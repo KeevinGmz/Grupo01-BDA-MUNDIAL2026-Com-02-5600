@@ -16,7 +16,7 @@ BEGIN TRANSACTION;
 
     DECLARE @v_id_imp INT;
     EXEC soporte.usp_Negocio_ImportarFixture
-        @archivo = N'sample_fixture.csv',
+        @archivo = 'sample_fixture.csv',
         @id_importacion = @v_id_imp OUTPUT;
 
     PRINT '--- EVIDENCIA DESPUES DE EJECUTAR IMPORTACION (ID: ' + CAST(@v_id_imp AS VARCHAR) + ') ---';

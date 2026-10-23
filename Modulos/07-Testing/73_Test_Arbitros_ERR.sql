@@ -13,24 +13,24 @@ GO
 SET NOCOUNT ON;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBAS DE ERROR: 73_Test_ERR_Arbitros';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBAS DE ERROR: 73_Test_ERR_Arbitros';
+PRINT '=====================================================================';
 GO
 
 /* =====================================================================
    CASO 5: conflicto de nacionalidad
 ===================================================================== */
-PRINT N'';
-PRINT N'-> Test 1: designar un arbitro de la misma nacionalidad que el equipo local';
+PRINT '';
+PRINT '-> Test 1: designar un arbitro de la misma nacionalidad que el equipo local';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_pais_local SMALLINT;
 DECLARE @v_id_pais_visitante SMALLINT;
 DECLARE @v_id_arbitro_conflicto INT;
-DECLARE @v_advertencia NVARCHAR(500);
+DECLARE @v_advertencia VARCHAR(500);
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
 DECLARE @v_filas_antes INT;
 DECLARE @v_filas_despues INT;
 DECLARE @v_cantidad_roles INT;
@@ -40,14 +40,14 @@ DECLARE @v_terna arbitraje.tt_Designacion;
 -- 1. Validar objetos requeridos
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID(N'arbitraje.usp_Negocio_DesignarTerna', N'P') IS NULL
+IF OBJECT_ID('arbitraje.usp_Negocio_DesignarTerna', 'P') IS NULL
 BEGIN
-    ;THROW 50001,N'73_Test_ERR_Arbitros: no existe arbitraje.usp_Negocio_DesignarTerna',1;
+    ;THROW 50001,'73_Test_ERR_Arbitros: no existe arbitraje.usp_Negocio_DesignarTerna',1;
 END;
 
-IF TYPE_ID(N'arbitraje.tt_Designacion') IS NULL
+IF TYPE_ID('arbitraje.tt_Designacion') IS NULL
 BEGIN
-    ;THROW 50001, N'73_Test_ERR_Arbitros: no existe arbitraje.tt_Designacion',1;
+    ;THROW 50001, '73_Test_ERR_Arbitros: no existe arbitraje.tt_Designacion',1;
 END;
 
 SELECT @v_cantidad_roles = COUNT(*)
@@ -55,7 +55,7 @@ FROM arbitraje.rol_arbitral;
 
 IF @v_cantidad_roles <> 5
 BEGIN
-    ;THROW 50001, N'73_Test_ERR_Arbitros: deben existir exactamente cinco roles arbitrales',1;
+    ;THROW 50001, '73_Test_ERR_Arbitros: deben existir exactamente cinco roles arbitrales',1;
 END;
 
 -------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ ORDER BY p.id_partido;
 
 IF @v_id_partido IS NULL
 BEGIN
-    ;THROW 50001,N'73_Test_ERR_Arbitros: se requiere un partido programado, un arbitro del pais local y cuatro arbitros neutrales', 1;
+    ;THROW 50001,'73_Test_ERR_Arbitros: se requiere un partido programado, un arbitro del pais local y cuatro arbitros neutrales', 1;
 END;
 
 SELECT TOP (1)
@@ -159,7 +159,7 @@ JOIN arbitros_prueba AS ap
 
 IF (SELECT COUNT(*) FROM @v_terna) <> 5
 BEGIN
-    ;THROW 50001,N'73_Test_ERR_Arbitros: no se pudo completar el TVP con cinco designaciones',1;
+    ;THROW 50001,'73_Test_ERR_Arbitros: no se pudo completar el TVP con cinco designaciones',1;
 END;
 
 IF EXISTS
@@ -170,7 +170,7 @@ IF EXISTS
     HAVING COUNT(*) > 1
 )
 BEGIN
-    ;THROW 50001, N'73_Test_ERR_Arbitros: el TVP contiene arbitros repetidos',1;
+    ;THROW 50001, '73_Test_ERR_Arbitros: el TVP contiene arbitros repetidos',1;
 END;
 
 IF 1 <>
@@ -182,14 +182,14 @@ IF 1 <>
        WHERE pa.id_pais IN (@v_id_pais_local, @v_id_pais_visitante)
    )
 BEGIN
-    ;THROW 50001, N'73_Test_ERR_Arbitros: el TVP debe contener exactamente un conflicto de nacionalidad',1;
+    ;THROW 50001, '73_Test_ERR_Arbitros: el TVP debe contener exactamente un conflicto de nacionalidad',1;
 END;
 
 SELECT @v_filas_antes = COUNT(*)
 FROM arbitraje.designacion_arbitral AS da
 WHERE da.id_partido = @v_id_partido;
 
-PRINT N'--- EVIDENCIA DEL TVP ANTES DEL INTENTO ---';
+PRINT '--- EVIDENCIA DEL TVP ANTES DEL INTENTO ---';
 
 SELECT
     @v_id_partido AS id_partido,
@@ -205,8 +205,8 @@ SELECT
     pa.id_pais AS pais_arbitro,
     CASE
         WHEN pa.id_pais IN (@v_id_pais_local, @v_id_pais_visitante)
-            THEN N'CONFLICTO'
-        ELSE N'NEUTRAL'
+            THEN 'CONFLICTO'
+        ELSE 'NEUTRAL'
     END AS validacion_nacionalidad
 FROM @v_terna AS t
 JOIN arbitraje.rol_arbitral AS r
@@ -229,7 +229,7 @@ BEGIN TRY
 
     SET @v_error_numero = 0;
     SET @v_error_mensaje =
-        N'El SP permitio una terna con conflicto de nacionalidad';
+        'El SP permitio una terna con conflicto de nacionalidad';
 END TRY
 BEGIN CATCH
     SET @v_error_numero = ERROR_NUMBER();
@@ -247,8 +247,8 @@ IF @@TRANCOUNT > 0
 -- 5. Evaluar el resultado
 -------------------------------------------------------------------------------
 
-PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
-PRINT CONCAT(N'Advertencia devuelta: ', COALESCE(@v_advertencia, N'Ninguna'));
+PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
+PRINT CONCAT('Advertencia devuelta: ', COALESCE(@v_advertencia, 'Ninguna'));
 
 SELECT
     @v_id_partido AS id_partido,
@@ -259,24 +259,24 @@ SELECT
 IF @v_error_numero IN (50001, 50003)
    AND
    (
-       @v_error_mensaje LIKE N'%nacionalidad%'
-       OR @v_error_mensaje LIKE N'%mismo pais%'
-       OR @v_error_mensaje LIKE N'%pais%seleccion%'
-       OR @v_error_mensaje LIKE N'%arbitro%pais%'
+       @v_error_mensaje LIKE '%nacionalidad%'
+       OR @v_error_mensaje LIKE '%mismo pais%'
+       OR @v_error_mensaje LIKE '%pais%seleccion%'
+       OR @v_error_mensaje LIKE '%arbitro%pais%'
    )
    AND @v_filas_despues = @v_filas_antes
 BEGIN
-    PRINT N'PASS Test 1: se rechazo la terna con conflicto de nacionalidad.';
+    PRINT 'PASS Test 1: se rechazo la terna con conflicto de nacionalidad.';
 END
 ELSE
 BEGIN
-    PRINT N'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
+    PRINT 'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
 END;
 GO
 
-PRINT N'';
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBAS DE ERROR: 73_Test_ERR_Arbitros';
-PRINT N'ROLLBACK EJECUTADO';
-PRINT N'=====================================================================';
+PRINT '';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBAS DE ERROR: 73_Test_ERR_Arbitros';
+PRINT 'ROLLBACK EJECUTADO';
+PRINT '=====================================================================';
 GO

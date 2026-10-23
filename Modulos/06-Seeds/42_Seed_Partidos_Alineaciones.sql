@@ -13,7 +13,7 @@ GO
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-DECLARE @v_errores NVARCHAR(2000) = N'';
+DECLARE @v_errores VARCHAR(2000) = '';
 DECLARE @v_propia BIT = 0;
 DECLARE @v_sp BIT = 0;
 DECLARE @v_cant_selecciones INT;
@@ -26,14 +26,14 @@ DECLARE @v_fecha_base DATETIME2(0) = '2026-06-10T15:00:00';
 -- 1. Validaciones previas del juego de datos
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID(N'torneo.usp_Negocio_RegistrarPartido', N'P') IS NULL
-    SET @v_errores += N'no existe torneo.usp_Negocio_RegistrarPartido; ';
+IF OBJECT_ID('torneo.usp_Negocio_RegistrarPartido', 'P') IS NULL
+    SET @v_errores += 'no existe torneo.usp_Negocio_RegistrarPartido; ';
 
-IF OBJECT_ID(N'juego.usp_Negocio_RegistrarAlineacion', N'P') IS NULL
-    SET @v_errores += N'no existe juego.usp_Negocio_RegistrarAlineacion; ';
+IF OBJECT_ID('juego.usp_Negocio_RegistrarAlineacio', 'P') IS NULL
+    SET @v_errores += 'no existe juego.usp_Negocio_RegistrarAlineacion; ';
 
-IF TYPE_ID(N'juego.tt_Alineacion') IS NULL
-    SET @v_errores += N'no existe el tipo juego.tt_Alineacion; ';
+IF TYPE_ID('juego.tt_Alineacio') IS NULL
+    SET @v_errores += 'no existe el tipo juego.tt_Alineacion; ';
 
 IF NOT EXISTS
 (
@@ -42,7 +42,7 @@ IF NOT EXISTS
     WHERE f.nro_fase = 1
       AND f.es_eliminacion = 0
 )
-    SET @v_errores += N'no existe la fase 1 o no esta configurada como fase de grupos; ';
+    SET @v_errores += 'no existe la fase 1 o no esta configurada como fase de grupos; ';
 
 SELECT @v_cant_selecciones = COUNT(*)
 FROM torneo.seleccion;
@@ -50,9 +50,9 @@ FROM torneo.seleccion;
 IF @v_cant_selecciones < 16
     SET @v_errores += CONCAT
     (
-        N'se requieren al menos 16 selecciones y existen ',
+        'se requieren al menos 16 selecciones y existen ',
         @v_cant_selecciones,
-        N'; '
+        '; '
     );
 
 SELECT @v_cant_sedes = COUNT(*)
@@ -61,9 +61,9 @@ FROM torneo.sede;
 IF @v_cant_sedes < 8
     SET @v_errores += CONCAT
     (
-        N'se requieren al menos 8 sedes y existen ',
+        'se requieren al menos 8 sedes y existen ',
         @v_cant_sedes,
-        N'; '
+        '; '
     );
 
 SELECT TOP (1) @v_titulares = CONVERT(INT, pr.valor)
@@ -79,19 +79,19 @@ WHERE pr.clave = 'MAX_SUPLENTES'
 ORDER BY pr.vigente_desde DESC;
 
 IF @v_titulares IS NULL
-    SET @v_errores += N'no existe un parametro vigente TITULARES; ';
+    SET @v_errores += 'no existe un parametro vigente TITULARES; ';
 
 IF @v_max_suplentes IS NULL
-    SET @v_errores += N'no existe un parametro vigente MAX_SUPLENTES; ';
+    SET @v_errores += 'no existe un parametro vigente MAX_SUPLENTES; ';
 
 IF @v_titulares IS NOT NULL AND @v_titulares <> 11
-    SET @v_errores += N'el parametro TITULARES debe ser 11 para este juego de datos; ';
+    SET @v_errores += 'el parametro TITULARES debe ser 11 para este juego de datos; ';
 
-IF @v_errores <> N''
+IF @v_errores <> ''
 BEGIN
     SET @v_errores = LEFT
     (
-        CONCAT(N'42_Seed_Partidos_Alineaciones: ', @v_errores),
+        CONCAT('42_Seed_Partidos_Alineaciones: ', @v_errores),
         2048
     );
     ;THROW 50001, @v_errores, 1;
@@ -150,7 +150,7 @@ IF EXISTS
 )
 BEGIN
     ;THROW 50003,
-           N'42_Seed_Partidos_Alineaciones: las primeras 16 selecciones deben estar distribuidas en grupos de 4',
+           '42_Seed_Partidos_Alineaciones: las primeras 16 selecciones deben estar distribuidas en grupos de 4',
            1;
 END;
 
@@ -161,7 +161,7 @@ IF
 ) <> 4
 BEGIN
     ;THROW 50003,
-           N'42_Seed_Partidos_Alineaciones: se requieren exactamente 4 grupos entre las primeras 16 selecciones',
+           '42_Seed_Partidos_Alineaciones: se requieren exactamente 4 grupos entre las primeras 16 selecciones',
            1;
 END;
 
@@ -185,7 +185,7 @@ IF EXISTS
 )
 BEGIN
     ;THROW 50003,
-           N'42_Seed_Partidos_Alineaciones: cada seleccion debe tener una convocatoria activa compatible con TITULARES y MAX_SUPLENTES',
+           '42_Seed_Partidos_Alineaciones: cada seleccion debe tener una convocatoria activa compatible con TITULARES y MAX_SUPLENTES',
            1;
 END;
 
@@ -251,7 +251,7 @@ JOIN @v_selecciones AS visitante
 IF (SELECT COUNT(*) FROM @v_fixture) <> 24
 BEGIN
     ;THROW 50003,
-           N'42_Seed_Partidos_Alineaciones: no se pudieron generar los 24 cruces de fase de grupos',
+           '42_Seed_Partidos_Alineaciones: no se pudieron generar los 24 cruces de fase de grupos',
            1;
 END;
 
@@ -431,7 +431,7 @@ BEGIN TRY
     ) < 24
     BEGIN
         ;THROW 50003,
-               N'42_Seed_Partidos_Alineaciones: no quedaron registrados al menos 24 partidos de fase 1',
+               '42_Seed_Partidos_Alineaciones: no quedaron registrados al menos 24 partidos de fase 1',
                1;
     END;
 
@@ -463,7 +463,7 @@ BEGIN TRY
     )
     BEGIN
         ;THROW 50003,
-               N'42_Seed_Partidos_Alineaciones: algun partido no tiene alineaciones para las dos selecciones',
+               '42_Seed_Partidos_Alineaciones: algun partido no tiene alineaciones para las dos selecciones',
                1;
     END;
 

@@ -13,9 +13,9 @@ GO
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBA EXITOSA: 70_Test_OK_Eventos';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBA EXITOSA: 70_Test_OK_Eventos';
+PRINT '=====================================================================';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_seleccion INT;
@@ -37,12 +37,12 @@ DECLARE @v_estado_original VARCHAR(12);
 -- 1. Validar los procedimientos requeridos
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID(N'juego.usp_Negocio_RegistrarGol', N'P') IS NULL
-   OR OBJECT_ID(N'juego.usp_Negocio_RegistrarTarjeta', N'P') IS NULL
-   OR OBJECT_ID(N'juego.usp_Negocio_RegistrarSustitucion', N'P') IS NULL
+IF OBJECT_ID('juego.usp_Negocio_RegistrarGol', 'P') IS NULL
+   OR OBJECT_ID('juego.usp_Negocio_RegistrarTarjeta', 'P') IS NULL
+   OR OBJECT_ID('juego.usp_Negocio_RegistrarSustitucio', 'P') IS NULL
 BEGIN
     ;THROW 50001,
-           N'70_Test_OK_Eventos: faltan uno o mas procedimientos de negocio requeridos',
+           '70_Test_OK_Eventos: faltan uno o mas procedimientos de negocio requeridos',
            1;
 END;
 
@@ -104,7 +104,7 @@ ORDER BY a.dorsal, a.id_jugador;
 SELECT TOP (1)
     @v_id_tipo_tarjeta = tt.id_tipo
 FROM juego.tipo_tarjeta AS tt
-WHERE UPPER(tt.descripcion) LIKE N'%AMARILL%'
+WHERE UPPER(tt.descripcion) LIKE '%AMARILL%'
 ORDER BY tt.id_tipo;
 
 -- La tarjeta requiere el arbitro que la muestra. Se obtiene una designacion
@@ -129,7 +129,7 @@ IF @v_id_partido IS NULL
    OR @v_id_arbitro IS NULL
 BEGIN
     ;THROW 50001,
-           N'70_Test_OK_Eventos: se requiere un partido con alineacion, dos titulares, un suplente, tarjeta amarilla y arbitro designado',
+           '70_Test_OK_Eventos: se requiere un partido con alineacion, dos titulares, un suplente, tarjeta amarilla y arbitro designado',
            1;
 END;
 
@@ -161,7 +161,7 @@ BEGIN TRY
     WHERE id_partido = @v_id_partido
       AND id_seleccion = @v_id_seleccion;
 
-    PRINT N'--- EVIDENCIA ANTES DE REGISTRAR EVENTOS ---';
+    PRINT '--- EVIDENCIA ANTES DE REGISTRAR EVENTOS ---';
 
     SELECT
         @v_id_partido AS id_partido,
@@ -204,8 +204,8 @@ BEGIN TRY
                    AND g.minuto = 25
                    AND g.periodo = 'PT'
              )
-            THEN N'PASS registrar gol'
-        ELSE N'FAIL registrar gol'
+            THEN 'PASS registrar gol'
+        ELSE 'FAIL registrar gol'
     END AS resultado;
 
     ---------------------------------------------------------------------------
@@ -219,7 +219,7 @@ BEGIN TRY
         @id_tipo = @v_id_tipo_tarjeta,
         @id_arbitro = @v_id_arbitro,
         @minuto = 35,
-        @motivo = N'Conducta antideportiva',
+        @motivo = 'Conducta antideportiva',
         @nro_tarjeta = @v_nro_tarjeta OUTPUT,
         @id_suspension = @v_id_suspension OUTPUT;;
 
@@ -236,8 +236,8 @@ BEGIN TRY
                    AND t.id_arbitro = @v_id_arbitro
                    AND t.minuto = 35
              )
-            THEN N'PASS registrar tarjeta'
-        ELSE N'FAIL registrar tarjeta'
+            THEN 'PASS registrar tarjeta'
+        ELSE 'FAIL registrar tarjeta'
     END AS resultado;
 
     ---------------------------------------------------------------------------
@@ -265,11 +265,11 @@ BEGIN TRY
                    AND s.id_jugador_entra = @v_jugador_entra
                    AND s.minuto = 65
              )
-            THEN N'PASS registrar sustitucion'
-        ELSE N'FAIL registrar sustitucion'
+            THEN 'PASS registrar sustitucion'
+        ELSE 'FAIL registrar sustitucion'
     END AS resultado;
 
-    PRINT N'--- EVIDENCIA DESPUES DE REGISTRAR EVENTOS ---';
+    PRINT '--- EVIDENCIA DESPUES DE REGISTRAR EVENTOS ---';
 
     SELECT g.*
     FROM juego.gol AS g
@@ -290,7 +290,7 @@ BEGIN TRY
       AND s.nro_sustitucion = @v_nro_sustitucion;
 
     ROLLBACK TRANSACTION;
-    PRINT N'PASS general: prueba finalizada y transaccion revertida.';
+    PRINT 'PASS general: prueba finalizada y transaccion revertida.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
@@ -298,9 +298,9 @@ BEGIN CATCH
 
     PRINT CONCAT
     (
-        N'FAIL general. Error ',
+        'FAIL general. Error ',
         ERROR_NUMBER(),
-        N': ',
+        ': ',
         ERROR_MESSAGE()
     );
 
@@ -308,8 +308,8 @@ BEGIN CATCH
 END CATCH;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBA EXITOSA: 70_Test_OK_Eventos';
-PRINT N'ROLLBACK EJECUTADO';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBA EXITOSA: 70_Test_OK_Eventos';
+PRINT 'ROLLBACK EJECUTADO';
+PRINT '=====================================================================';
 GO

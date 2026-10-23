@@ -23,7 +23,7 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_codigo INT = 50001;
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
@@ -62,13 +62,13 @@ BEGIN
 
     -- 1) Validaciones acumuladas antes de abrir la transaccion
     IF @v_estado IS NULL
-        SET @v_errores += N'partido inexistente; ';
+        SET @v_errores += 'partido inexistente; ';
 
     IF @v_estado IS NOT NULL
        AND @v_estado NOT IN ('PROGRAMADO', 'EN_CURSO')
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el partido debe estar PROGRAMADO o EN_CURSO; ';
+        SET @v_errores += 'el partido debe estar PROGRAMADO o EN_CURSO; ';
     END
 
     IF NOT EXISTS
@@ -78,35 +78,35 @@ BEGIN
         WHERE ep.id_partido = @id_partido
           AND ep.id_seleccion = @id_seleccion
     )
-        SET @v_errores += N'la seleccion no participa del partido; ';
+        SET @v_errores += 'la seleccion no participa del partido; ';
 
     IF NULLIF(LTRIM(RTRIM(@esquema_tactico)), '') IS NULL
-        SET @v_errores += N'esquema_tactico obligatorio; ';
+        SET @v_errores += 'esquema_tactico obligatorio; ';
     ELSE IF @esquema_tactico NOT LIKE '[1-9]-[0-9]-[0-9]'
         AND @esquema_tactico NOT LIKE '[1-9]-[0-9]-[0-9]-[0-9]'
         AND @esquema_tactico NOT LIKE '[1-9]-[0-9]-[0-9]-[0-9]-[0-9]'
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'esquema_tactico con formato invalido; ';
+        SET @v_errores += 'esquema_tactico con formato invalido; ';
     END
 
     IF @v_titulares_regla IS NULL OR @v_max_suplentes IS NULL
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'faltan parametros vigentes TITULARES o MAX_SUPLENTES; ';
+        SET @v_errores += 'faltan parametros vigentes TITULARES o MAX_SUPLENTES; ';
     END
     ELSE
     BEGIN
         IF @v_titulares <> @v_titulares_regla
         BEGIN
             SET @v_codigo = 50003;
-            SET @v_errores += CONCAT(N'la alineacion debe incluir exactamente ', @v_titulares_regla, N' titulares; ');
+            SET @v_errores += CONCAT('la alineacion debe incluir exactamente ', @v_titulares_regla, ' titulares; ');
         END
 
         IF @v_suplentes > @v_max_suplentes
         BEGIN
             SET @v_codigo = 50003;
-            SET @v_errores += CONCAT(N'la alineacion supera el maximo de ', @v_max_suplentes, N' suplentes; ');
+            SET @v_errores += CONCAT('la alineacion supera el maximo de ', @v_max_suplentes, ' suplentes; ');
         END
     END
 
@@ -119,7 +119,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'los dorsales no pueden repetirse en la alineacion; ';
+        SET @v_errores += 'los dorsales no pueden repetirse en la alineacion; ';
     END
 
     IF EXISTS
@@ -134,7 +134,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'todos los jugadores deben estar convocados ACTIVO por la seleccion; ';
+        SET @v_errores += 'todos los jugadores deben estar convocados ACTIVO por la seleccion; ';
     END
 
     IF EXISTS
@@ -149,7 +149,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el dorsal de cada jugador debe coincidir con su convocatoria; ';
+        SET @v_errores += 'el dorsal de cada jugador debe coincidir con su convocatoria; ';
     END
 
     IF EXISTS
@@ -160,7 +160,7 @@ BEGIN
           ON pos.id_posicion = a.id_posicion
         WHERE pos.id_posicion IS NULL
     )
-        SET @v_errores += N'la alineacion contiene posiciones inexistentes; ';
+        SET @v_errores += 'la alineacion contiene posiciones inexistentes; ';
 
     IF EXISTS
     (
@@ -173,7 +173,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'es_posicion_habitual no coincide con la posicion habitual del jugador; ';
+        SET @v_errores += 'es_posicion_habitual no coincide con la posicion habitual del jugador; ';
     END
 
     IF EXISTS
@@ -184,7 +184,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'la alineacion contiene jugadores suspendidos para este partido; ';
+        SET @v_errores += 'la alineacion contiene jugadores suspendidos para este partido; ';
     END
 
     IF EXISTS
@@ -197,12 +197,12 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'no se puede reemplazar la alineacion porque la seleccion ya tiene eventos registrados; ';
+        SET @v_errores += 'no se puede reemplazar la alineacion porque la seleccion ya tiene eventos registrados; ';
     END
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_errores = LEFT(CONCAT(N'juego.usp_Negocio_RegistrarAlineacion: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT('juego.usp_Negocio_RegistrarAlineacion: ', @v_errores), 2048);
         THROW @v_codigo, @v_errores, 1;
     END
 
@@ -281,7 +281,7 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_codigo INT = 50001;
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
@@ -320,18 +320,18 @@ BEGIN
 
     SELECT TOP (1) @v_max_ventanas = CONVERT(INT, pr.valor)
     FROM torneo.parametro_reglamento AS pr
-    WHERE pr.clave = 'MAX_VENTANAS_SUSTITUCION'
+    WHERE pr.clave = 'MAX_VENTANAS_SUSTITUCIO'
       AND pr.vigente_desde <= @v_fecha_partido
     ORDER BY pr.vigente_desde DESC;
 
     -- 1) Validaciones acumuladas antes de abrir la transaccion
     IF @v_estado IS NULL
-        SET @v_errores += N'partido inexistente; ';
+        SET @v_errores += 'partido inexistente; ';
 
     IF @v_estado IS NOT NULL AND @v_estado <> 'EN_CURSO'
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el partido debe estar EN_CURSO para registrar una sustitucion; ';
+        SET @v_errores += 'el partido debe estar EN_CURSO para registrar una sustitucion; ';
     END
 
     IF NOT EXISTS
@@ -341,27 +341,27 @@ BEGIN
         WHERE ep.id_partido = @id_partido
           AND ep.id_seleccion = @id_seleccion
     )
-        SET @v_errores += N'la seleccion no participa del partido; ';
+        SET @v_errores += 'la seleccion no participa del partido; ';
 
     IF @id_jugador_sale IS NOT NULL
        AND @id_jugador_entra IS NOT NULL
        AND @id_jugador_sale = @id_jugador_entra
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'los jugadores saliente y entrante deben ser distintos; ';
+        SET @v_errores += 'los jugadores saliente y entrante deben ser distintos; ';
     END
 
     IF @minuto IS NULL OR @minuto < 1 OR @minuto > 120
-        SET @v_errores += N'minuto obligatorio y debe estar entre 1 y 120; ';
+        SET @v_errores += 'minuto obligatorio y debe estar entre 1 y 120; ';
 
     IF @minuto > 90 AND ISNULL(@v_admite_alargue, 0) = 0
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'la fase no admite sustituciones en alargue; ';
+        SET @v_errores += 'la fase no admite sustituciones en alargue; ';
     END
 
-    IF @motivo IS NULL OR @motivo NOT IN ('TACTICO', 'LESION', 'PRECAUCION')
-        SET @v_errores += N'motivo invalido; ';
+    IF @motivo IS NULL OR @motivo NOT IN ('TACTICO', 'LESIO', 'PRECAUCIO')
+        SET @v_errores += 'motivo invalido; ';
 
     IF NOT EXISTS
     (
@@ -372,7 +372,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'la seleccion no tiene una alineacion registrada; ';
+        SET @v_errores += 'la seleccion no tiene una alineacion registrada; ';
     END
 
     IF @minuto IS NOT NULL
@@ -384,7 +384,7 @@ BEGIN
        )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el jugador saliente no esta en cancha al minuto indicado; ';
+        SET @v_errores += 'el jugador saliente no esta en cancha al minuto indicado; ';
     END
 
     IF NOT EXISTS
@@ -398,7 +398,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el jugador entrante debe estar alineado como suplente; ';
+        SET @v_errores += 'el jugador entrante debe estar alineado como suplente; ';
     END
 
     IF EXISTS
@@ -415,7 +415,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el jugador entrante ya fue utilizado en una sustitucion; ';
+        SET @v_errores += 'el jugador entrante ya fue utilizado en una sustitucion; ';
     END
 
     IF EXISTS
@@ -432,13 +432,13 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el jugador entrante fue expulsado; ';
+        SET @v_errores += 'el jugador entrante fue expulsado; ';
     END
 
     IF @v_max_sustituciones IS NULL OR @v_max_extra IS NULL OR @v_max_ventanas IS NULL
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'faltan parametros vigentes de sustituciones; ';
+        SET @v_errores += 'faltan parametros vigentes de sustituciones; ';
     END
 
     SELECT
@@ -459,14 +459,14 @@ BEGIN
        AND @v_cambios_reglamentarios >= @v_max_sustituciones
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'se alcanzo el maximo de sustituciones reglamentarias; ';
+        SET @v_errores += 'se alcanzo el maximo de sustituciones reglamentarias; ';
     END
 
     IF @minuto > 90 AND @v_max_extra IS NOT NULL
        AND @v_cambios_alargue >= @v_max_extra
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'se alcanzo el maximo de sustituciones adicionales de alargue; ';
+        SET @v_errores += 'se alcanzo el maximo de sustituciones adicionales de alargue; ';
     END
 
     IF @minuto = 45
@@ -492,21 +492,21 @@ BEGIN
                AND @v_ventanas_reglamentarias >= @v_max_ventanas
             BEGIN
                 SET @v_codigo = 50003;
-                SET @v_errores += N'se alcanzo el maximo de ventanas reglamentarias; ';
+                SET @v_errores += 'se alcanzo el maximo de ventanas reglamentarias; ';
             END
 
             IF @minuto > 90
                AND @v_ventanas_alargue >= 1
             BEGIN
                 SET @v_codigo = 50003;
-                SET @v_errores += N'ya se utilizo la ventana adicional de alargue; ';
+                SET @v_errores += 'ya se utilizo la ventana adicional de alargue; ';
             END
         END
     END
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_errores = LEFT(CONCAT(N'juego.usp_Negocio_RegistrarSustitucion: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT('juego.usp_Negocio_RegistrarSustitucion: ', @v_errores), 2048);
         THROW @v_codigo, @v_errores, 1;
     END
 

@@ -13,29 +13,29 @@ GO
 SET NOCOUNT ON;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBAS DE ERROR: 71_Test_ERR_Eventos';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBAS DE ERROR: 71_Test_ERR_Eventos';
+PRINT '=====================================================================';
 GO
 
 /* =====================================================================
    CASO 1: autor y asistente del gol son la misma persona
 ===================================================================== */
-PRINT N'';
-PRINT N'-> Test 1: registrar gol con autor igual al asistente';
+PRINT '';
+PRINT '-> Test 1: registrar gol con autor igual al asistente';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_seleccion INT;
 DECLARE @v_id_jugador INT;
 DECLARE @v_nro_gol TINYINT;
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
 DECLARE @v_filas_antes INT;
 DECLARE @v_filas_despues INT;
 
-IF OBJECT_ID(N'juego.usp_Negocio_RegistrarGol', N'P') IS NULL
+IF OBJECT_ID('juego.usp_Negocio_RegistrarGol', 'P') IS NULL
 BEGIN
-    ;THROW 50001,N'71_Test_ERR_Eventos: no existe juego.usp_Negocio_RegistrarGol',1;
+    ;THROW 50001,'71_Test_ERR_Eventos: no existe juego.usp_Negocio_RegistrarGol',1;
 END;
 
 SELECT TOP (1)
@@ -53,7 +53,7 @@ IF @v_id_partido IS NULL
    OR @v_id_seleccion IS NULL
    OR @v_id_jugador IS NULL
 BEGIN
-    ;THROW 50001,N'71_Test_ERR_Eventos: se requiere un partido EN_CURSO con un titular alineado para el Test 1', 1;
+    ;THROW 50001,'71_Test_ERR_Eventos: se requiere un partido EN_CURSO con un titular alineado para el Test 1', 1;
 END;
 
 SELECT @v_filas_antes = COUNT(*)
@@ -76,7 +76,7 @@ BEGIN TRY
         @nro_gol = @v_nro_gol OUTPUT;
 
     SET @v_error_numero = 0;
-    SET @v_error_mensaje = N'El SP permitio que autor y asistente fueran iguales';
+    SET @v_error_mensaje = 'El SP permitio que autor y asistente fueran iguales';
 END TRY
 BEGIN CATCH
     SET @v_error_numero = ERROR_NUMBER();
@@ -91,30 +91,30 @@ WHERE g.id_partido = @v_id_partido
 IF @@TRANCOUNT > 0
     ROLLBACK TRANSACTION;
 
-PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
+PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
 
 IF @v_error_numero IN (50001, 50003)
    AND
    (
-       @v_error_mensaje LIKE N'%autor%asistente%distint%'
-       OR @v_error_mensaje LIKE N'%autor%asistente%igual%'
-       OR @v_error_mensaje LIKE N'%mismo%jugador%'
+       @v_error_mensaje LIKE '%autor%asistente%distint%'
+       OR @v_error_mensaje LIKE '%autor%asistente%igual%'
+       OR @v_error_mensaje LIKE '%mismo%jugador%'
    )
    AND @v_filas_despues = @v_filas_antes
 BEGIN
-    PRINT N'PASS Test 1: se rechazo el gol con autor y asistente iguales.';
+    PRINT 'PASS Test 1: se rechazo el gol con autor y asistente iguales.';
 END
 ELSE
 BEGIN
-    PRINT N'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
+    PRINT 'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
 END;
 GO
 
 /* =====================================================================
    CASO 2: el jugador que sale no esta en cancha
 ===================================================================== */
-PRINT N'';
-PRINT N'-> Test 2: sustituir a un jugador que no esta en cancha';
+PRINT '';
+PRINT '-> Test 2: sustituir a un jugador que no esta en cancha';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_seleccion INT;
@@ -122,13 +122,13 @@ DECLARE @v_jugador_sale INT;
 DECLARE @v_jugador_entra INT;
 DECLARE @v_nro_sustitucion TINYINT;
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
 DECLARE @v_filas_antes INT;
 DECLARE @v_filas_despues INT;
 
-IF OBJECT_ID(N'juego.usp_Negocio_RegistrarSustitucion', N'P') IS NULL
+IF OBJECT_ID('juego.usp_Negocio_RegistrarSustitucion', 'P') IS NULL
 BEGIN
-    ;THROW 50001,N'71_Test_ERR_Eventos: no existe juego.usp_Negocio_RegistrarSustitucion',1;
+    ;THROW 50001,'71_Test_ERR_Eventos: no existe juego.usp_Negocio_RegistrarSustitucion',1;
 END;
 
 ;WITH suplentes AS
@@ -166,7 +166,7 @@ IF @v_id_partido IS NULL
    OR @v_jugador_sale IS NULL
    OR @v_jugador_entra IS NULL
 BEGIN
-    ;THROW 50001, N'71_Test_ERR_Eventos: se requiere un partido EN_CURSO con al menos dos suplentes para el Test 2',1;
+    ;THROW 50001, '71_Test_ERR_Eventos: se requiere un partido EN_CURSO con al menos dos suplentes para el Test 2',1;
 END;
 
 SELECT @v_filas_antes = COUNT(*)
@@ -187,7 +187,7 @@ BEGIN TRY
         @nro_sustitucion = @v_nro_sustitucion OUTPUT;
 
     SET @v_error_numero = 0;
-    SET @v_error_mensaje = N'El SP permitio que saliera un jugador que no estaba en cancha';
+    SET @v_error_mensaje = 'El SP permitio que saliera un jugador que no estaba en cancha';
 END TRY
 BEGIN CATCH
     SET @v_error_numero = ERROR_NUMBER();
@@ -202,30 +202,30 @@ WHERE s.id_partido = @v_id_partido
 IF @@TRANCOUNT > 0
     ROLLBACK TRANSACTION;
 
-PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
+PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
 
 IF @v_error_numero IN (50001, 50003)
    AND
    (
-       @v_error_mensaje LIKE N'%sale%cancha%'
-       OR @v_error_mensaje LIKE N'%jugador%no%esta%cancha%'
-       OR @v_error_mensaje LIKE N'%jugador saliente%titular%'
+       @v_error_mensaje LIKE '%sale%cancha%'
+       OR @v_error_mensaje LIKE '%jugador%no%esta%cancha%'
+       OR @v_error_mensaje LIKE '%jugador saliente%titular%'
    )
    AND @v_filas_despues = @v_filas_antes
 BEGIN
-    PRINT N'PASS Test 2: se rechazo la salida de un jugador que no estaba en cancha.';
+    PRINT 'PASS Test 2: se rechazo la salida de un jugador que no estaba en cancha.';
 END
 ELSE
 BEGIN
-    PRINT N'FAIL Test 2: numero, mensaje o persistencia distintos de lo esperado.';
+    PRINT 'FAIL Test 2: numero, mensaje o persistencia distintos de lo esperado.';
 END;
 GO
 
 /* =====================================================================
    CASO 3: tarjeta aplicada por un arbitro no designado
 ===================================================================== */
-PRINT N'';
-PRINT N'-> Test 3: registrar tarjeta con un arbitro no designado';
+PRINT '';
+PRINT '-> Test 3: registrar tarjeta con un arbitro no designado';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_seleccion INT;
@@ -235,13 +235,13 @@ DECLARE @v_id_tipo_tarjeta TINYINT;
 DECLARE @v_nro_tarjeta TINYINT;
 DECLARE @v_id_suspension INT;
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
 DECLARE @v_filas_antes INT;
 DECLARE @v_filas_despues INT;
 
-IF OBJECT_ID(N'juego.usp_Negocio_RegistrarTarjeta', N'P') IS NULL
+IF OBJECT_ID('juego.usp_Negocio_RegistrarTarjeta', 'P') IS NULL
 BEGIN
-    ;THROW 50001,N'71_Test_ERR_Eventos: no existe juego.usp_Negocio_RegistrarTarjeta',1;
+    ;THROW 50001,'71_Test_ERR_Eventos: no existe juego.usp_Negocio_RegistrarTarjeta',1;
 END;
 
 SELECT TOP (1)
@@ -272,7 +272,7 @@ ORDER BY ar.id_persona;
 SELECT TOP (1)
     @v_id_tipo_tarjeta = tt.id_tipo
 FROM juego.tipo_tarjeta AS tt
-WHERE UPPER(tt.descripcion) LIKE N'%AMARILL%'
+WHERE UPPER(tt.descripcion) LIKE '%AMARILL%'
 ORDER BY tt.id_tipo;
 
 IF @v_id_partido IS NULL
@@ -281,7 +281,7 @@ IF @v_id_partido IS NULL
    OR @v_id_arbitro_no_designado IS NULL
    OR @v_id_tipo_tarjeta IS NULL
 BEGIN
-    ;THROW 50001,N'71_Test_ERR_Eventos: se requiere un partido EN_CURSO, titular, tarjeta amarilla y arbitro no designado para el Test 3',1;
+    ;THROW 50001,'71_Test_ERR_Eventos: se requiere un partido EN_CURSO, titular, tarjeta amarilla y arbitro no designado para el Test 3',1;
 END;
 
 SELECT @v_filas_antes = COUNT(*)
@@ -299,12 +299,12 @@ BEGIN TRY
         @id_tipo = @v_id_tipo_tarjeta,
         @id_arbitro = @v_id_arbitro_no_designado,
         @minuto = 30,
-        @motivo = N'Conducta antideportiva',
+        @motivo = 'Conducta antideportiva',
         @nro_tarjeta = @v_nro_tarjeta OUTPUT,
         @id_suspension = @v_id_suspension OUTPUT;
 
     SET @v_error_numero = 0;
-    SET @v_error_mensaje = N'El SP permitio una tarjeta aplicada por un arbitro no designado';
+    SET @v_error_mensaje = 'El SP permitio una tarjeta aplicada por un arbitro no designado';
 END TRY
 BEGIN CATCH
     SET @v_error_numero = ERROR_NUMBER();
@@ -319,7 +319,7 @@ WHERE t.id_partido = @v_id_partido
 IF @@TRANCOUNT > 0
     ROLLBACK TRANSACTION;
 
-PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
+PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
 
 SELECT
     @v_id_partido AS id_partido_prueba,
@@ -330,23 +330,23 @@ SELECT
 IF @v_error_numero IN (50001, 50003)
    AND
    (
-       @v_error_mensaje LIKE N'%arbitro%no%designad%'
-       OR @v_error_mensaje LIKE N'%arbitro%terna%'
-       OR @v_error_mensaje LIKE N'%designacion%arbitral%'
+       @v_error_mensaje LIKE '%arbitro%no%designad%'
+       OR @v_error_mensaje LIKE '%arbitro%terna%'
+       OR @v_error_mensaje LIKE '%designacion%arbitral%'
    )
    AND @v_filas_despues = @v_filas_antes
 BEGIN
-    PRINT N'PASS Test 3: se rechazo la tarjeta del arbitro no designado.';
+    PRINT 'PASS Test 3: se rechazo la tarjeta del arbitro no designado.';
 END
 ELSE
 BEGIN
-    PRINT N'FAIL Test 3: numero, mensaje o persistencia distintos de lo esperado.';
+    PRINT 'FAIL Test 3: numero, mensaje o persistencia distintos de lo esperado.';
 END;
 GO
 
-PRINT N'';
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBAS DE ERROR: 71_Test_ERR_Eventos';
-PRINT N'CADA CASO EJECUTO SU PROPIO ROLLBACK';
-PRINT N'=====================================================================';
+PRINT '';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBAS DE ERROR: 71_Test_ERR_Eventos';
+PRINT 'CADA CASO EJECUTO SU PROPIO ROLLBACK';
+PRINT '=====================================================================';
 GO

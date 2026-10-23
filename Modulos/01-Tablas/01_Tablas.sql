@@ -81,8 +81,8 @@ GO
 -- geo.confederacion: catálogo de confederaciones (UEFA, CONMEBOL, etc.).
 CREATE TABLE geo.confederacion (
     id_confederacion TINYINT IDENTITY(1,1) NOT NULL,
-    nombre           NVARCHAR(50) NOT NULL,
-    sigla            NVARCHAR(10) NOT NULL,
+    nombre           VARCHAR(50) NOT NULL,
+    sigla            VARCHAR(10) NOT NULL,
     CONSTRAINT PK_confederacion PRIMARY KEY (id_confederacion),
     CONSTRAINT UQ_confederacion_nombre UNIQUE (nombre),
     CONSTRAINT UQ_confederacion_sigla UNIQUE (sigla)
@@ -92,7 +92,7 @@ GO
 -- geo.huso_horario: husos horarios con su desfase en minutos respecto de UTC.
 CREATE TABLE geo.huso_horario (
     id_huso        SMALLINT IDENTITY(1,1) NOT NULL,
-    zona_horaria   NVARCHAR(60) NOT NULL,
+    zona_horaria   VARCHAR(60) NOT NULL,
     offset_utc     SMALLINT NOT NULL,
     horario_verano BIT NOT NULL CONSTRAINT DF_huso_horario_horario_verano DEFAULT 0,
     CONSTRAINT PK_huso_horario PRIMARY KEY (id_huso),
@@ -105,7 +105,7 @@ GO
 CREATE TABLE publicidad.moneda (
     id_moneda   TINYINT IDENTITY(1,1) NOT NULL,
     cod_iso4217 CHAR(3) NOT NULL,
-    nombre      NVARCHAR(50) NOT NULL,
+    nombre      VARCHAR(50) NOT NULL,
     CONSTRAINT PK_moneda PRIMARY KEY (id_moneda),
     CONSTRAINT UQ_moneda_cod_iso4217 UNIQUE (cod_iso4217)
 );
@@ -116,7 +116,7 @@ CREATE TABLE torneo.parametro_reglamento (
     clave         VARCHAR(40) NOT NULL,
     vigente_desde DATE NOT NULL,
     valor         INT NOT NULL,
-    descripcion   NVARCHAR(200) NULL,
+    descripcion   VARCHAR(200) NULL,
     CONSTRAINT PK_parametro_reglamento PRIMARY KEY (clave, vigente_desde)
 );
 GO
@@ -124,7 +124,7 @@ GO
 -- juego.tipo_tarjeta: catálogo.
 CREATE TABLE juego.tipo_tarjeta (
     id_tipo     TINYINT IDENTITY(1,1) NOT NULL,
-    descripcion NVARCHAR(30) NOT NULL,
+    descripcion VARCHAR(30) NOT NULL,
     CONSTRAINT PK_tipo_tarjeta PRIMARY KEY (id_tipo),
     CONSTRAINT UQ_tipo_tarjeta_descripcion UNIQUE (descripcion)
 );
@@ -133,7 +133,7 @@ GO
 -- arbitraje.rol_arbitral: catálogo.
 CREATE TABLE arbitraje.rol_arbitral (
     id_rol      TINYINT IDENTITY(1,1) NOT NULL,
-    descripcion NVARCHAR(30) NOT NULL,
+    descripcion VARCHAR(30) NOT NULL,
     CONSTRAINT PK_rol_arbitral PRIMARY KEY (id_rol),
     CONSTRAINT UQ_rol_arbitral_descripcion UNIQUE (descripcion)
 );
@@ -142,8 +142,8 @@ GO
 -- soporte.importacion: auditoría de cada importación (fuente, archivo, filas leídas/ok/error, estado).
 CREATE TABLE soporte.importacion (
     id_importacion INT IDENTITY(1,1) NOT NULL,
-    fuente         NVARCHAR(100) NOT NULL,
-    archivo        NVARCHAR(260) NOT NULL,
+    fuente         VARCHAR(100) NOT NULL,
+    archivo        VARCHAR(260) NOT NULL,
     formato        VARCHAR(10) NOT NULL,
     fecha_inicio   DATETIME2(0) NOT NULL,
     fecha_fin      DATETIME2(0) NULL,
@@ -171,8 +171,8 @@ GO
 -- persona.club: clubes de origen de los jugadores.
 CREATE TABLE persona.club (
     id_club   INT IDENTITY(1,1) NOT NULL,
-    nombre    NVARCHAR(100) NOT NULL,
-    pais_club NVARCHAR(80) NOT NULL,
+    nombre    VARCHAR(100) NOT NULL,
+    pais_club VARCHAR(80) NOT NULL,
     CONSTRAINT PK_club PRIMARY KEY (id_club),
     CONSTRAINT UQ_club_nombre_pais_club UNIQUE (nombre, pais_club)
 );
@@ -181,7 +181,7 @@ GO
 -- persona.posicion: catálogo de posiciones de juego.
 CREATE TABLE persona.posicion (
     id_posicion TINYINT IDENTITY(1,1) NOT NULL,
-    descripcion NVARCHAR(40) NOT NULL,
+    descripcion VARCHAR(40) NOT NULL,
     CONSTRAINT PK_posicion PRIMARY KEY (id_posicion),
     CONSTRAINT UQ_posicion_descripcion UNIQUE (descripcion)
 );
@@ -190,7 +190,7 @@ GO
 -- persona.rol_cuerpo_tecnico: catálogo (director técnico, ayudante, etc.).
 CREATE TABLE persona.rol_cuerpo_tecnico (
     id_rol_ct   TINYINT IDENTITY(1,1) NOT NULL,
-    descripcion NVARCHAR(50) NOT NULL,
+    descripcion VARCHAR(50) NOT NULL,
     CONSTRAINT PK_rol_cuerpo_tecnico PRIMARY KEY (id_rol_ct),
     CONSTRAINT UQ_rol_cuerpo_tecnico_descripcion UNIQUE (descripcion)
 );
@@ -199,7 +199,7 @@ GO
 -- persona.categoria_arbitral: catálogo de categorías de árbitro (FIFA / confederación).
 CREATE TABLE persona.categoria_arbitral (
     id_categoria TINYINT IDENTITY(1,1) NOT NULL,
-    descripcion  NVARCHAR(50) NOT NULL,
+    descripcion  VARCHAR(50) NOT NULL,
     CONSTRAINT PK_categoria_arbitral PRIMARY KEY (id_categoria),
     CONSTRAINT UQ_categoria_arbitral_descripcion UNIQUE (descripcion)
 );
@@ -209,7 +209,7 @@ GO
 CREATE TABLE persona.idioma (
     id_idioma  SMALLINT IDENTITY(1,1) NOT NULL,
     cod_iso639 CHAR(3) NOT NULL,
-    nombre     NVARCHAR(60) NOT NULL,
+    nombre     VARCHAR(60) NOT NULL,
     CONSTRAINT PK_idioma PRIMARY KEY (id_idioma),
     CONSTRAINT UQ_idioma_cod_iso639 UNIQUE (cod_iso639),
     CONSTRAINT UQ_idioma_nombre UNIQUE (nombre)
@@ -227,7 +227,7 @@ GO
 -- torneo.fase: las 7 fases del torneo.
 CREATE TABLE torneo.fase (
     nro_fase       TINYINT NOT NULL,
-    nombre         NVARCHAR(40) NOT NULL,
+    nombre         VARCHAR(40) NOT NULL,
     es_eliminacion BIT NOT NULL,
     admite_alargue BIT NOT NULL,
     admite_penales BIT NOT NULL,
@@ -241,10 +241,10 @@ GO
 -- geo.pais: países. El código FIFA es opcional, por eso su unicidad es un índice filtrado.
 CREATE TABLE geo.pais (
     id_pais          SMALLINT IDENTITY(1,1) NOT NULL,
-    nombre           NVARCHAR(80) NOT NULL,
+    nombre           VARCHAR(80) NOT NULL,
     cod_iso3         CHAR(3) NOT NULL,
     cod_fifa         CHAR(3) NULL,
-    gentilicio       NVARCHAR(60) NULL,
+    gentilicio       VARCHAR(60) NULL,
     id_confederacion TINYINT NOT NULL,
     CONSTRAINT PK_pais PRIMARY KEY (id_pais),
     CONSTRAINT UQ_pais_nombre UNIQUE (nombre),
@@ -283,7 +283,7 @@ GO
 -- geo.ciudad: ciudades con población y huso horario (el huso de un país es el de su ciudad más poblada).
 CREATE TABLE geo.ciudad (
     id_ciudad INT IDENTITY(1,1) NOT NULL,
-    nombre    NVARCHAR(100) NOT NULL,
+    nombre    VARCHAR(100) NOT NULL,
     poblacion INT NOT NULL,
     id_pais   SMALLINT NOT NULL,
     id_huso   SMALLINT NOT NULL,
@@ -310,9 +310,9 @@ CREATE TABLE persona.persona (
     id_persona   INT IDENTITY(1,1) NOT NULL,
     tipo_persona CHAR(1) NOT NULL,
     tipo_doc     VARCHAR(5) NOT NULL,
-    nro_doc      NVARCHAR(30) NOT NULL,
-    nombre       NVARCHAR(80) NOT NULL,
-    apellido     NVARCHAR(80) NOT NULL,
+    nro_doc      VARCHAR(30) NOT NULL,
+    nombre       VARCHAR(80) NOT NULL,
+    apellido     VARCHAR(80) NOT NULL,
     fecha_nac    DATE NOT NULL,
     id_pais      SMALLINT NOT NULL,
     CONSTRAINT PK_persona PRIMARY KEY (id_persona),
@@ -348,9 +348,9 @@ GO
 -- publicidad.anunciante: anunciantes, con su país de origen y su identificación fiscal.
 CREATE TABLE publicidad.anunciante (
     id_anunciante         INT IDENTITY(1,1) NOT NULL,
-    razon_social          NVARCHAR(150) NOT NULL,
-    identificacion_fiscal NVARCHAR(30) NOT NULL,
-    contacto              NVARCHAR(150) NULL,
+    razon_social          VARCHAR(150) NOT NULL,
+    identificacion_fiscal VARCHAR(30) NOT NULL,
+    contacto              VARCHAR(150) NULL,
     id_pais               SMALLINT NOT NULL,
     CONSTRAINT PK_anunciante PRIMARY KEY (id_anunciante),
     CONSTRAINT UQ_anunciante_identificacion_fiscal UNIQUE (identificacion_fiscal)
@@ -361,9 +361,9 @@ GO
 -- torneo.sede: estadios, con capacidad y coordenadas.
 CREATE TABLE torneo.sede (
     id_sede        INT IDENTITY(1,1) NOT NULL,
-    nombre_estadio NVARCHAR(100) NOT NULL,
+    nombre_estadio VARCHAR(100) NOT NULL,
     capacidad      INT NOT NULL,
-    direccion      NVARCHAR(200) NULL,
+    direccion      VARCHAR(200) NULL,
     latitud        DECIMAL(9,6) NULL,
     longitud       DECIMAL(9,6) NULL,
     id_ciudad      INT NOT NULL,
@@ -423,7 +423,7 @@ GO
 -- publicidad.campania: campañas publicitarias de cada anunciante, con vigencia y presupuesto.
 CREATE TABLE publicidad.campania (
     id_campania   INT IDENTITY(1,1) NOT NULL,
-    nombre        NVARCHAR(100) NOT NULL,
+    nombre        VARCHAR(100) NOT NULL,
     id_anunciante INT NOT NULL,
     fecha_desde   DATE NOT NULL,
     fecha_hasta   DATE NOT NULL,
@@ -449,9 +449,9 @@ CREATE TABLE soporte.importacion_error (
     id_importacion INT NOT NULL,
     nro_error      INT NOT NULL,
     nro_fila       INT NOT NULL,
-    columna        NVARCHAR(60) NULL,
-    valor          NVARCHAR(500) NULL,
-    mensaje        NVARCHAR(500) NOT NULL,
+    columna        VARCHAR(60) NULL,
+    valor          VARCHAR(500) NULL,
+    mensaje        VARCHAR(500) NOT NULL,
     CONSTRAINT PK_importacion_error PRIMARY KEY (id_importacion, nro_error)
 );
 GO
@@ -462,7 +462,7 @@ CREATE TABLE publicidad.espacio_publicitario (
     id_sede     INT NOT NULL,
     nro_espacio TINYINT NOT NULL,
     tipo        VARCHAR(20) NULL,
-    descripcion NVARCHAR(100) NULL,
+    descripcion VARCHAR(100) NULL,
     CONSTRAINT PK_espacio_publicitario PRIMARY KEY (id_sede, nro_espacio),
     CONSTRAINT CK_espacio_publicitario_nro_espacio CHECK (nro_espacio BETWEEN 1 AND 4)
 );
@@ -502,7 +502,7 @@ GO
 -- publicidad.pieza_publicitaria: piezas de contenido de cada campaña (por idioma y mercado destino).
 CREATE TABLE publicidad.pieza_publicitaria (
     id_pieza        INT IDENTITY(1,1) NOT NULL,
-    descripcion     NVARCHAR(200) NOT NULL,
+    descripcion     VARCHAR(200) NOT NULL,
     duracion_seg    SMALLINT NOT NULL,
     formato         VARCHAR(20) NOT NULL,
     id_campania     INT NOT NULL,
@@ -536,7 +536,7 @@ CREATE TABLE torneo.cambio_convocatoria (
     id_seleccion INT NOT NULL,
     id_jugador   INT NOT NULL,
     tipo         VARCHAR(4) NOT NULL,
-    motivo       NVARCHAR(200) NULL,
+    motivo       VARCHAR(200) NULL,
     fecha        DATE NOT NULL CONSTRAINT DF_cambio_convocatoria_fecha DEFAULT CAST(SYSUTCDATETIME() AS DATE),
     CONSTRAINT PK_cambio_convocatoria PRIMARY KEY (id_cambio),
     CONSTRAINT CK_cambio_convocatoria_tipo CHECK (tipo IN ('ALTA','BAJA'))
@@ -626,7 +626,7 @@ CREATE TABLE juego.tarjeta (
     id_seleccion INT NOT NULL,
     nro_tarjeta  TINYINT NOT NULL,
     minuto       SMALLINT NOT NULL,
-    motivo       NVARCHAR(100) NULL,
+    motivo       VARCHAR(100) NULL,
     id_tipo      TINYINT NOT NULL,
     id_arbitro   INT NOT NULL,
     id_jugador   INT NOT NULL,
@@ -640,8 +640,8 @@ CREATE TABLE arbitraje.informe_post_partido (
     id_informe       INT IDENTITY(1,1) NOT NULL,
     fecha_informe    DATETIME2(0) NOT NULL,
     tipo             VARCHAR(30) NOT NULL,
-    descripcion      NVARCHAR(1000) NOT NULL,
-    sancion_aplicada NVARCHAR(200) NULL,
+    descripcion      VARCHAR(1000) NOT NULL,
+    sancion_aplicada VARCHAR(200) NULL,
     CONSTRAINT PK_informe_post_partido PRIMARY KEY (id_informe)
 );
 GO
@@ -675,7 +675,7 @@ CREATE TABLE juego.suspension (
     cant_partidos TINYINT NOT NULL,
     estado        VARCHAR(10) NOT NULL CONSTRAINT DF_suspension_estado DEFAULT 'PENDIENTE',
     fecha_alta    DATETIME2(0) NOT NULL CONSTRAINT DF_suspension_fecha_alta DEFAULT SYSUTCDATETIME(),
-    motivo        NVARCHAR(200) NULL,
+    motivo        VARCHAR(200) NULL,
     CONSTRAINT PK_suspension PRIMARY KEY (id_suspension),
     CONSTRAINT CK_suspension_cant_partidos CHECK (cant_partidos >= 1),
     CONSTRAINT CK_suspension_estado CHECK (estado IN ('PENDIENTE','CUMPLIDA','ANULADA'))

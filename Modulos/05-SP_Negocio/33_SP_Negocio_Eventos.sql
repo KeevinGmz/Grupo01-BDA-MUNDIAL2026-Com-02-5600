@@ -28,7 +28,7 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_codigo INT = 50001;
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
@@ -47,7 +47,7 @@ BEGIN
 
     -- 1) Validaciones acumuladas antes de abrir la transaccion
     IF @v_estado IS NULL
-        SET @v_errores += N'partido inexistente; ';
+        SET @v_errores += 'partido inexistente; ';
 
     IF @v_estado IS NOT NULL
        AND @v_estado <> 'EN_CURSO'
@@ -59,7 +59,7 @@ BEGIN
        )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el partido debe estar EN_CURSO o tener alineaciones cargadas; ';
+        SET @v_errores += 'el partido debe estar EN_CURSO o tener alineaciones cargadas; ';
     END
 
     IF NOT EXISTS
@@ -69,38 +69,38 @@ BEGIN
         WHERE ep.id_partido = @id_partido
           AND ep.id_seleccion = @id_seleccion
     )
-        SET @v_errores += N'la seleccion no participa del partido; ';
+        SET @v_errores += 'la seleccion no participa del partido; ';
 
     IF @id_jugador_asistente IS NOT NULL
        AND @id_jugador_autor = @id_jugador_asistente
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'autor y asistente deben ser distintos; ';
+        SET @v_errores += 'autor y asistente deben ser distintos; ';
     END
 
     IF @en_contra IS NULL
-        SET @v_errores += N'en_contra obligatorio; ';
+        SET @v_errores += 'en_contra obligatorio; ';
 
     IF @en_contra = 1 AND @id_jugador_asistente IS NOT NULL
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'un gol en contra no admite asistente; ';
+        SET @v_errores += 'un gol en contra no admite asistente; ';
     END
 
     IF @minuto IS NULL OR @minuto < 0 OR @minuto > 130
-        SET @v_errores += N'minuto obligatorio y debe estar entre 0 y 130; ';
+        SET @v_errores += 'minuto obligatorio y debe estar entre 0 y 130; ';
 
     IF @periodo IS NULL OR @periodo NOT IN ('PT', 'ST', 'ADIC', 'ALARG', 'PEN')
-        SET @v_errores += N'periodo invalido; ';
+        SET @v_errores += 'periodo invalido; ';
 
     IF @tipo_gol IS NULL
        OR @tipo_gol NOT IN ('JUGADA', 'PENAL', 'TIRO LIBRE', 'CABEZA', 'CORNER', 'REBOTE', 'EN CONTRA')
-        SET @v_errores += N'tipo_gol invalido; ';
+        SET @v_errores += 'tipo_gol invalido; ';
 
     IF @periodo = 'PEN' AND ISNULL(@v_admite_penales, 0) = 0
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'la fase no admite definicion por penales; ';
+        SET @v_errores += 'la fase no admite definicion por penales; ';
     END
 
     IF @minuto IS NOT NULL
@@ -112,7 +112,7 @@ BEGIN
        )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el autor no esta en cancha para su seleccion al minuto indicado; ';
+        SET @v_errores += 'el autor no esta en cancha para su seleccion al minuto indicado; ';
     END
 
     IF @id_jugador_asistente IS NOT NULL
@@ -125,12 +125,12 @@ BEGIN
        )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el asistente no esta en cancha para la seleccion al minuto indicado; ';
+        SET @v_errores += 'el asistente no esta en cancha para la seleccion al minuto indicado; ';
     END
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_errores = LEFT(CONCAT(N'juego.usp_Negocio_RegistrarGol: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT('juego.usp_Negocio_RegistrarGol: ', @v_errores), 2048);
         THROW @v_codigo, @v_errores, 1;
     END
 
@@ -202,7 +202,7 @@ CREATE OR ALTER PROCEDURE juego.usp_Negocio_RegistrarTarjeta
     @id_arbitro INT,
     @minuto SMALLINT,
     @id_tipo TINYINT,
-    @motivo NVARCHAR(100) = NULL,
+    @motivo VARCHAR(100) = NULL,
     @nro_tarjeta TINYINT OUTPUT,
     @id_suspension INT OUTPUT
 AS
@@ -210,7 +210,7 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_codigo INT = 50001;
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
@@ -255,12 +255,12 @@ BEGIN
 
     -- 1) Validaciones acumuladas antes de abrir la transaccion
     IF @v_estado IS NULL
-        SET @v_errores += N'partido inexistente; ';
+        SET @v_errores += 'partido inexistente; ';
 
     IF @v_estado = 'FINALIZADO'
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'no se pueden registrar tarjetas en un partido FINALIZADO; ';
+        SET @v_errores += 'no se pueden registrar tarjetas en un partido FINALIZADO; ';
     END
 
     IF NOT EXISTS
@@ -271,7 +271,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el partido no tiene alineaciones cargadas; ';
+        SET @v_errores += 'el partido no tiene alineaciones cargadas; ';
     END
 
     IF NOT EXISTS
@@ -281,7 +281,7 @@ BEGIN
         WHERE ep.id_partido = @id_partido
           AND ep.id_seleccion = @id_seleccion
     )
-        SET @v_errores += N'la seleccion no participa del partido; ';
+        SET @v_errores += 'la seleccion no participa del partido; ';
 
     IF NOT EXISTS
     (
@@ -291,10 +291,10 @@ BEGIN
           AND a.id_seleccion = @id_seleccion
           AND a.id_jugador = @id_jugador
     )
-        SET @v_errores += N'el jugador no integra la alineacion de la seleccion; ';
+        SET @v_errores += 'el jugador no integra la alineacion de la seleccion; ';
 
     IF @minuto IS NULL OR @minuto < 0 OR @minuto > 130
-        SET @v_errores += N'minuto obligatorio y debe estar entre 0 y 130; ';
+        SET @v_errores += 'minuto obligatorio y debe estar entre 0 y 130; ';
 
     IF @minuto IS NOT NULL
        AND NOT EXISTS
@@ -305,7 +305,7 @@ BEGIN
        )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el jugador no esta en cancha al minuto indicado; ';
+        SET @v_errores += 'el jugador no esta en cancha al minuto indicado; ';
     END
 
     IF NOT EXISTS
@@ -318,11 +318,11 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el arbitro no esta designado en el partido; ';
+        SET @v_errores += 'el arbitro no esta designado en el partido; ';
     END
 
     IF @v_desc_tipo IS NULL
-        SET @v_errores += N'tipo de tarjeta inexistente; ';
+        SET @v_errores += 'tipo de tarjeta inexistente; ';
 
     IF EXISTS
     (
@@ -337,7 +337,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'el jugador ya fue expulsado en el partido; ';
+        SET @v_errores += 'el jugador ya fue expulsado en el partido; ';
     END
 
     IF @v_desc_tipo = 'AMARILLA'
@@ -360,12 +360,12 @@ BEGIN
     IF @v_desc_tipo = 'AMARILLA' AND @v_id_tipo_roja_doble IS NULL
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += N'no existe el tipo ROJA_DOBLE_AMARILLA; ';
+        SET @v_errores += 'no existe el tipo ROJA_DOBLE_AMARILLA; ';
     END
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_errores = LEFT(CONCAT(N'juego.usp_Negocio_RegistrarTarjeta: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT('juego.usp_Negocio_RegistrarTarjeta: ', @v_errores), 2048);
         THROW @v_codigo, @v_errores, 1;
     END
 
@@ -421,7 +421,7 @@ BEGIN
               AND cs.vigente = 1;
 
             IF @v_id_criterio IS NULL
-                THROW 50003, N'juego.usp_Negocio_RegistrarTarjeta: no existe criterio vigente para el tipo de roja aplicado', 1;
+                THROW 50003, 'juego.usp_Negocio_RegistrarTarjeta: no existe criterio vigente para el tipo de roja aplicado', 1;
 
             INSERT INTO juego.suspension
             (
@@ -439,7 +439,7 @@ BEGIN
                 @v_cant_partidos,
                 'PENDIENTE',
                 @v_fecha_partido,
-                CONCAT(N'Suspension por ', @v_desc_tipo_aplicado)
+                CONCAT('Suspension por ', @v_desc_tipo_aplicado)
             );
 
             SET @id_suspension = CONVERT(INT, SCOPE_IDENTITY());
@@ -455,7 +455,7 @@ BEGIN
               AND cs.vigente = 1;
 
             IF @v_id_criterio IS NULL
-                THROW 50003, N'juego.usp_Negocio_RegistrarTarjeta: no existe criterio vigente para AMARILLA', 1;
+                THROW 50003, 'juego.usp_Negocio_RegistrarTarjeta: no existe criterio vigente para AMARILLA', 1;
 
             SET @v_fase_desde = CASE WHEN @v_nro_fase = 1 THEN 1 WHEN @v_nro_fase BETWEEN 2 AND 4 THEN 2 ELSE 5 END;
             SET @v_fase_hasta = CASE WHEN @v_nro_fase = 1 THEN 1 WHEN @v_nro_fase BETWEEN 2 AND 4 THEN 4 ELSE 7 END;
@@ -498,7 +498,7 @@ BEGIN
                     @v_cant_partidos,
                     'PENDIENTE',
                     @v_fecha_partido,
-                    N'Suspension por acumulacion de amarillas'
+                    'Suspension por acumulacion de amarillas'
                 );
 
                 SET @id_suspension = CONVERT(INT, SCOPE_IDENTITY());

@@ -13,21 +13,21 @@ GO
 SET NOCOUNT ON;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBAS DE ERROR: 75_Test_ERR_Publicidad';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBAS DE ERROR: 75_Test_ERR_Publicidad';
+PRINT '=====================================================================';
 GO
 
 /* =====================================================================
    CASO 1: partido con cuatro exhibiciones previas y @reemplazar = 0
 ===================================================================== */
-PRINT N'';
-PRINT N'-> Test 1: reasignar publicidad sin reemplazar un partido ya completo';
+PRINT '';
+PRINT '-> Test 1: reasignar publicidad sin reemplazar un partido ya completo';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_sede INT;
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
 DECLARE @v_filas_antes INT;
 DECLARE @v_filas_despues INT;
 DECLARE @v_reemplazar_preparacion BIT = 1;
@@ -45,9 +45,9 @@ DECLARE @v_exhibiciones_preparadas TABLE
 -- 1. Validar el procedimiento y obtener un partido apto
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID(N'publicidad.usp_Negocio_AsignarPublicidad', N'P') IS NULL
+IF OBJECT_ID('publicidad.usp_Negocio_AsignarPublicidad', 'P') IS NULL
 BEGIN
-    ;THROW 50001, N'75_Test_ERR_Publicidad: no existe publicidad.usp_Negocio_AsignarPublicidad',1;
+    ;THROW 50001, '75_Test_ERR_Publicidad: no existe publicidad.usp_Negocio_AsignarPublicidad',1;
 END;
 
 
@@ -68,7 +68,7 @@ ORDER BY p.id_partido;
 
 IF @v_id_partido IS NULL
 BEGIN
-    ;THROW 50001,N'75_Test_ERR_Publicidad: se requiere un partido PROGRAMADO cuya sede tenga cuatro espacios publicitarios', 1;
+    ;THROW 50001,'75_Test_ERR_Publicidad: se requiere un partido PROGRAMADO cuya sede tenga cuatro espacios publicitarios', 1;
 END;
 
 BEGIN TRY
@@ -88,7 +88,7 @@ BEGIN TRY
 
     IF @v_filas_antes <> 4
     BEGIN
-        ;THROW 50001,N'75_Test_ERR_Publicidad: la preparacion no genero exactamente cuatro exhibiciones', 1;
+        ;THROW 50001,'75_Test_ERR_Publicidad: la preparacion no genero exactamente cuatro exhibiciones', 1;
     END;
 
     INSERT INTO @v_exhibiciones_preparadas
@@ -101,7 +101,7 @@ BEGIN TRY
     FROM publicidad.exhibicion AS e
     WHERE e.id_partido = @v_id_partido;
 
-    PRINT N'--- EVIDENCIA ANTES DEL INTENTO INVALIDO ---';
+    PRINT '--- EVIDENCIA ANTES DEL INTENTO INVALIDO ---';
 
     SELECT
         @v_id_partido AS id_partido,
@@ -125,7 +125,7 @@ BEGIN TRY
 
         SET @v_error_numero = 0;
         SET @v_error_mensaje =
-            N'El SP permitio reasignar publicidad sin habilitar el reemplazo';
+            'El SP permitio reasignar publicidad sin habilitar el reemplazo';
     END TRY
     BEGIN CATCH
         SET @v_error_numero = ERROR_NUMBER();
@@ -140,16 +140,16 @@ BEGIN TRY
     -- 4. Evaluar antes del rollback
     ---------------------------------------------------------------------------
 
-    PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
+    PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
 
     IF @v_error_numero IN (50001, 50003)
        AND
        (
-           @v_error_mensaje LIKE N'%exhibicion%previa%'
-           OR @v_error_mensaje LIKE N'%publicidad%asignada%'
-           OR @v_error_mensaje LIKE N'%reemplaz%'
-           OR @v_error_mensaje LIKE N'%cuatro%exhibicion%'
-           OR @v_error_mensaje LIKE N'%4%exhibicion%'
+           @v_error_mensaje LIKE '%exhibicion%previa%'
+           OR @v_error_mensaje LIKE '%publicidad%asignada%'
+           OR @v_error_mensaje LIKE '%reemplaz%'
+           OR @v_error_mensaje LIKE '%cuatro%exhibicion%'
+           OR @v_error_mensaje LIKE '%4%exhibicion%'
        )
        AND @v_filas_despues = 4
        AND NOT EXISTS
@@ -168,15 +168,15 @@ BEGIN TRY
                      )
            )
     BEGIN
-        PRINT N'PASS Test 1: se rechazo la reasignacion y se conservaron las cuatro exhibiciones.';
+        PRINT 'PASS Test 1: se rechazo la reasignacion y se conservaron las cuatro exhibiciones.';
     END
     ELSE
     BEGIN
-        PRINT N'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
+        PRINT 'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
     END;
 
     ROLLBACK TRANSACTION;
-    PRINT N'ROLLBACK ejecutado: la base queda sin cambios de la prueba.';
+    PRINT 'ROLLBACK ejecutado: la base queda sin cambios de la prueba.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
@@ -184,9 +184,9 @@ BEGIN CATCH
 
     PRINT CONCAT
     (
-        N'FAIL de preparacion. Error ',
+        'FAIL de preparacion. Error ',
         ERROR_NUMBER(),
-        N': ',
+        ': ',
         ERROR_MESSAGE()
     );
 
@@ -194,8 +194,8 @@ BEGIN CATCH
 END CATCH;
 GO
 
-PRINT N'';
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBAS DE ERROR: 75_Test_ERR_Publicidad';
-PRINT N'=====================================================================';
+PRINT '';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBAS DE ERROR: 75_Test_ERR_Publicidad';
+PRINT '=====================================================================';
 GO

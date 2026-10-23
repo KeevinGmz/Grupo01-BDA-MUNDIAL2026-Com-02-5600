@@ -13,7 +13,7 @@ GO
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-PRINT N'=== 64_Test_OK_Partidos: registrar y cerrar partido ===';
+PRINT '=== 64_Test_OK_Partidos: registrar y cerrar partido ===';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_sede INT;
@@ -36,10 +36,10 @@ DECLARE @v_equipos_antes INT;
 -- 1. Validaciones previas y obtencion de datos reales
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID(N'torneo.usp_Negocio_RegistrarPartido', N'P') IS NULL
-   OR OBJECT_ID(N'torneo.usp_Negocio_CerrarPartido', N'P') IS NULL
+IF OBJECT_ID('torneo.usp_Negocio_RegistrarPartido', 'P') IS NULL
+   OR OBJECT_ID('torneo.usp_Negocio_CerrarPartido', 'P') IS NULL
 BEGIN
-    ;THROW 50001,N'64_Test_OK_Partidos: faltan los procedimientos de negocio requeridos',1;
+    ;THROW 50001,'64_Test_OK_Partidos: faltan los procedimientos de negocio requeridos',1;
 END;
 
 -- Se elige una fase no eliminatoria para no exigir un ganador al cerrar.
@@ -104,7 +104,7 @@ IF @v_nro_fase IS NULL
    OR @v_id_rol_principal IS NULL
    OR @v_id_arbitro IS NULL
 BEGIN
-    ;THROW 50001,N'64_Test_OK_Partidos: faltan fase de grupos, sede, selecciones con convocados, posiciones o arbitro principal',1;
+    ;THROW 50001,'64_Test_OK_Partidos: faltan fase de grupos, sede, selecciones con convocados, posiciones o arbitro principal',1;
 END;
 
 -- Se busca un horario libre para la sede y las selecciones.
@@ -158,7 +158,7 @@ END;
 
 IF @v_horario_ocupado = 1
 BEGIN
-    ;THROW 50001, N'64_Test_OK_Partidos: no se encontro un horario libre luego de 30 intentos', 1;
+    ;THROW 50001, '64_Test_OK_Partidos: no se encontro un horario libre luego de 30 intentos', 1;
 END;
 
 BEGIN TRY
@@ -167,7 +167,7 @@ BEGIN TRY
     SELECT @v_partidos_antes = COUNT(*) FROM torneo.partido;
     SELECT @v_equipos_antes = COUNT(*) FROM torneo.equipo_en_partido;
 
-    PRINT N'--- EVIDENCIA ANTES DE REGISTRAR PARTIDO ---';
+    PRINT '--- EVIDENCIA ANTES DE REGISTRAR PARTIDO ---';
     SELECT @v_partidos_antes AS partidos_antes,
            @v_equipos_antes AS equipos_en_partido_antes;
 
@@ -203,11 +203,11 @@ BEGIN TRY
                  WHERE ep.id_partido = @v_id_partido
                    AND ep.id_seleccion IN (@v_id_local, @v_id_visitante)
              )
-            THEN N'PASS registrar partido'
-        ELSE N'FAIL registrar partido'
+            THEN 'PASS registrar partido'
+        ELSE 'FAIL registrar partido'
     END AS resultado;
 
-    PRINT CONCAT(N'--- EVIDENCIA DESPUES DE REGISTRAR. ID: ', @v_id_partido, N' ---');
+    PRINT CONCAT('--- EVIDENCIA DESPUES DE REGISTRAR. ID: ', @v_id_partido, ' ---');
     SELECT p.* FROM torneo.partido AS p WHERE p.id_partido = @v_id_partido;
     SELECT ep.* FROM torneo.equipo_en_partido AS ep WHERE ep.id_partido = @v_id_partido;
 
@@ -263,11 +263,11 @@ BEGIN TRY
                    AND p.asistencia_publico = 45000
                    AND p.definido_por_penales = 0
              )
-            THEN N'PASS cerrar partido'
-        ELSE N'FAIL cerrar partido'
+            THEN 'PASS cerrar partido'
+        ELSE 'FAIL cerrar partido'
     END AS resultado;
 
-    PRINT N'--- EVIDENCIA DESPUES DE CERRAR PARTIDO ---';
+    PRINT '--- EVIDENCIA DESPUES DE CERRAR PARTIDO ---';
     SELECT p.id_partido, p.estado, p.asistencia_publico, p.definido_por_penales
     FROM torneo.partido AS p
     WHERE p.id_partido = @v_id_partido;
@@ -277,13 +277,13 @@ BEGIN TRY
     ---------------------------------------------------------------------------
 
     ROLLBACK TRANSACTION;
-    PRINT N'PASS general: prueba finalizada y transaccion revertida.';
+    PRINT 'PASS general: prueba finalizada y transaccion revertida.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
         ROLLBACK TRANSACTION;
 
-    PRINT CONCAT(N'FAIL general. Error ', ERROR_NUMBER(), N': ', ERROR_MESSAGE());
+    PRINT CONCAT('FAIL general. Error ', ERROR_NUMBER(), ': ', ERROR_MESSAGE());
     ;THROW;
 END CATCH;
 GO

@@ -5,7 +5,7 @@ Comisión: 02-5600
 Grupo   : 01
 Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Caceres Lautaro Agustin
 Fecha   : 2026-10-03
-Objetivo: <una línea sobre lo que hace este script>
+Objetivo: Carga inicial de geografia.
 ===================================================================== */
 USE Mundial2026;
 GO
@@ -28,7 +28,7 @@ BEGIN
     SET @aux = CONCAT( 'Sede Generica', @s);
     EXEC torneo.usp_Sede_Insertar 
         @nombre_estadio = @aux,
-        @capacidad = s,
+        @capacidad = @s,
         @direccion = N'xxx 1234',
         @id_ciudad = 1, -- Asumiendo ciudad pre-cargada
         @id_sede = @id_sede_out OUTPUT;

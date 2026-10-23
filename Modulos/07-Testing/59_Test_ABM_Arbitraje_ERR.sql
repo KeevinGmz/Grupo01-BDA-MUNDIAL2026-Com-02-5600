@@ -13,16 +13,16 @@ GO
 SET NOCOUNT ON;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBAS DE ERROR: 59_Test_ABM_Arbitraje_ERR';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBAS DE ERROR: 59_Test_ABM_Arbitraje_ERR';
+PRINT '=====================================================================';
 GO
 
 /* =====================================================================
    CASO 1: mismo arbitro, mismo partido, dos roles diferentes
 ===================================================================== */
-PRINT N'';
-PRINT N'-> Test 1: asignar al mismo arbitro dos roles en el mismo partido';
+PRINT '';
+PRINT '-> Test 1: asignar al mismo arbitro dos roles en el mismo partido';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_arbitro INT;
@@ -30,7 +30,7 @@ DECLARE @v_id_rol_1 TINYINT;
 DECLARE @v_id_rol_2 TINYINT;
 DECLARE @v_fecha_designacion DATETIME2(0) = SYSUTCDATETIME();
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
 DECLARE @v_designaciones_antes INT;
 DECLARE @v_designaciones_despues INT;
 
@@ -38,9 +38,9 @@ DECLARE @v_designaciones_despues INT;
 -- 1. Validaciones previas
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID(N'arbitraje.usp_DesignacionArbitral_Insertar', N'P') IS NULL
+IF OBJECT_ID('arbitraje.usp_DesignacionArbitral_Insertar', 'P') IS NULL
 BEGIN
-    ;THROW 50001,N'59_Test_ABM_Arbitraje_ERR: no existe arbitraje.usp_DesignacionArbitral_Insertar',1;
+    ;THROW 50001,'59_Test_ABM_Arbitraje_ERR: no existe arbitraje.usp_DesignacionArbitral_Insertar',1;
 END;
 
 -- Se busca una combinacion completamente valida para la preparacion:
@@ -83,7 +83,7 @@ IF @v_id_partido IS NULL
    OR @v_id_rol_1 IS NULL
    OR @v_id_rol_2 IS NULL
 BEGIN
-    ;THROW 50001,N'59_Test_ABM_Arbitraje_ERR: se requiere un partido, un arbitro y dos roles libres para ejecutar la prueba',1;
+    ;THROW 50001,'59_Test_ABM_Arbitraje_ERR: se requiere un partido, un arbitro y dos roles libres para ejecutar la prueba',1;
 END;
 
 SELECT @v_designaciones_antes = COUNT(*)
@@ -114,7 +114,7 @@ BEGIN TRY
           AND d.id_arbitro = @v_id_arbitro
     )
     BEGIN
-        ;THROW 50003,N'59_Test_ABM_Arbitraje_ERR: no se pudo preparar la primera designacion valida', 1;
+        ;THROW 50003,'59_Test_ABM_Arbitraje_ERR: no se pudo preparar la primera designacion valida', 1;
     END;
 
     ---------------------------------------------------------------------------
@@ -132,7 +132,7 @@ BEGIN TRY
 
         SET @v_error_numero = 0;
         SET @v_error_mensaje =
-            N'El SP permitio asignar al mismo arbitro dos veces en el partido';
+            'El SP permitio asignar al mismo arbitro dos veces en el partido';
     END TRY
     BEGIN CATCH
         SET @v_error_numero = ERROR_NUMBER();
@@ -150,9 +150,9 @@ BEGIN TRY
 
     PRINT CONCAT
     (
-        N'Error capturado ',
+        'Error capturado ',
         @v_error_numero,
-        N': ',
+        ': ',
         @v_error_mensaje
     );
 
@@ -169,16 +169,16 @@ BEGIN TRY
        AND @v_designaciones_despues = 1
        AND
        (
-           @v_error_mensaje LIKE N'%arbitro%ya%design%'
-           OR @v_error_mensaje LIKE N'%arbitro%partido%registrado%'
-           OR @v_error_mensaje LIKE N'%designacion%arbitro%exist%'
+           @v_error_mensaje LIKE '%arbitro%ya%design%'
+           OR @v_error_mensaje LIKE '%arbitro%partido%registrado%'
+           OR @v_error_mensaje LIKE '%designacion%arbitro%exist%'
        )
     BEGIN
-        PRINT N'PASS Test 1: se rechazo la segunda designacion del mismo arbitro.';
+        PRINT 'PASS Test 1: se rechazo la segunda designacion del mismo arbitro.';
     END
     ELSE
     BEGIN
-        PRINT N'FAIL Test 1: numero, mensaje o cantidad de filas distintos de lo esperado.';
+        PRINT 'FAIL Test 1: numero, mensaje o cantidad de filas distintos de lo esperado.';
     END;
 
     ROLLBACK TRANSACTION;
@@ -189,9 +189,9 @@ BEGIN CATCH
 
     PRINT CONCAT
     (
-        N'FAIL de preparacion. Error ',
+        'FAIL de preparacion. Error ',
         ERROR_NUMBER(),
-        N': ',
+        ': ',
         ERROR_MESSAGE()
     );
 
@@ -199,9 +199,9 @@ BEGIN CATCH
 END CATCH;
 GO
 
-PRINT N'';
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBAS DE ERROR: 59_Test_ABM_Arbitraje_ERR';
-PRINT N'ROLLBACK EJECUTADO';
-PRINT N'=====================================================================';
+PRINT '';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBAS DE ERROR: 59_Test_ABM_Arbitraje_ERR';
+PRINT 'ROLLBACK EJECUTADO';
+PRINT '=====================================================================';
 GO

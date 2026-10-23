@@ -15,8 +15,8 @@ GO
 -- ============================================================================
 
 CREATE OR ALTER PROCEDURE soporte.usp_Importacion_Insertar
-    @fuente NVARCHAR(100),
-    @archivo NVARCHAR(260),
+    @fuente VARCHAR(100),
+    @archivo VARCHAR(260),
     @formato VARCHAR(10),
     @fecha_inicio DATETIME2(0),
     @fecha_fin DATETIME2(0) = NULL,
@@ -28,24 +28,24 @@ CREATE OR ALTER PROCEDURE soporte.usp_Importacion_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
         -- 1) Validaciones: todas antes de abrir la transaccion; se acumulan
-        IF NULLIF(LTRIM(RTRIM(@fuente)), N'') IS NULL SET @v_errores += N'fuente obligatoria; ';
-        IF NULLIF(LTRIM(RTRIM(@archivo)), N'') IS NULL SET @v_errores += N'archivo obligatorio; ';
-        IF @formato IS NULL OR @formato NOT IN ('CSV','JSON','XML') SET @v_errores += N'formato invalido (debe ser CSV, JSON o XML); ';
-        IF @fecha_inicio IS NULL SET @v_errores += N'fecha_inicio obligatoria; ';
-        IF @fecha_fin IS NOT NULL AND @fecha_inicio IS NOT NULL AND @fecha_fin < @fecha_inicio SET @v_errores += N'fecha_fin no puede ser anterior a fecha_inicio; ';
-        IF @filas_leidas IS NULL OR @filas_leidas < 0 SET @v_errores += N'filas_leidas obligatoria y no negativa; ';
-        IF @filas_ok IS NULL OR @filas_ok < 0 SET @v_errores += N'filas_ok obligatoria y no negativa; ';
-        IF @filas_error IS NULL OR @filas_error < 0 SET @v_errores += N'filas_error obligatoria y no negativa; ';
-        IF @filas_leidas IS NOT NULL AND @filas_ok IS NOT NULL AND @filas_error IS NOT NULL AND @filas_ok + @filas_error > @filas_leidas SET @v_errores += N'filas_ok mas filas_error no puede superar filas_leidas; ';
-        IF @estado IS NULL OR @estado NOT IN ('EN_CURSO','OK','CON_ERROR') SET @v_errores += N'estado invalido; ';
-        IF @v_errores <> N''
+        IF NULLIF(LTRIM(RTRIM(@fuente)), '') IS NULL SET @v_errores += 'fuente obligatoria; ';
+        IF NULLIF(LTRIM(RTRIM(@archivo)), '') IS NULL SET @v_errores += 'archivo obligatorio; ';
+        IF @formato IS NULL OR @formato NOT IN ('CSV','JSO','XML') SET @v_errores += 'formato invalido (debe ser CSV, JSON o XML); ';
+        IF @fecha_inicio IS NULL SET @v_errores += 'fecha_inicio obligatoria; ';
+        IF @fecha_fin IS NOT NULL AND @fecha_inicio IS NOT NULL AND @fecha_fin < @fecha_inicio SET @v_errores += 'fecha_fin no puede ser anterior a fecha_inicio; ';
+        IF @filas_leidas IS NULL OR @filas_leidas < 0 SET @v_errores += 'filas_leidas obligatoria y no negativa; ';
+        IF @filas_ok IS NULL OR @filas_ok < 0 SET @v_errores += 'filas_ok obligatoria y no negativa; ';
+        IF @filas_error IS NULL OR @filas_error < 0 SET @v_errores += 'filas_error obligatoria y no negativa; ';
+        IF @filas_leidas IS NOT NULL AND @filas_ok IS NOT NULL AND @filas_error IS NOT NULL AND @filas_ok + @filas_error > @filas_leidas SET @v_errores += 'filas_ok mas filas_error no puede superar filas_leidas; ';
+        IF @estado IS NULL OR @estado NOT IN ('EN_CURSO','OK','CON_ERROR') SET @v_errores += 'estado invalido; ';
+        IF @v_errores <> ''
         BEGIN
-            SET @v_errores = LEFT(CONCAT(N'soporte.usp_Importacion_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT('soporte.usp_Importacion_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -72,8 +72,8 @@ GO
 
 CREATE OR ALTER PROCEDURE soporte.usp_Importacion_Modificar
     @id_importacion INT,
-    @fuente NVARCHAR(100),
-    @archivo NVARCHAR(260),
+    @fuente VARCHAR(100),
+    @archivo VARCHAR(260),
     @formato VARCHAR(10),
     @fecha_inicio DATETIME2(0),
     @fecha_fin DATETIME2(0) = NULL,
@@ -84,25 +84,25 @@ CREATE OR ALTER PROCEDURE soporte.usp_Importacion_Modificar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
         -- 1) Validaciones: todas antes de abrir la transaccion; se acumulan
-        IF NOT EXISTS (SELECT 1 FROM soporte.importacion WHERE id_importacion = @id_importacion) SET @v_errores += N'importacion inexistente; ';
-        IF NULLIF(LTRIM(RTRIM(@fuente)), N'') IS NULL SET @v_errores += N'fuente obligatoria; ';
-        IF NULLIF(LTRIM(RTRIM(@archivo)), N'') IS NULL SET @v_errores += N'archivo obligatorio; ';
-        IF @formato IS NULL OR @formato NOT IN ('CSV','JSON','XML') SET @v_errores += N'formato invalido (debe ser CSV, JSON o XML); ';
-        IF @fecha_inicio IS NULL SET @v_errores += N'fecha_inicio obligatoria; ';
-        IF @fecha_fin IS NOT NULL AND @fecha_inicio IS NOT NULL AND @fecha_fin < @fecha_inicio SET @v_errores += N'fecha_fin no puede ser anterior a fecha_inicio; ';
-        IF @filas_leidas IS NULL OR @filas_leidas < 0 SET @v_errores += N'filas_leidas obligatoria y no negativa; ';
-        IF @filas_ok IS NULL OR @filas_ok < 0 SET @v_errores += N'filas_ok obligatoria y no negativa; ';
-        IF @filas_error IS NULL OR @filas_error < 0 SET @v_errores += N'filas_error obligatoria y no negativa; ';
-        IF @filas_leidas IS NOT NULL AND @filas_ok IS NOT NULL AND @filas_error IS NOT NULL AND @filas_ok + @filas_error > @filas_leidas SET @v_errores += N'filas_ok mas filas_error no puede superar filas_leidas; ';
-        IF @estado IS NULL OR @estado NOT IN ('EN_CURSO','OK','CON_ERROR') SET @v_errores += N'estado invalido; ';
-        IF @v_errores <> N''
+        IF NOT EXISTS (SELECT 1 FROM soporte.importacion WHERE id_importacion = @id_importacion) SET @v_errores += 'importacion inexistente; ';
+        IF NULLIF(LTRIM(RTRIM(@fuente)), '') IS NULL SET @v_errores += 'fuente obligatoria; ';
+        IF NULLIF(LTRIM(RTRIM(@archivo)), '') IS NULL SET @v_errores += 'archivo obligatorio; ';
+        IF @formato IS NULL OR @formato NOT IN ('CSV','JSO','XML') SET @v_errores += 'formato invalido (debe ser CSV, JSON o XML); ';
+        IF @fecha_inicio IS NULL SET @v_errores += 'fecha_inicio obligatoria; ';
+        IF @fecha_fin IS NOT NULL AND @fecha_inicio IS NOT NULL AND @fecha_fin < @fecha_inicio SET @v_errores += 'fecha_fin no puede ser anterior a fecha_inicio; ';
+        IF @filas_leidas IS NULL OR @filas_leidas < 0 SET @v_errores += 'filas_leidas obligatoria y no negativa; ';
+        IF @filas_ok IS NULL OR @filas_ok < 0 SET @v_errores += 'filas_ok obligatoria y no negativa; ';
+        IF @filas_error IS NULL OR @filas_error < 0 SET @v_errores += 'filas_error obligatoria y no negativa; ';
+        IF @filas_leidas IS NOT NULL AND @filas_ok IS NOT NULL AND @filas_error IS NOT NULL AND @filas_ok + @filas_error > @filas_leidas SET @v_errores += 'filas_ok mas filas_error no puede superar filas_leidas; ';
+        IF @estado IS NULL OR @estado NOT IN ('EN_CURSO','OK','CON_ERROR') SET @v_errores += 'estado invalido; ';
+        IF @v_errores <> ''
         BEGIN
-            SET @v_errores = LEFT(CONCAT(N'soporte.usp_Importacion_Modificar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT('soporte.usp_Importacion_Modificar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -135,21 +135,21 @@ CREATE OR ALTER PROCEDURE soporte.usp_Importacion_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
         -- 1) El registro debe existir
         IF NOT EXISTS (SELECT 1 FROM soporte.importacion WHERE id_importacion = @id_importacion)
-            THROW 50001, N'soporte.usp_Importacion_Eliminar: importacion inexistente', 1;
+            THROW 50001, 'soporte.usp_Importacion_Eliminar: importacion inexistente', 1;
 
         -- 2) Dependientes: una linea por cada tabla con FK a esta fila
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM soporte.importacion_error WHERE id_importacion = @id_importacion;
-        IF @v_n > 0 SET @v_errores += CONCAT(N'importacion_error(', @v_n, N'); ');
-        IF @v_errores <> N''
+        IF @v_n > 0 SET @v_errores += CONCAT('importacion_error(', @v_n, '); ');
+        IF @v_errores <> ''
         BEGIN
-            SET @v_errores = LEFT(CONCAT(N'soporte.usp_Importacion_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT('soporte.usp_Importacion_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
             THROW 50002, @v_errores, 1;
         END
 
@@ -177,25 +177,25 @@ CREATE OR ALTER PROCEDURE soporte.usp_ImportacionError_Insertar
     @id_importacion INT,
     @nro_error INT,
     @nro_fila INT,
-    @columna NVARCHAR(60) = NULL,
-    @valor NVARCHAR(500) = NULL,
-    @mensaje NVARCHAR(500)
+    @columna VARCHAR(60) = NULL,
+    @valor VARCHAR(500) = NULL,
+    @mensaje VARCHAR(500)
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
         -- 1) Validaciones: todas antes de abrir la transaccion; se acumulan
-        IF NOT EXISTS (SELECT 1 FROM soporte.importacion WHERE id_importacion = @id_importacion) SET @v_errores += N'importacion inexistente; ';
-        IF @nro_error IS NULL OR @nro_error <= 0 SET @v_errores += N'nro_error obligatorio y mayor a 0; ';
-        IF @nro_fila IS NULL OR @nro_fila <= 0 SET @v_errores += N'nro_fila obligatoria y mayor a 0; ';
-        IF NULLIF(LTRIM(RTRIM(@mensaje)), N'') IS NULL SET @v_errores += N'mensaje obligatorio; ';
-        IF EXISTS (SELECT 1 FROM soporte.importacion_error WHERE id_importacion = @id_importacion AND nro_error = @nro_error) SET @v_errores += N'importacion_error ya registrado; ';
-        IF @v_errores <> N''
+        IF NOT EXISTS (SELECT 1 FROM soporte.importacion WHERE id_importacion = @id_importacion) SET @v_errores += 'importacion inexistente; ';
+        IF @nro_error IS NULL OR @nro_error <= 0 SET @v_errores += 'nro_error obligatorio y mayor a 0; ';
+        IF @nro_fila IS NULL OR @nro_fila <= 0 SET @v_errores += 'nro_fila obligatoria y mayor a 0; ';
+        IF NULLIF(LTRIM(RTRIM(@mensaje)), '') IS NULL SET @v_errores += 'mensaje obligatorio; ';
+        IF EXISTS (SELECT 1 FROM soporte.importacion_error WHERE id_importacion = @id_importacion AND nro_error = @nro_error) SET @v_errores += 'importacion_error ya registrado; ';
+        IF @v_errores <> ''
         BEGIN
-            SET @v_errores = LEFT(CONCAT(N'soporte.usp_ImportacionError_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT('soporte.usp_ImportacionError_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -223,23 +223,23 @@ CREATE OR ALTER PROCEDURE soporte.usp_ImportacionError_Modificar
     @id_importacion INT,
     @nro_error INT,
     @nro_fila INT,
-    @columna NVARCHAR(60) = NULL,
-    @valor NVARCHAR(500) = NULL,
-    @mensaje NVARCHAR(500)
+    @columna VARCHAR(60) = NULL,
+    @valor VARCHAR(500) = NULL,
+    @mensaje VARCHAR(500)
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
         -- 1) Validaciones: todas antes de abrir la transaccion; se acumulan
-        IF NOT EXISTS (SELECT 1 FROM soporte.importacion_error WHERE id_importacion = @id_importacion AND nro_error = @nro_error) SET @v_errores += N'importacion_error inexistente; ';
-        IF @nro_fila IS NULL OR @nro_fila <= 0 SET @v_errores += N'nro_fila obligatoria y mayor a 0; ';
-        IF NULLIF(LTRIM(RTRIM(@mensaje)), N'') IS NULL SET @v_errores += N'mensaje obligatorio; ';
-        IF @v_errores <> N''
+        IF NOT EXISTS (SELECT 1 FROM soporte.importacion_error WHERE id_importacion = @id_importacion AND nro_error = @nro_error) SET @v_errores += 'importacion_error inexistente; ';
+        IF @nro_fila IS NULL OR @nro_fila <= 0 SET @v_errores += 'nro_fila obligatoria y mayor a 0; ';
+        IF NULLIF(LTRIM(RTRIM(@mensaje)), '') IS NULL SET @v_errores += 'mensaje obligatorio; ';
+        IF @v_errores <> ''
         BEGIN
-            SET @v_errores = LEFT(CONCAT(N'soporte.usp_ImportacionError_Modificar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT('soporte.usp_ImportacionError_Modificar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -275,7 +275,7 @@ BEGIN
     BEGIN TRY
         -- 1) El registro debe existir
         IF NOT EXISTS (SELECT 1 FROM soporte.importacion_error WHERE id_importacion = @id_importacion AND nro_error = @nro_error)
-            THROW 50001, N'soporte.usp_ImportacionError_Eliminar: importacion_error inexistente', 1;
+            THROW 50001, 'soporte.usp_ImportacionError_Eliminar: importacion_error inexistente', 1;
 
         -- 2) Sin dependientes
         -- 3) Transaccion propia o savepoint si ya hay una abierta

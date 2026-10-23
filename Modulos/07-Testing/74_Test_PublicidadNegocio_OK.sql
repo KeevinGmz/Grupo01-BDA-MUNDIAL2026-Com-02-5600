@@ -13,9 +13,9 @@ GO
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBA EXITOSA: 74_Test_OK_Publicidad';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBA EXITOSA: 74_Test_OK_Publicidad';
+PRINT '=====================================================================';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_sede INT;
@@ -28,9 +28,9 @@ DECLARE @v_reemplazar BIT = 1;
 -- 1. Validar el procedimiento requerido
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID(N'publicidad.usp_Negocio_AsignarPublicidad', N'P') IS NULL
+IF OBJECT_ID('publicidad.usp_Negocio_AsignarPublicidad', 'P') IS NULL
 BEGIN
-    ;THROW 50001, N'74_Test_OK_Publicidad: no existe publicidad.usp_Negocio_AsignarPublicidad',1;
+    ;THROW 50001, '74_Test_OK_Publicidad: no existe publicidad.usp_Negocio_AsignarPublicidad',1;
 END;
 
 -------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ ORDER BY
 
 IF @v_id_partido IS NULL
 BEGIN
-    ;THROW 50001, N'74_Test_OK_Publicidad: se requiere un partido PROGRAMADO cuya sede tenga cuatro espacios publicitarios', 1;
+    ;THROW 50001, '74_Test_OK_Publicidad: se requiere un partido PROGRAMADO cuya sede tenga cuatro espacios publicitarios', 1;
 END;
 
 BEGIN TRY
@@ -79,7 +79,7 @@ BEGIN TRY
     FROM publicidad.exhibicion AS e
     WHERE e.id_partido = @v_id_partido;
 
-    PRINT N'--- EVIDENCIA ANTES DE ASIGNAR PUBLICIDAD ---';
+    PRINT '--- EVIDENCIA ANTES DE ASIGNAR PUBLICIDAD ---';
 
     SELECT
         @v_id_partido AS id_partido,
@@ -157,11 +157,11 @@ BEGIN TRY
                              AND e.orden_prioridad = v.nro
                        )
              )
-            THEN N'PASS asignar cuatro piezas publicitarias'
-        ELSE N'FAIL asignar cuatro piezas publicitarias'
+            THEN 'PASS asignar cuatro piezas publicitarias'
+        ELSE 'FAIL asignar cuatro piezas publicitarias'
     END AS resultado;
 
-    PRINT N'--- EVIDENCIA DESPUES DE ASIGNAR PUBLICIDAD ---';
+    PRINT '--- EVIDENCIA DESPUES DE ASIGNAR PUBLICIDAD ---';
 
     SELECT
         e.id_exhibicion,
@@ -183,7 +183,7 @@ BEGIN TRY
     ---------------------------------------------------------------------------
 
     ROLLBACK TRANSACTION;
-    PRINT N'PASS general: prueba finalizada y transaccion revertida.';
+    PRINT 'PASS general: prueba finalizada y transaccion revertida.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
@@ -191,9 +191,9 @@ BEGIN CATCH
 
     PRINT CONCAT
     (
-        N'FAIL general. Error ',
+        'FAIL general. Error ',
         ERROR_NUMBER(),
-        N': ',
+        ': ',
         ERROR_MESSAGE()
     );
 
@@ -201,8 +201,8 @@ BEGIN CATCH
 END CATCH;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBA EXITOSA: 74_Test_OK_Publicidad';
-PRINT N'ROLLBACK EJECUTADO';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBA EXITOSA: 74_Test_OK_Publicidad';
+PRINT 'ROLLBACK EJECUTADO';
+PRINT '=====================================================================';
 GO

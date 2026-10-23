@@ -5,7 +5,7 @@ Comisión: 02-5600
 Grupo   : 01
 Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Caceres Lautaro Agustin
 Fecha   : 2026-10-03
-Objetivo: <una línea sobre lo que hace este script>
+Objetivo: Crea los procedimientos de negocio para importaciones.
 ===================================================================== */
 USE Mundial2026;
 GO
@@ -13,7 +13,7 @@ GO
 -- 36_SP_Importacion.sql (se completa en la Entrega 6) ----------------------
 --
 CREATE OR ALTER PROCEDURE soporte.usp_Negocio_ImportarFixture
-	@archivo NVARCHAR(260), @id_importacion INT OUTPUT
+	@archivo VARCHAR(260), @id_importacion INT OUTPUT
 AS
 BEGIN
 	SELECT * FROM soporte.importacion
