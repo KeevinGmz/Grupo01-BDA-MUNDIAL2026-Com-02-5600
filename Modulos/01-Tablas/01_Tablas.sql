@@ -1,15 +1,19 @@
-/* =====================================================================
+Ôªø/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
 Comision: 02-5600
 Grupo   : 01
 Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Caceres Lautaro Agustin
 Fecha   : 2026-10-03
-Objetivo: Borra (si existen) y crea las 48 tablas del modelo con sus PK, UNIQUE, CHECK y DEFAULT en lÌnea, sin claves for·neas.
+Objetivo: Borra (si existen) y crea las 48 tablas del modelo con sus PK, UNIQUE, CHECK y DEFAULT en l√≠nea, sin claves for√°neas.
+          Entrega 6: soporte.importacion admite tambi√©n los formatos TXT y HTML.
    ===================================================================== */
 USE Mundial2026;
 GO
 
+
+-- Entrega 6: tabla de equivalencias de pa√≠ses (referencia a geo.pais; se recrea en 04_Tablas_Importacion.sql)
+DROP TABLE IF EXISTS soporte.equivalencia_pais;
 
 -- Capa 7 y hojas de la capa 6 (nadie las referencia):
 DROP TABLE IF EXISTS juego.suspension_partido;   -- referencia a suspension: va antes
@@ -78,7 +82,7 @@ GO
 
 
 -- ---------------------------------- Nivel 0 ----------------------------------
--- geo.confederacion: cat·logo de confederaciones (UEFA, CONMEBOL, etc.).
+-- geo.confederacion: cat√°logo de confederaciones (UEFA, CONMEBOL, etc.).
 CREATE TABLE geo.confederacion (
     id_confederacion TINYINT IDENTITY(1,1) NOT NULL,
     nombre           NVARCHAR(50) NOT NULL,
@@ -111,7 +115,7 @@ CREATE TABLE publicidad.moneda (
 );
 GO
 
--- torneo.parametro_reglamento: par·metros del reglamento con vigencia (convocados, cambios, prime time, etc.).
+-- torneo.parametro_reglamento: par√°metros del reglamento con vigencia (convocados, cambios, prime time, etc.).
 CREATE TABLE torneo.parametro_reglamento (
     clave         VARCHAR(40) NOT NULL,
     vigente_desde DATE NOT NULL,
@@ -121,7 +125,7 @@ CREATE TABLE torneo.parametro_reglamento (
 );
 GO
 
--- juego.tipo_tarjeta: cat·logo.
+-- juego.tipo_tarjeta: cat√°logo.
 CREATE TABLE juego.tipo_tarjeta (
     id_tipo     TINYINT IDENTITY(1,1) NOT NULL,
     descripcion NVARCHAR(30) NOT NULL,
@@ -130,7 +134,7 @@ CREATE TABLE juego.tipo_tarjeta (
 );
 GO
 
--- arbitraje.rol_arbitral: cat·logo.
+-- arbitraje.rol_arbitral: cat√°logo.
 CREATE TABLE arbitraje.rol_arbitral (
     id_rol      TINYINT IDENTITY(1,1) NOT NULL,
     descripcion NVARCHAR(30) NOT NULL,
@@ -139,7 +143,7 @@ CREATE TABLE arbitraje.rol_arbitral (
 );
 GO
 
--- soporte.importacion: auditorÌa de cada importaciÛn (fuente, archivo, filas leÌdas/ok/error, estado).
+-- soporte.importacion: auditor√≠a de cada importaci√≥n (fuente, archivo, filas le√≠das/ok/error, estado).
 CREATE TABLE soporte.importacion (
     id_importacion INT IDENTITY(1,1) NOT NULL,
     fuente         NVARCHAR(100) NOT NULL,
@@ -152,12 +156,12 @@ CREATE TABLE soporte.importacion (
     filas_error    INT NOT NULL CONSTRAINT DF_importacion_filas_error DEFAULT 0,
     estado         VARCHAR(10) NOT NULL CONSTRAINT DF_importacion_estado DEFAULT 'EN_CURSO',
     CONSTRAINT PK_importacion PRIMARY KEY (id_importacion),
-    CONSTRAINT CK_importacion_formato CHECK (formato IN ('CSV','JSON','XML')),
+    CONSTRAINT CK_importacion_formato CHECK (formato IN ('CSV','TXT','JSON','XML','HTML')),
     CONSTRAINT CK_importacion_estado CHECK (estado IN ('EN_CURSO','OK','CON_ERROR'))
 );
 GO
 
--- publicidad.franja_horaria: franjas horarias de emisiÛn.
+-- publicidad.franja_horaria: franjas horarias de emisi√≥n.
 CREATE TABLE publicidad.franja_horaria (
     id_franja  TINYINT IDENTITY(1,1) NOT NULL,
     hora_desde TIME(0) NOT NULL,
@@ -178,7 +182,7 @@ CREATE TABLE persona.club (
 );
 GO
 
--- persona.posicion: cat·logo de posiciones de juego.
+-- persona.posicion: cat√°logo de posiciones de juego.
 CREATE TABLE persona.posicion (
     id_posicion TINYINT IDENTITY(1,1) NOT NULL,
     descripcion NVARCHAR(40) NOT NULL,
@@ -187,7 +191,7 @@ CREATE TABLE persona.posicion (
 );
 GO
 
--- persona.rol_cuerpo_tecnico: cat·logo (director tÈcnico, ayudante, etc.).
+-- persona.rol_cuerpo_tecnico: cat√°logo (director t√©cnico, ayudante, etc.).
 CREATE TABLE persona.rol_cuerpo_tecnico (
     id_rol_ct   TINYINT IDENTITY(1,1) NOT NULL,
     descripcion NVARCHAR(50) NOT NULL,
@@ -196,7 +200,7 @@ CREATE TABLE persona.rol_cuerpo_tecnico (
 );
 GO
 
--- persona.categoria_arbitral: cat·logo de categorÌas de ·rbitro (FIFA / confederaciÛn).
+-- persona.categoria_arbitral: cat√°logo de categor√≠as de √°rbitro (FIFA / confederaci√≥n).
 CREATE TABLE persona.categoria_arbitral (
     id_categoria TINYINT IDENTITY(1,1) NOT NULL,
     descripcion  NVARCHAR(50) NOT NULL,
@@ -205,7 +209,7 @@ CREATE TABLE persona.categoria_arbitral (
 );
 GO
 
--- persona.idioma: cat·logo de idiomas (ISO 639).
+-- persona.idioma: cat√°logo de idiomas (ISO 639).
 CREATE TABLE persona.idioma (
     id_idioma  SMALLINT IDENTITY(1,1) NOT NULL,
     cod_iso639 CHAR(3) NOT NULL,
@@ -238,7 +242,7 @@ CREATE TABLE torneo.fase (
 GO
 
 -- ---------------------------------- Nivel 1 ----------------------------------
--- geo.pais: paÌses. El cÛdigo FIFA es opcional, por eso su unicidad es un Ìndice filtrado.
+-- geo.pais: pa√≠ses. El c√≥digo FIFA es opcional, por eso su unicidad es un √≠ndice filtrado.
 CREATE TABLE geo.pais (
     id_pais          SMALLINT IDENTITY(1,1) NOT NULL,
     nombre           NVARCHAR(80) NOT NULL,
@@ -254,7 +258,7 @@ GO
 CREATE UNIQUE INDEX UX_pais_cod_fifa ON geo.pais (cod_fifa) WHERE cod_fifa IS NOT NULL;
 GO
 
--- publicidad.tipo_cambio: cotizaciÛn diaria de cada moneda contra USD.
+-- publicidad.tipo_cambio: cotizaci√≥n diaria de cada moneda contra USD.
 CREATE TABLE publicidad.tipo_cambio (
     id_moneda      TINYINT NOT NULL,
     fecha          DATE NOT NULL,
@@ -264,8 +268,8 @@ CREATE TABLE publicidad.tipo_cambio (
 );
 GO
 
--- juego.criterio_suspension: criterios parametrizables de suspensiÛn por acumulaciÛn de tarjetas.
---   Solo un criterio vigente por tipo de tarjeta (Ìndice ˙nico filtrado).
+-- juego.criterio_suspension: criterios parametrizables de suspensi√≥n por acumulaci√≥n de tarjetas.
+--   Solo un criterio vigente por tipo de tarjeta (√≠ndice √∫nico filtrado).
 CREATE TABLE juego.criterio_suspension (
     id_criterio              INT IDENTITY(1,1) NOT NULL,
     id_tipo                  TINYINT NOT NULL,
@@ -280,7 +284,7 @@ CREATE UNIQUE INDEX UX_criterio_suspension_id_tipo_vigente ON juego.criterio_sus
 GO
 
 -- ---------------------------------- Nivel 2 ----------------------------------
--- geo.ciudad: ciudades con poblaciÛn y huso horario (el huso de un paÌs es el de su ciudad m·s poblada).
+-- geo.ciudad: ciudades con poblaci√≥n y huso horario (el huso de un pa√≠s es el de su ciudad m√°s poblada).
 CREATE TABLE geo.ciudad (
     id_ciudad INT IDENTITY(1,1) NOT NULL,
     nombre    NVARCHAR(100) NOT NULL,
@@ -293,7 +297,7 @@ CREATE TABLE geo.ciudad (
 );
 GO
 
--- torneo.seleccion: selecciones participantes (una por paÌs), con su grupo.
+-- torneo.seleccion: selecciones participantes (una por pa√≠s), con su grupo.
 CREATE TABLE torneo.seleccion (
     id_seleccion       INT IDENTITY(1,1) NOT NULL,
     id_letra           CHAR(1) NOT NULL,
@@ -305,7 +309,7 @@ CREATE TABLE torneo.seleccion (
 );
 GO
 
--- persona.persona: supertipo de la jerarquÌa (J jugador, C cuerpo tÈcnico, A ·rbitro).
+-- persona.persona: supertipo de la jerarqu√≠a (J jugador, C cuerpo t√©cnico, A √°rbitro).
 CREATE TABLE persona.persona (
     id_persona   INT IDENTITY(1,1) NOT NULL,
     tipo_persona CHAR(1) NOT NULL,
@@ -325,7 +329,7 @@ CREATE TABLE persona.persona (
 );
 GO
 
--- geo.indicador_pais: indicadores econÛmicos por paÌs y aÒo.
+-- geo.indicador_pais: indicadores econ√≥micos por pa√≠s y a√±o.
 CREATE TABLE geo.indicador_pais (
     id_pais          SMALLINT NOT NULL,
     anio             SMALLINT NOT NULL,
@@ -336,7 +340,7 @@ CREATE TABLE geo.indicador_pais (
 );
 GO
 
--- publicidad.feriado: feriados por paÌs.
+-- publicidad.feriado: feriados por pa√≠s.
 CREATE TABLE publicidad.feriado (
     id_pais SMALLINT NOT NULL,
     fecha   DATE NOT NULL,
@@ -345,7 +349,7 @@ CREATE TABLE publicidad.feriado (
 );
 GO
 
--- publicidad.anunciante: anunciantes, con su paÌs de origen y su identificaciÛn fiscal.
+-- publicidad.anunciante: anunciantes, con su pa√≠s de origen y su identificaci√≥n fiscal.
 CREATE TABLE publicidad.anunciante (
     id_anunciante         INT IDENTITY(1,1) NOT NULL,
     razon_social          NVARCHAR(150) NOT NULL,
@@ -420,7 +424,7 @@ CREATE TABLE persona.persona_idioma (
 );
 GO
 
--- publicidad.campania: campaÒas publicitarias de cada anunciante, con vigencia y presupuesto.
+-- publicidad.campania: campa√±as publicitarias de cada anunciante, con vigencia y presupuesto.
 CREATE TABLE publicidad.campania (
     id_campania   INT IDENTITY(1,1) NOT NULL,
     nombre        NVARCHAR(100) NOT NULL,
@@ -434,7 +438,7 @@ CREATE TABLE publicidad.campania (
 );
 GO
 
--- publicidad.anunciante_pais: paÌses de interÈs de cada anunciante, con prioridad (1 = m·xima, 3 = mÌnima).
+-- publicidad.anunciante_pais: pa√≠ses de inter√©s de cada anunciante, con prioridad (1 = m√°xima, 3 = m√≠nima).
 CREATE TABLE publicidad.anunciante_pais (
     id_anunciante INT NOT NULL,
     id_pais       SMALLINT NOT NULL,
@@ -444,7 +448,7 @@ CREATE TABLE publicidad.anunciante_pais (
 );
 GO
 
--- soporte.importacion_error: detalle de errores por fila de cada importaciÛn.
+-- soporte.importacion_error: detalle de errores por fila de cada importaci√≥n.
 CREATE TABLE soporte.importacion_error (
     id_importacion INT NOT NULL,
     nro_error      INT NOT NULL,
@@ -485,7 +489,7 @@ CREATE TABLE torneo.partido (
 );
 GO
 
--- torneo.convocatoria: convocados de cada selecciÛn. 
+-- torneo.convocatoria: convocados de cada selecci√≥n. 
 CREATE TABLE torneo.convocatoria (
     id_seleccion INT NOT NULL,
     id_jugador   INT NOT NULL,
@@ -499,7 +503,7 @@ CREATE TABLE torneo.convocatoria (
 );
 GO
 
--- publicidad.pieza_publicitaria: piezas de contenido de cada campaÒa (por idioma y mercado destino).
+-- publicidad.pieza_publicitaria: piezas de contenido de cada campa√±a (por idioma y mercado destino).
 CREATE TABLE publicidad.pieza_publicitaria (
     id_pieza        INT IDENTITY(1,1) NOT NULL,
     descripcion     NVARCHAR(200) NOT NULL,
@@ -514,7 +518,7 @@ CREATE TABLE publicidad.pieza_publicitaria (
 GO
 
 -- ---------------------------------- Nivel 5 ----------------------------------
--- torneo.equipo_en_partido: las dos selecciones de cada partido (L local / V visitante) y su esquema t·ctico.
+-- torneo.equipo_en_partido: las dos selecciones de cada partido (L local / V visitante) y su esquema t√°ctico.
 CREATE TABLE torneo.equipo_en_partido (
     id_partido      INT NOT NULL,
     id_seleccion    INT NOT NULL,
@@ -530,7 +534,7 @@ CREATE TABLE torneo.equipo_en_partido (
 );
 GO
 
--- torneo.cambio_convocatoria: altas y bajas de ˙ltimo momento (un reemplazo son dos filas: baja y alta).
+-- torneo.cambio_convocatoria: altas y bajas de √∫ltimo momento (un reemplazo son dos filas: baja y alta).
 CREATE TABLE torneo.cambio_convocatoria (
     id_cambio    INT IDENTITY(1,1) NOT NULL,
     id_seleccion INT NOT NULL,
@@ -543,7 +547,7 @@ CREATE TABLE torneo.cambio_convocatoria (
 );
 GO
 
--- arbitraje.designacion_arbitral: terna/cuaterna arbitral de cada partido (un ·rbitro por rol y un rol por ·rbitro).
+-- arbitraje.designacion_arbitral: terna/cuaterna arbitral de cada partido (un √°rbitro por rol y un rol por √°rbitro).
 CREATE TABLE arbitraje.designacion_arbitral (
     id_partido        INT NOT NULL,
     id_rol            TINYINT NOT NULL,
@@ -569,7 +573,7 @@ CREATE TABLE publicidad.tarifa (
 GO
 
 -- ---------------------------------- Nivel 6 ----------------------------------
--- juego.alineacion: titulares y suplentes de cada selecciÛn en cada partido.
+-- juego.alineacion: titulares y suplentes de cada selecci√≥n en cada partido.
 CREATE TABLE juego.alineacion (
     id_partido           INT NOT NULL,
     id_seleccion         INT NOT NULL,
@@ -620,7 +624,7 @@ CREATE TABLE juego.gol (
 );
 GO
 
--- juego.tarjeta: tarjetas amarillas/rojas de cada partido y el ·rbitro que las seÒalÛ.
+-- juego.tarjeta: tarjetas amarillas/rojas de cada partido y el √°rbitro que las se√±al√≥.
 CREATE TABLE juego.tarjeta (
     id_partido   INT NOT NULL,
     id_seleccion INT NOT NULL,
@@ -646,7 +650,7 @@ CREATE TABLE arbitraje.informe_post_partido (
 );
 GO
 
--- publicidad.exhibicion: registro histÛrico de las 4 piezas exhibidas por partido (base para facturar).
+-- publicidad.exhibicion: registro hist√≥rico de las 4 piezas exhibidas por partido (base para facturar).
 CREATE TABLE publicidad.exhibicion (
     id_exhibicion       INT IDENTITY(1,1) NOT NULL,
     id_partido          INT NOT NULL,
@@ -667,7 +671,7 @@ CREATE TABLE publicidad.exhibicion (
 GO
 
 -- ---------------------------------- Nivel 7 ----------------------------------
--- juego.suspension: suspensiones de jugadores (por acumulaciÛn de amarillas o expulsiÛn).
+-- juego.suspension: suspensiones de jugadores (por acumulaci√≥n de amarillas o expulsi√≥n).
 CREATE TABLE juego.suspension (
     id_suspension INT IDENTITY(1,1) NOT NULL,
     id_jugador    INT NOT NULL,
@@ -682,7 +686,7 @@ CREATE TABLE juego.suspension (
 );
 GO
 
--- juego.suspension_partido: partidos en los que se cumple cada suspensiÛn.
+-- juego.suspension_partido: partidos en los que se cumple cada suspensi√≥n.
 CREATE TABLE juego.suspension_partido (
     id_suspension INT NOT NULL,
     id_partido    INT NOT NULL,
@@ -690,5 +694,5 @@ CREATE TABLE juego.suspension_partido (
 );
 GO
 
--- ComprobaciÛn manual (va en los scripts de testing, no ac·):
+-- Comprobaci√≥n manual (va en los scripts de testing, no ac√°):
 --   SELECT COUNT(*) FROM sys.tables;   -- esperado: 48
