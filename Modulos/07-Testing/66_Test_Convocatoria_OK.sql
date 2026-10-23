@@ -13,7 +13,7 @@ GO
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-PRINT '=== 66_Test_OK_Convocatoria: reemplazar convocado ===';
+PRINT N'=== 66_Test_OK_Convocatoria: reemplazar convocado ===';
 
 DECLARE @v_id_seleccion INT;
 DECLARE @v_jugador_baja INT;
@@ -21,7 +21,7 @@ DECLARE @v_jugador_alta INT;
 DECLARE @v_dorsal_baja TINYINT;
 DECLARE @v_dorsal_alta TINYINT;
 DECLARE @v_fecha DATE = CAST(SYSUTCDATETIME() AS DATE);
-DECLARE @v_motivo VARCHAR(200) = 'Lesion grave de rodilla';
+DECLARE @v_motivo NVARCHAR(200) = N'Lesion grave de rodilla';
 DECLARE @v_ultimo_cambio_antes INT;
 DECLARE @v_convocatorias_antes INT;
 DECLARE @v_convocatorias_despues INT;
@@ -30,9 +30,9 @@ DECLARE @v_convocatorias_despues INT;
 -- 1. Validaciones previas
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID('torneo.usp_Negocio_ReemplazarConvocado', 'P') IS NULL
+IF OBJECT_ID(N'torneo.usp_Negocio_ReemplazarConvocado', N'P') IS NULL
 BEGIN
-    ;THROW 50001, '66_Test_OK_Convocatoria: no existe torneo.usp_Negocio_ReemplazarConvocado',1;
+    ;THROW 50001, N'66_Test_OK_Convocatoria: no existe torneo.usp_Negocio_ReemplazarConvocado',1;
 END;
 
 ;WITH numeros AS
@@ -82,17 +82,17 @@ IF @v_id_seleccion IS NULL
    OR @v_dorsal_baja IS NULL
    OR @v_dorsal_alta IS NULL
 BEGIN
-    ;THROW 50001, '66_Test_OK_Convocatoria: se requiere una seleccion con convocado activo, un jugador elegible no convocado y un dorsal libre',1;
+    ;THROW 50001, N'66_Test_OK_Convocatoria: se requiere una seleccion con convocado activo, un jugador elegible no convocado y un dorsal libre',1;
 END;
 
 IF @v_jugador_baja = @v_jugador_alta
 BEGIN
-    ;THROW 50001,'66_Test_OK_Convocatoria: los jugadores de baja y alta deben ser distintos', 1;
+    ;THROW 50001,N'66_Test_OK_Convocatoria: los jugadores de baja y alta deben ser distintos', 1;
 END;
 
 IF @v_dorsal_baja = @v_dorsal_alta
 BEGIN
-    ;THROW 50001, '66_Test_OK_Convocatoria: el dorsal del alta debe estar libre y ser distinto del dorsal retenido por la baja',1;
+    ;THROW 50001, N'66_Test_OK_Convocatoria: el dorsal del alta debe estar libre y ser distinto del dorsal retenido por la baja',1;
 END;
 
 BEGIN TRY
@@ -109,7 +109,7 @@ BEGIN TRY
     SELECT @v_ultimo_cambio_antes = ISNULL(MAX(id_cambio), 0)
     FROM torneo.cambio_convocatoria;
 
-    PRINT '--- EVIDENCIA ANTES DE REEMPLAZAR AL CONVOCADO ---';
+    PRINT N'--- EVIDENCIA ANTES DE REEMPLAZAR AL CONVOCADO ---';
 
     SELECT
         @v_id_seleccion AS id_seleccion_prueba,
@@ -168,8 +168,8 @@ BEGIN TRY
                    AND c.dorsal = @v_dorsal_alta
                    AND c.estado = 'ACTIVO'
              )
-            THEN 'PASS reemplazo de convocatoria'
-        ELSE 'FAIL reemplazo de convocatoria'
+            THEN N'PASS reemplazo de convocatoria'
+        ELSE N'FAIL reemplazo de convocatoria'
     END AS resultado;
 
     ---------------------------------------------------------------------------
@@ -192,11 +192,11 @@ BEGIN TRY
                        (cc.id_jugador = @v_jugador_alta AND cc.tipo = 'ALTA')
                    )
              )
-            THEN 'PASS trazabilidad de baja y alta'
-        ELSE 'FAIL trazabilidad de baja y alta'
+            THEN N'PASS trazabilidad de baja y alta'
+        ELSE N'FAIL trazabilidad de baja y alta'
     END AS resultado;
 
-    PRINT '--- EVIDENCIA DESPUES DEL REEMPLAZO ---';
+    PRINT N'--- EVIDENCIA DESPUES DEL REEMPLAZO ---';
 
     SELECT c.*
     FROM torneo.convocatoria AS c
@@ -216,7 +216,7 @@ BEGIN TRY
     ---------------------------------------------------------------------------
 
     ROLLBACK TRANSACTION;
-    PRINT 'PASS general: prueba finalizada y transaccion revertida.';
+    PRINT N'PASS general: prueba finalizada y transaccion revertida.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
@@ -224,9 +224,9 @@ BEGIN CATCH
 
     PRINT CONCAT
     (
-        'FAIL general. Error ',
+        N'FAIL general. Error ',
         ERROR_NUMBER(),
-        ': ',
+        N': ',
         ERROR_MESSAGE()
     );
 

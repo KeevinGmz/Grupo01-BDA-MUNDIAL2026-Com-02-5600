@@ -14,12 +14,12 @@ GO
 INSERT INTO geo.confederacion (nombre, sigla)
 SELECT v.nombre, v.sigla
 FROM (VALUES
-    ('Unión de Asociaciones Europeas de Fútbol', 'UEFA'),
-    ('Confederación Sudamericana de Fútbol',     'CONMEBOL'),
-    ('Confederación de Norte, Centro América y Caribe', 'CONCACAF'),
-    ('Confederación Africana de Fútbol',         'CAF'),
-    ('Confederación Asiática de Fútbol',         'AFC'),
-    ('Confederación de Fútbol de Oceanía',       'OFC')
+    (N'Unión de Asociaciones Europeas de Fútbol', N'UEFA'),
+    (N'Confederación Sudamericana de Fútbol',     N'CONMEBOL'),
+    (N'Confederación de Norte, Centro América y Caribe', N'CONCACAF'),
+    (N'Confederación Africana de Fútbol',         N'CAF'),
+    (N'Confederación Asiática de Fútbol',         N'AFC'),
+    (N'Confederación de Fútbol de Oceanía',       N'OFC')
 ) AS v(nombre, sigla)
 WHERE NOT EXISTS (SELECT 1 FROM geo.confederacion c WHERE c.sigla = v.sigla);
 GO
@@ -27,14 +27,14 @@ GO
 -- 2. persona.posicion: posiciones de juego.
 INSERT INTO persona.posicion (descripcion)
 SELECT v.descripcion
-FROM (VALUES ('Arquero'), ('Defensor'), ('Mediocampista'), ('Delantero')) AS v(descripcion)
+FROM (VALUES (N'Arquero'), (N'Defensor'), (N'Mediocampista'), (N'Delantero')) AS v(descripcion)
 WHERE NOT EXISTS (SELECT 1 FROM persona.posicion p WHERE p.descripcion = v.descripcion);
 GO
 
 -- 3. juego.tipo_tarjeta.
 INSERT INTO juego.tipo_tarjeta (descripcion)
 SELECT v.descripcion
-FROM (VALUES ('AMARILLA'), ('ROJA_DOBLE_AMARILLA'), ('ROJA_DIRECTA')) AS v(descripcion)
+FROM (VALUES (N'AMARILLA'), (N'ROJA_DOBLE_AMARILLA'), (N'ROJA_DIRECTA')) AS v(descripcion)
 WHERE NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta t WHERE t.descripcion = v.descripcion);
 GO
 
@@ -42,9 +42,9 @@ GO
 INSERT INTO juego.criterio_suspension (id_tipo, cant_tarjetas_requeridas, cant_partidos_suspension)
 SELECT tt.id_tipo, v.cant_tarjetas, v.cant_partidos
 FROM (VALUES
-    ('AMARILLA',            2, 1),
-    ('ROJA_DOBLE_AMARILLA', 1, 1),
-    ('ROJA_DIRECTA',        1, 1)
+    (N'AMARILLA',            2, 1),
+    (N'ROJA_DOBLE_AMARILLA', 1, 1),
+    (N'ROJA_DIRECTA',        1, 1)
 ) AS v(tipo, cant_tarjetas, cant_partidos)
 JOIN juego.tipo_tarjeta tt ON tt.descripcion = v.tipo
 WHERE NOT EXISTS (SELECT 1 FROM juego.criterio_suspension c WHERE c.id_tipo = tt.id_tipo AND c.vigente = 1);
@@ -53,7 +53,7 @@ GO
 -- 5. arbitraje.rol_arbitral: cinco roles.
 INSERT INTO arbitraje.rol_arbitral (descripcion)
 SELECT v.descripcion
-FROM (VALUES ('PRINCIPAL'), ('ASISTENTE_1'), ('ASISTENTE_2'), ('CUARTO'), ('VAR')) AS v(descripcion)
+FROM (VALUES (N'PRINCIPAL'), (N'ASISTENTE_1'), (N'ASISTENTE_2'), (N'CUARTO'), (N'VAR')) AS v(descripcion)
 WHERE NOT EXISTS (SELECT 1 FROM arbitraje.rol_arbitral r WHERE r.descripcion = v.descripcion);
 GO
 
@@ -61,13 +61,13 @@ GO
 INSERT INTO torneo.fase (nro_fase, nombre, es_eliminacion, admite_alargue, admite_penales)
 SELECT v.nro_fase, v.nombre, v.es_eliminacion, v.admite_alargue, v.admite_penales
 FROM (VALUES
-    (1, 'Fase de Grupos',          0, 0, 0),
-    (2, 'Dieciseisavos de Final',  1, 1, 1),
-    (3, 'Octavos de Final',        1, 1, 1),
-    (4, 'Cuartos de Final',        1, 1, 1),
-    (5, 'Semifinales',             1, 1, 1),
-    (6, 'Tercer Puesto',           1, 1, 1),
-    (7, 'Final',                   1, 1, 1)
+    (1, N'Fase de Grupos',          0, 0, 0),
+    (2, N'Dieciseisavos de Final',  1, 1, 1),
+    (3, N'Octavos de Final',        1, 1, 1),
+    (4, N'Cuartos de Final',        1, 1, 1),
+    (5, N'Semifinales',             1, 1, 1),
+    (6, N'Tercer Puesto',           1, 1, 1),
+    (7, N'Final',                   1, 1, 1)
 ) AS v(nro_fase, nombre, es_eliminacion, admite_alargue, admite_penales)
 WHERE NOT EXISTS (SELECT 1 FROM torneo.fase f WHERE f.nro_fase = v.nro_fase);
 GO
@@ -95,15 +95,15 @@ GO
 INSERT INTO torneo.parametro_reglamento (clave, vigente_desde, valor, descripcion)
 SELECT v.clave, v.vigente_desde, v.valor, v.descripcion
 FROM (VALUES
-    ('MIN_CONVOCADOS',            CAST('2026-01-01' AS DATE), 23 , 'mínimo para registrar una convocatoria'),
-    ('MAX_CONVOCADOS',            CAST('2026-01-01' AS DATE), 26 , 'máximo de convocados por selección'),
-    ('TITULARES',                 CAST('2026-01-01' AS DATE), 11 , 'jugadores en la alineación titular'),
-    ('MAX_SUPLENTES',             CAST('2026-01-01' AS DATE), 15 , 'tope de banco por partido'),
-    ('MAX_SUSTITUCIONES',         CAST('2026-01-01' AS DATE), 5 ,  'cambios en tiempo reglamentario'),
-    ('MAX_SUSTITUCIONES_ALARGUE', CAST('2026-01-01' AS DATE), 1 ,  'cambio adicional en alargue'),
-    ('MAX_VENTANAS_SUSTITUCION',  CAST('2026-01-01' AS DATE), 3 ,  'ventanas de cambios (sin confirmar contra el reglamento oficial)'),
-    ('PRIME_DESDE_HORA',          CAST('2026-01-01' AS DATE), 19 , 'inicio del prime time local'),
-    ('PRIME_HASTA_HORA',          CAST('2026-01-01' AS DATE), 23 , 'fin del prime time local')
+    ('MIN_CONVOCADOS',            CAST('2026-01-01' AS DATE), 23 , N'mínimo para registrar una convocatoria'),
+    ('MAX_CONVOCADOS',            CAST('2026-01-01' AS DATE), 26 , N'máximo de convocados por selección'),
+    ('TITULARES',                 CAST('2026-01-01' AS DATE), 11 , N'jugadores en la alineación titular'),
+    ('MAX_SUPLENTES',             CAST('2026-01-01' AS DATE), 15 , N'tope de banco por partido'),
+    ('MAX_SUSTITUCIONES',         CAST('2026-01-01' AS DATE), 5 , N'cambios en tiempo reglamentario'),
+    ('MAX_SUSTITUCIONES_ALARGUE', CAST('2026-01-01' AS DATE), 1 , N'cambio adicional en alargue'),
+    ('MAX_VENTANAS_SUSTITUCION',  CAST('2026-01-01' AS DATE), 3 , N'ventanas de cambios (sin confirmar contra el reglamento oficial)'),
+    ('PRIME_DESDE_HORA',          CAST('2026-01-01' AS DATE), 19 , N'inicio del prime time local'),
+    ('PRIME_HASTA_HORA',          CAST('2026-01-01' AS DATE), 23 , N'fin del prime time local')
 ) AS v(clave, vigente_desde, valor, descripcion)
 WHERE NOT EXISTS (SELECT 1 FROM torneo.parametro_reglamento p
                   WHERE p.clave = v.clave AND p.vigente_desde = v.vigente_desde);
@@ -112,7 +112,7 @@ GO
 -- 10. publicidad.moneda: USD, la moneda de referencia de las cotizaciones.
 INSERT INTO publicidad.moneda (cod_iso4217, nombre)
 SELECT v.cod_iso4217, v.nombre
-FROM (VALUES ('USD', 'Dólar Estadounidense')) AS v(cod_iso4217, nombre)
+FROM (VALUES (N'USD', N'Dólar Estadounidense')) AS v(cod_iso4217, nombre)
 WHERE NOT EXISTS (SELECT 1 FROM publicidad.moneda m WHERE m.cod_iso4217 = v.cod_iso4217);
 GO
 
@@ -120,7 +120,7 @@ GO
 INSERT INTO publicidad.tipo_cambio (id_moneda, fecha, cotizacion_usd)
 SELECT m.id_moneda, CAST('2026-01-01' AS DATE), 1.000000
 FROM publicidad.moneda m
-WHERE m.cod_iso4217 = 'USD'
+WHERE m.cod_iso4217 = N'USD'
   AND NOT EXISTS (SELECT 1 FROM publicidad.tipo_cambio t
                   WHERE t.id_moneda = m.id_moneda AND t.fecha = CAST('2026-01-01' AS DATE));
 GO

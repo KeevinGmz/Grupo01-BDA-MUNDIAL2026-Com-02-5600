@@ -21,7 +21,7 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_codigo INT = 50001;
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
@@ -52,23 +52,23 @@ BEGIN
         FROM torneo.seleccion AS s
         WHERE s.id_seleccion = @id_seleccion
     )
-        SET @v_errores += 'seleccion inexistente; ';
+        SET @v_errores += N'seleccion inexistente; ';
 
     IF @v_min IS NULL OR @v_max IS NULL
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'no existen parametros vigentes MIN_CONVOCADOS y MAX_CONVOCADOS; ';
+        SET @v_errores += N'no existen parametros vigentes MIN_CONVOCADOS y MAX_CONVOCADOS; ';
     END
     ELSE IF @v_cant_convocados < @v_min OR @v_cant_convocados > @v_max
     BEGIN
         SET @v_codigo = 50003;
         SET @v_errores += CONCAT
         (
-            'cantidad de convocados fuera del rango reglamentario [',
+            N'cantidad de convocados fuera del rango reglamentario [',
             @v_min,
-            ', ',
+            N', ',
             @v_max,
-            ']; '
+            N']; '
         );
     END
 
@@ -80,7 +80,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'todos los dorsales deben estar entre 1 y 99; ';
+        SET @v_errores += N'todos los dorsales deben estar entre 1 y 99; ';
     END
 
     IF EXISTS
@@ -92,7 +92,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'los dorsales no pueden repetirse en la lista; ';
+        SET @v_errores += N'los dorsales no pueden repetirse en la lista; ';
     END
 
     IF EXISTS
@@ -103,7 +103,7 @@ BEGIN
           ON j.id_persona = c.id_jugador
         WHERE j.id_persona IS NULL
     )
-        SET @v_errores += 'la lista contiene jugadores inexistentes; ';
+        SET @v_errores += N'la lista contiene jugadores inexistentes; ';
 
     IF EXISTS
     (
@@ -114,7 +114,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'la seleccion ya tiene una convocatoria ACTIVA; ';
+        SET @v_errores += N'la seleccion ya tiene una convocatoria ACTIVA; ';
     END
 
     IF EXISTS
@@ -128,12 +128,12 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'la lista contiene jugadores convocados activamente por otra seleccion; ';
+        SET @v_errores += N'la lista contiene jugadores convocados activamente por otra seleccion; ';
     END
 
-    IF @v_errores <> ''
+    IF @v_errores <> N''
     BEGIN
-        SET @v_errores = LEFT(CONCAT('torneo.usp_Negocio_RegistrarConvocatoria: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT(N'torneo.usp_Negocio_RegistrarConvocatoria: ', @v_errores), 2048);
         THROW @v_codigo, @v_errores, 1;
     END
 
@@ -188,14 +188,14 @@ CREATE OR ALTER PROCEDURE torneo.usp_Negocio_ReemplazarConvocado
     @id_jugador_baja INT,
     @id_jugador_alta INT,
     @dorsal TINYINT,
-    @motivo VARCHAR(200),
+    @motivo NVARCHAR(200),
     @fecha DATE
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_codigo INT = 50001;
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
@@ -208,7 +208,7 @@ BEGIN
         FROM torneo.seleccion AS s
         WHERE s.id_seleccion = @id_seleccion
     )
-        SET @v_errores += 'seleccion inexistente; ';
+        SET @v_errores += N'seleccion inexistente; ';
 
     SELECT @v_dorsal_baja = c.dorsal
     FROM torneo.convocatoria AS c
@@ -219,7 +219,7 @@ BEGIN
     IF @v_dorsal_baja IS NULL
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'el jugador de baja no esta convocado ACTIVO en la seleccion; ';
+        SET @v_errores += N'el jugador de baja no esta convocado ACTIVO en la seleccion; ';
     END
 
     IF NOT EXISTS
@@ -228,14 +228,14 @@ BEGIN
         FROM persona.jugador AS j
         WHERE j.id_persona = @id_jugador_alta
     )
-        SET @v_errores += 'jugador de alta inexistente; ';
+        SET @v_errores += N'jugador de alta inexistente; ';
 
     IF @id_jugador_baja IS NOT NULL
        AND @id_jugador_alta IS NOT NULL
        AND @id_jugador_baja = @id_jugador_alta
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'los jugadores de baja y alta deben ser distintos; ';
+        SET @v_errores += N'los jugadores de baja y alta deben ser distintos; ';
     END
 
     -- Segun el plan, el alta no debe estar convocada en ninguna seleccion.
@@ -247,19 +247,19 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'el jugador de alta ya figura en una convocatoria; ';
+        SET @v_errores += N'el jugador de alta ya figura en una convocatoria; ';
     END
 
     IF @dorsal IS NULL OR @dorsal NOT BETWEEN 1 AND 99
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'dorsal obligatorio y debe estar entre 1 y 99; ';
+        SET @v_errores += N'dorsal obligatorio y debe estar entre 1 y 99; ';
     END
 
     IF @v_dorsal_baja IS NOT NULL AND @dorsal = @v_dorsal_baja
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'el dorsal del alta debe ser distinto del dorsal de la baja; ';
+        SET @v_errores += N'el dorsal del alta debe ser distinto del dorsal de la baja; ';
     END
 
     IF EXISTS
@@ -271,18 +271,18 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'el dorsal indicado no esta libre en la seleccion; ';
+        SET @v_errores += N'el dorsal indicado no esta libre en la seleccion; ';
     END
 
-    IF NULLIF(LTRIM(RTRIM(@motivo)), '') IS NULL
-        SET @v_errores += 'motivo obligatorio; ';
+    IF NULLIF(LTRIM(RTRIM(@motivo)), N'') IS NULL
+        SET @v_errores += N'motivo obligatorio; ';
 
     IF @fecha IS NULL
-        SET @v_errores += 'fecha obligatoria; ';
+        SET @v_errores += N'fecha obligatoria; ';
 
-    IF @v_errores <> ''
+    IF @v_errores <> N''
     BEGIN
-        SET @v_errores = LEFT(CONCAT('torneo.usp_Negocio_ReemplazarConvocado: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT(N'torneo.usp_Negocio_ReemplazarConvocado: ', @v_errores), 2048);
         THROW @v_codigo, @v_errores, 1;
     END
 

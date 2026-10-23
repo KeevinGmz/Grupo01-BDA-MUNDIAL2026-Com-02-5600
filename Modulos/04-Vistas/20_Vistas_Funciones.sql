@@ -399,7 +399,7 @@ CREATE OR ALTER VIEW juego.vw_Goleadores
 AS
 SELECT
     g.id_jugador_autor AS id_jugador,
-    CONCAT(p.apellido, ', ', p.nombre) AS jugador_nombre,
+    CONCAT(p.apellido, N', ', p.nombre) AS jugador_nombre,
     pais.nombre AS seleccion,
     COUNT(*) AS total_goles
 FROM juego.gol AS g

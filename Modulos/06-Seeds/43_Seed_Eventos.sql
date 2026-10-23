@@ -13,7 +13,7 @@ GO
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-DECLARE @v_errores VARCHAR(2000) = '';
+DECLARE @v_errores NVARCHAR(2000) = N'';
 DECLARE @v_propia BIT = 0;
 DECLARE @v_sp BIT = 0;
 
@@ -21,14 +21,14 @@ DECLARE @v_sp BIT = 0;
 -- 1. Validaciones de objetos y catalogos
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID('juego.usp_Negocio_RegistrarSustitucion', 'P') IS NULL
-    SET @v_errores += 'no existe juego.usp_Negocio_RegistrarSustitucion; ';
+IF OBJECT_ID(N'juego.usp_Negocio_RegistrarSustitucion', N'P') IS NULL
+    SET @v_errores += N'no existe juego.usp_Negocio_RegistrarSustitucion; ';
 
-IF OBJECT_ID('juego.usp_Negocio_RegistrarTarjeta', 'P') IS NULL
-    SET @v_errores += 'no existe juego.usp_Negocio_RegistrarTarjeta; ';
+IF OBJECT_ID(N'juego.usp_Negocio_RegistrarTarjeta', N'P') IS NULL
+    SET @v_errores += N'no existe juego.usp_Negocio_RegistrarTarjeta; ';
 
-IF OBJECT_ID('torneo.usp_Partido_Modificar', 'P') IS NULL
-    SET @v_errores += 'no existe torneo.usp_Partido_Modificar; ';
+IF OBJECT_ID(N'torneo.usp_Partido_Modificar', N'P') IS NULL
+    SET @v_errores += N'no existe torneo.usp_Partido_Modificar; ';
 
 DECLARE @v_tipo_amarilla TINYINT;
 DECLARE @v_tipo_roja_directa TINYINT;
@@ -36,24 +36,24 @@ DECLARE @v_tipo_roja_doble TINYINT;
 
 SELECT @v_tipo_amarilla = tt.id_tipo
 FROM juego.tipo_tarjeta AS tt
-WHERE tt.descripcion = 'AMARILLA';
+WHERE tt.descripcion = N'AMARILLA';
 
 SELECT @v_tipo_roja_directa = tt.id_tipo
 FROM juego.tipo_tarjeta AS tt
-WHERE tt.descripcion = 'ROJA_DIRECTA';
+WHERE tt.descripcion = N'ROJA_DIRECTA';
 
 SELECT @v_tipo_roja_doble = tt.id_tipo
 FROM juego.tipo_tarjeta AS tt
-WHERE tt.descripcion = 'ROJA_DOBLE_AMARILLA';
+WHERE tt.descripcion = N'ROJA_DOBLE_AMARILLA';
 
 IF @v_tipo_amarilla IS NULL
-    SET @v_errores += 'no existe el tipo AMARILLA; ';
+    SET @v_errores += N'no existe el tipo AMARILLA; ';
 
 IF @v_tipo_roja_directa IS NULL
-    SET @v_errores += 'no existe el tipo ROJA_DIRECTA; ';
+    SET @v_errores += N'no existe el tipo ROJA_DIRECTA; ';
 
 IF @v_tipo_roja_doble IS NULL
-    SET @v_errores += 'no existe el tipo ROJA_DOBLE_AMARILLA; ';
+    SET @v_errores += N'no existe el tipo ROJA_DOBLE_AMARILLA; ';
 
 IF NOT EXISTS
 (
@@ -62,7 +62,7 @@ IF NOT EXISTS
     WHERE cs.id_tipo = @v_tipo_amarilla
       AND cs.vigente = 1
 )
-    SET @v_errores += 'no existe criterio vigente para AMARILLA; ';
+    SET @v_errores += N'no existe criterio vigente para AMARILLA; ';
 
 IF NOT EXISTS
 (
@@ -71,7 +71,7 @@ IF NOT EXISTS
     WHERE cs.id_tipo = @v_tipo_roja_directa
       AND cs.vigente = 1
 )
-    SET @v_errores += 'no existe criterio vigente para ROJA_DIRECTA; ';
+    SET @v_errores += N'no existe criterio vigente para ROJA_DIRECTA; ';
 
 IF NOT EXISTS
 (
@@ -80,11 +80,11 @@ IF NOT EXISTS
     WHERE cs.id_tipo = @v_tipo_roja_doble
       AND cs.vigente = 1
 )
-    SET @v_errores += 'no existe criterio vigente para ROJA_DOBLE_AMARILLA; ';
+    SET @v_errores += N'no existe criterio vigente para ROJA_DOBLE_AMARILLA; ';
 
-IF @v_errores <> ''
+IF @v_errores <> N''
 BEGIN
-    SET @v_errores = LEFT(CONCAT('43_Seed_Eventos: ', @v_errores), 2048);
+    SET @v_errores = LEFT(CONCAT(N'43_Seed_Eventos: ', @v_errores), 2048);
     ;THROW 50001, @v_errores, 1;
 END;
 
@@ -144,7 +144,7 @@ ORDER BY a.id_seleccion;
 IF @v_id_seleccion IS NULL
 BEGIN
     ;THROW 50003,
-           '43_Seed_Eventos: no existe una seleccion con tres partidos alineados, sin eventos y con arbitros designados. Ejecute antes el seed de designaciones arbitrales.',
+           N'43_Seed_Eventos: no existe una seleccion con tres partidos alineados, sin eventos y con arbitros designados. Ejecute antes el seed de designaciones arbitrales.',
            1;
 END;
 
@@ -183,7 +183,7 @@ DECLARE @v_partidos TABLE
         WHERE da.id_partido = p.id_partido
           AND da.estado = 'DESIGNADA'
         ORDER BY
-            CASE WHEN ra.descripcion = 'PRINCIPAL' THEN 0 ELSE 1 END,
+            CASE WHEN ra.descripcion = N'PRINCIPAL' THEN 0 ELSE 1 END,
             da.id_rol
     ) AS arbitro
     WHERE EXISTS
@@ -303,7 +303,7 @@ IF @v_sale IS NULL OR @v_entra IS NULL OR @v_doble_amarilla IS NULL
    OR @v_roja_directa IS NULL OR @v_acumulacion IS NULL
 BEGIN
     ;THROW 50003,
-           '43_Seed_Eventos: no se pudieron seleccionar jugadores aptos de las alineaciones',
+           N'43_Seed_Eventos: no se pudieron seleccionar jugadores aptos de las alineaciones',
            1;
 END;
 
@@ -383,7 +383,7 @@ BEGIN TRY
         @id_arbitro = @v_arbitro_1,
         @minuto = 30,
         @id_tipo = @v_tipo_amarilla,
-        @motivo = 'Falta tactica',
+        @motivo = N'Falta tactica',
         @nro_tarjeta = @v_nro_tarjeta OUTPUT,
         @id_suspension = @v_id_suspension OUTPUT;
 
@@ -394,7 +394,7 @@ BEGIN TRY
         @id_arbitro = @v_arbitro_1,
         @minuto = 60,
         @id_tipo = @v_tipo_amarilla,
-        @motivo = 'Segunda amonestacion',
+        @motivo = N'Segunda amonestacion',
         @nro_tarjeta = @v_nro_tarjeta OUTPUT,
         @id_suspension = @v_id_suspension OUTPUT;
 
@@ -408,7 +408,7 @@ BEGIN TRY
         @id_arbitro = @v_arbitro_2,
         @minuto = 10,
         @id_tipo = @v_tipo_roja_directa,
-        @motivo = 'Conducta violenta',
+        @motivo = N'Conducta violenta',
         @nro_tarjeta = @v_nro_tarjeta OUTPUT,
         @id_suspension = @v_id_suspension OUTPUT;
 
@@ -422,7 +422,7 @@ BEGIN TRY
         @id_arbitro = @v_arbitro_1,
         @minuto = 40,
         @id_tipo = @v_tipo_amarilla,
-        @motivo = 'Falta reiterada',
+        @motivo = N'Falta reiterada',
         @nro_tarjeta = @v_nro_tarjeta OUTPUT,
         @id_suspension = @v_id_suspension OUTPUT;
 
@@ -433,7 +433,7 @@ BEGIN TRY
         @id_arbitro = @v_arbitro_2,
         @minuto = 35,
         @id_tipo = @v_tipo_amarilla,
-        @motivo = 'Falta reiterada',
+        @motivo = N'Falta reiterada',
         @nro_tarjeta = @v_nro_tarjeta OUTPUT,
         @id_suspension = @v_id_suspension OUTPUT;
 

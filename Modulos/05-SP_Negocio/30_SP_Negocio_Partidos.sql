@@ -25,7 +25,7 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_codigo INT = 50001;
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
@@ -35,38 +35,38 @@ BEGIN
 
     -- 1) Validaciones acumuladas antes de abrir la transaccion
     IF @fecha_hora_utc IS NULL
-        SET @v_errores += 'fecha_hora_utc obligatoria; ';
+        SET @v_errores += N'fecha_hora_utc obligatoria; ';
 
     IF NOT EXISTS (SELECT 1 FROM torneo.sede WHERE id_sede = @id_sede)
-        SET @v_errores += 'sede inexistente; ';
+        SET @v_errores += N'sede inexistente; ';
 
     SELECT @v_es_eliminacion = f.es_eliminacion
     FROM torneo.fase AS f
     WHERE f.nro_fase = @nro_fase;
 
     IF @v_es_eliminacion IS NULL
-        SET @v_errores += 'fase inexistente; ';
+        SET @v_errores += N'fase inexistente; ';
 
     SELECT @v_grupo_local = s.id_letra
     FROM torneo.seleccion AS s
     WHERE s.id_seleccion = @id_seleccion_local;
 
     IF @v_grupo_local IS NULL
-        SET @v_errores += 'seleccion local inexistente; ';
+        SET @v_errores += N'seleccion local inexistente; ';
 
     SELECT @v_grupo_visitante = s.id_letra
     FROM torneo.seleccion AS s
     WHERE s.id_seleccion = @id_seleccion_visitante;
 
     IF @v_grupo_visitante IS NULL
-        SET @v_errores += 'seleccion visitante inexistente; ';
+        SET @v_errores += N'seleccion visitante inexistente; ';
 
     IF @id_seleccion_local IS NOT NULL
        AND @id_seleccion_visitante IS NOT NULL
        AND @id_seleccion_local = @id_seleccion_visitante
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'las selecciones local y visitante deben ser distintas; ';
+        SET @v_errores += N'las selecciones local y visitante deben ser distintas; ';
     END
 
     IF @esquema_local IS NOT NULL
@@ -75,7 +75,7 @@ BEGIN
        AND @esquema_local NOT LIKE '[1-9]-[0-9]-[0-9]-[0-9]-[0-9]'
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'esquema_local con formato invalido; ';
+        SET @v_errores += N'esquema_local con formato invalido; ';
     END
 
     IF @esquema_visitante IS NOT NULL
@@ -84,7 +84,7 @@ BEGIN
        AND @esquema_visitante NOT LIKE '[1-9]-[0-9]-[0-9]-[0-9]-[0-9]'
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'esquema_visitante con formato invalido; ';
+        SET @v_errores += N'esquema_visitante con formato invalido; ';
     END
 
     IF @fecha_hora_utc IS NOT NULL
@@ -98,7 +98,7 @@ BEGIN
        )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'la sede no esta libre en la fecha y hora indicadas; ';
+        SET @v_errores += N'la sede no esta libre en la fecha y hora indicadas; ';
     END
 
     IF @nro_fase = 1
@@ -108,7 +108,7 @@ BEGIN
            AND @v_grupo_local <> @v_grupo_visitante
         BEGIN
             SET @v_codigo = 50003;
-            SET @v_errores += 'en fase de grupos, ambas selecciones deben pertenecer al mismo grupo; ';
+            SET @v_errores += N'en fase de grupos, ambas selecciones deben pertenecer al mismo grupo; ';
         END
 
         IF EXISTS
@@ -126,7 +126,7 @@ BEGIN
         )
         BEGIN
             SET @v_codigo = 50003;
-            SET @v_errores += 'el cruce entre las selecciones ya fue registrado en la fase de grupos; ';
+            SET @v_errores += N'el cruce entre las selecciones ya fue registrado en la fase de grupos; ';
         END
     END
     ELSE IF @v_es_eliminacion = 1
@@ -143,13 +143,13 @@ BEGIN
         )
         BEGIN
             SET @v_codigo = 50003;
-            SET @v_errores += 'una de las selecciones ya tiene un partido registrado en esta fase eliminatoria; ';
+            SET @v_errores += N'una de las selecciones ya tiene un partido registrado en esta fase eliminatoria; ';
         END
     END
 
-    IF @v_errores <> ''
+    IF @v_errores <> N''
     BEGIN
-        SET @v_errores = LEFT(CONCAT('torneo.usp_Negocio_RegistrarPartido: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT(N'torneo.usp_Negocio_RegistrarPartido: ', @v_errores), 2048);
         THROW @v_codigo, @v_errores, 1;
     END
 
@@ -223,7 +223,7 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_codigo INT = 50001;
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
@@ -248,28 +248,28 @@ BEGIN
     WHERE p.id_partido = @id_partido;
 
     IF @v_estado IS NULL
-        SET @v_errores += 'partido inexistente; ';
+        SET @v_errores += N'partido inexistente; ';
 
     IF @v_estado IS NOT NULL
        AND @v_estado NOT IN ('PROGRAMADO', 'EN_CURSO')
     BEGIN
         SET @v_codigo = 50002;
-        SET @v_errores += 'el partido debe estar PROGRAMADO o EN_CURSO; ';
+        SET @v_errores += N'el partido debe estar PROGRAMADO o EN_CURSO; ';
     END
 
     IF @asistencia_publico IS NULL OR @asistencia_publico < 0
-        SET @v_errores += 'asistencia_publico obligatoria y no negativa; ';
+        SET @v_errores += N'asistencia_publico obligatoria y no negativa; ';
 
     IF @asistencia_publico IS NOT NULL
        AND @v_capacidad IS NOT NULL
        AND @asistencia_publico > @v_capacidad
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'la asistencia supera la capacidad de la sede; ';
+        SET @v_errores += N'la asistencia supera la capacidad de la sede; ';
     END
 
     IF @definido_por_penales IS NULL
-        SET @v_errores += 'definido_por_penales obligatorio; ';
+        SET @v_errores += N'definido_por_penales obligatorio; ';
 
     IF @v_estado IS NOT NULL
        AND
@@ -280,7 +280,7 @@ BEGIN
        ) <> 2
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'ambas selecciones deben tener alineacion registrada; ';
+        SET @v_errores += N'ambas selecciones deben tener alineacion registrada; ';
     END
 
     IF @v_estado IS NOT NULL
@@ -296,7 +296,7 @@ BEGIN
        )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'el partido no tiene un arbitro PRINCIPAL designado; ';
+        SET @v_errores += N'el partido no tiene un arbitro PRINCIPAL designado; ';
     END
 
     SELECT
@@ -313,7 +313,7 @@ BEGIN
     IF @v_es_eliminacion = 0 AND @definido_por_penales = 1
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'una fase no eliminatoria no puede definirse por penales; ';
+        SET @v_errores += N'una fase no eliminatoria no puede definirse por penales; ';
     END
 
     IF @v_es_eliminacion = 1
@@ -323,31 +323,31 @@ BEGIN
             IF @definido_por_penales <> 1
             BEGIN
                 SET @v_codigo = 50003;
-                SET @v_errores += 'un empate en fase eliminatoria debe definirse por penales; ';
+                SET @v_errores += N'un empate en fase eliminatoria debe definirse por penales; ';
             END
 
             IF @v_penales_local + @v_penales_visitante = 0
             BEGIN
                 SET @v_codigo = 50003;
-                SET @v_errores += 'un partido definido por penales debe tener goles del periodo PEN; ';
+                SET @v_errores += N'un partido definido por penales debe tener goles del periodo PEN; ';
             END
 
             IF @v_penales_local = @v_penales_visitante
             BEGIN
                 SET @v_codigo = 50003;
-                SET @v_errores += 'la tanda de penales no puede finalizar empatada; ';
+                SET @v_errores += N'la tanda de penales no puede finalizar empatada; ';
             END
         END
         ELSE IF @definido_por_penales = 1
         BEGIN
             SET @v_codigo = 50003;
-            SET @v_errores += 'si los goles reglamentarios no empatan, definido_por_penales debe ser 0; ';
+            SET @v_errores += N'si los goles reglamentarios no empatan, definido_por_penales debe ser 0; ';
         END
     END
 
-    IF @v_errores <> ''
+    IF @v_errores <> N''
     BEGIN
-        SET @v_errores = LEFT(CONCAT('torneo.usp_Negocio_CerrarPartido: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT(N'torneo.usp_Negocio_CerrarPartido: ', @v_errores), 2048);
         THROW @v_codigo, @v_errores, 1;
     END
 

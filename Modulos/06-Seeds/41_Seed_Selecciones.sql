@@ -15,7 +15,7 @@ SET XACT_ABORT ON;
 
 DECLARE @v_propia BIT = 0;
 DECLARE @v_sp BIT = 0;
-DECLARE @v_errores VARCHAR(2000) = '';
+DECLARE @v_errores NVARCHAR(2000) = N'';
 DECLARE @v_cant_selecciones INT;
 DECLARE @v_id_club INT;
 DECLARE @v_id_posicion TINYINT;
@@ -28,9 +28,9 @@ FROM torneo.seleccion;
 IF @v_cant_selecciones < 16
     SET @v_errores += CONCAT
     (
-        'se requieren al menos 16 selecciones y solo existen ',
+        N'se requieren al menos 16 selecciones y solo existen ',
         @v_cant_selecciones,
-        '; '
+        N'; '
     );
 
 SELECT TOP (1) @v_id_club = c.id_club
@@ -38,31 +38,31 @@ FROM persona.club AS c
 ORDER BY c.id_club;
 
 IF @v_id_club IS NULL
-    SET @v_errores += 'debe existir al menos un club antes de generar jugadores; ';
+    SET @v_errores += N'debe existir al menos un club antes de generar jugadores; ';
 
 SELECT TOP (1) @v_id_posicion = p.id_posicion
 FROM persona.posicion AS p
 ORDER BY
-    CASE WHEN p.descripcion IN ('ARQUERO', 'PORTERO') THEN 0 ELSE 1 END,
+    CASE WHEN p.descripcion IN (N'ARQUERO', N'PORTERO') THEN 0 ELSE 1 END,
     p.id_posicion;
 
 IF @v_id_posicion IS NULL
-    SET @v_errores += 'debe existir al menos una posicion antes de generar jugadores; ';
+    SET @v_errores += N'debe existir al menos una posicion antes de generar jugadores; ';
 
-IF TYPE_ID('torneo.tt_Convocado') IS NULL
-    SET @v_errores += 'no existe el tipo torneo.tt_Convocado; ';
+IF TYPE_ID(N'torneo.tt_Convocado') IS NULL
+    SET @v_errores += N'no existe el tipo torneo.tt_Convocado; ';
 
-IF OBJECT_ID('persona.usp_Jugador_Insertar', 'P') IS NULL
-    SET @v_errores += 'no existe persona.usp_Jugador_Insertar; ';
+IF OBJECT_ID(N'persona.usp_Jugador_Insertar', N'P') IS NULL
+    SET @v_errores += N'no existe persona.usp_Jugador_Insertar; ';
 
-IF OBJECT_ID('torneo.usp_Negocio_RegistrarConvocatoria', 'P') IS NULL
-    SET @v_errores += 'no existe torneo.usp_Negocio_RegistrarConvocatoria; ';
+IF OBJECT_ID(N'torneo.usp_Negocio_RegistrarConvocatoria', N'P') IS NULL
+    SET @v_errores += N'no existe torneo.usp_Negocio_RegistrarConvocatoria; ';
 
-IF @v_errores <> ''
+IF @v_errores <> N''
 BEGIN
     SET @v_errores = LEFT
     (
-        CONCAT('41_Seed_Jugadores_Convocatorias: ', @v_errores),
+        CONCAT(N'41_Seed_Jugadores_Convocatorias: ', @v_errores),
         2048
     );
     ;THROW 50001, @v_errores, 1;
@@ -117,11 +117,11 @@ BEGIN TRY
         BEGIN
             SET @v_errores = CONCAT
             (
-                '41_Seed_Jugadores_Convocatorias: la seleccion ',
+                N'41_Seed_Jugadores_Convocatorias: la seleccion ',
                 @v_id_seleccion,
-                ' posee una convocatoria ACTIVA incompleta de ',
+                N' posee una convocatoria ACTIVA incompleta de ',
                 @v_cant_activos,
-                ' jugadores'
+                N' jugadores'
             );
             ;THROW 50003, @v_errores, 1;
         END
@@ -131,9 +131,9 @@ BEGIN TRY
             DECLARE @v_lista torneo.tt_Convocado;
             DECLARE @v_dorsal TINYINT = 1;
             DECLARE @v_id_jugador INT;
-            DECLARE @v_nro_doc VARCHAR(30);
-            DECLARE @v_nombre VARCHAR(80);
-            DECLARE @v_apellido VARCHAR(80);
+            DECLARE @v_nro_doc NVARCHAR(30);
+            DECLARE @v_nombre NVARCHAR(80);
+            DECLARE @v_apellido NVARCHAR(80);
             DECLARE @v_fecha_nac DATE;
             DECLARE @v_pie_habil CHAR(1);
             DECLARE @v_altura_cm SMALLINT;
@@ -143,14 +143,14 @@ BEGIN TRY
                 /* Documento deterministico y unico incluso si los IDENTITY tienen huecos. */
                 SET @v_nro_doc = CONCAT
                 (
-                    'SEED-',
-                    RIGHT(CONCAT('000000', @v_id_seleccion), 6),
-                    '-',
-                    RIGHT(CONCAT('00', @v_dorsal), 2)
+                    N'SEED-',
+                    RIGHT(CONCAT(N'000000', @v_id_seleccion), 6),
+                    N'-',
+                    RIGHT(CONCAT(N'00', @v_dorsal), 2)
                 );
 
-                SET @v_nombre = CONCAT('Jugador ', RIGHT(CONCAT('00', @v_dorsal), 2));
-                SET @v_apellido = CONCAT('Seleccion ', @v_id_seleccion);
+                SET @v_nombre = CONCAT(N'Jugador ', RIGHT(CONCAT(N'00', @v_dorsal), 2));
+                SET @v_apellido = CONCAT(N'Seleccion ', @v_id_seleccion);
                 SET @v_fecha_nac = DATEADD
                 (
                     DAY,
@@ -232,7 +232,7 @@ BEGIN TRY
     )
     BEGIN
         ;THROW 50003,
-               '41_Seed_Jugadores_Convocatorias: alguna de las 16 selecciones tiene menos de 23 convocados activos',
+               N'41_Seed_Jugadores_Convocatorias: alguna de las 16 selecciones tiene menos de 23 convocados activos',
                1;
     END
 

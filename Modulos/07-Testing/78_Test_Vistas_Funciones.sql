@@ -12,9 +12,9 @@ GO
 
 SET NOCOUNT ON;
 
-PRINT '=====================================================================';
-PRINT 'INICIO PRUEBAS: 78_Test_Funciones_Vistas';
-PRINT '=====================================================================';
+PRINT N'=====================================================================';
+PRINT N'INICIO PRUEBAS: 78_Test_Funciones_Vistas';
+PRINT N'=====================================================================';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_fecha_hora_utc DATETIME2(0);
@@ -47,7 +47,7 @@ SELECT TOP (1)
 FROM publicidad.tipo_cambio AS tc
 ORDER BY tc.fecha DESC, tc.id_moneda;
 
-PRINT '--- DATOS DINAMICOS UTILIZADOS ---';
+PRINT N'--- DATOS DINAMICOS UTILIZADOS ---';
 SELECT
     @v_id_partido AS id_partido,
     @v_fecha_hora_utc AS fecha_hora_utc,
@@ -60,15 +60,15 @@ SELECT
 -------------------------------------------------------------------------------
 -- 1. geo.fn_FechaHoraLocal
 -------------------------------------------------------------------------------
-PRINT '';
-PRINT '--- 1/5: geo.fn_FechaHoraLocal ---';
+PRINT N'';
+PRINT N'--- 1/5: geo.fn_FechaHoraLocal ---';
 
 BEGIN TRY
-    IF OBJECT_ID('geo.fn_FechaHoraLocal', 'F') IS NULL
-        THROW 50001, 'No existe geo.fn_FechaHoraLocal', 1;
+    IF OBJECT_ID(N'geo.fn_FechaHoraLocal', N'FN') IS NULL
+        THROW 50001, N'No existe geo.fn_FechaHoraLocal', 1;
 
     IF @v_fecha_hora_utc IS NULL OR @v_id_huso IS NULL
-        THROW 50001, 'No hay partido, sede, ciudad o huso para probar fn_FechaHoraLocal', 1;
+        THROW 50001, N'No hay partido, sede, ciudad o huso para probar fn_FechaHoraLocal', 1;
 
     SELECT
         @v_id_partido AS id_partido,
@@ -76,24 +76,24 @@ BEGIN TRY
         @v_id_huso AS id_huso,
         geo.fn_FechaHoraLocal(@v_fecha_hora_utc, @v_id_huso) AS fecha_hora_local;
 
-    PRINT 'PASS 1/5: geo.fn_FechaHoraLocal se ejecuto correctamente.';
+    PRINT N'PASS 1/5: geo.fn_FechaHoraLocal se ejecuto correctamente.';
 END TRY
 BEGIN CATCH
-    PRINT CONCAT('FAIL 1/5: ', ERROR_NUMBER(), ' - ', ERROR_MESSAGE());
+    PRINT CONCAT(N'FAIL 1/5: ', ERROR_NUMBER(), N' - ', ERROR_MESSAGE());
 END CATCH;
 
 -------------------------------------------------------------------------------
 -- 2. juego.fn_JugadorSuspendidoEnPartido
 -------------------------------------------------------------------------------
-PRINT '';
-PRINT '--- 2/5: juego.fn_JugadorSuspendidoEnPartido ---';
+PRINT N'';
+PRINT N'--- 2/5: juego.fn_JugadorSuspendidoEnPartido ---';
 
 BEGIN TRY
-    IF OBJECT_ID('juego.fn_JugadorSuspendidoEnPartido', 'FN') IS NULL
-        THROW 50001, 'No existe juego.fn_JugadorSuspendidoEnPartido', 1;
+    IF OBJECT_ID(N'juego.fn_JugadorSuspendidoEnPartido', N'FN') IS NULL
+        THROW 50001, N'No existe juego.fn_JugadorSuspendidoEnPartido', 1;
 
     IF @v_id_jugador IS NULL OR @v_id_partido IS NULL
-        THROW 50001, 'No hay jugador o partido para probar la funcion de suspensio', 1;
+        THROW 50001, N'No hay jugador o partido para probar la funcion de suspension', 1;
 
     SELECT
         @v_id_jugador AS id_jugador,
@@ -104,24 +104,24 @@ BEGIN TRY
             @v_id_partido
         ) AS esta_suspendido;
 
-    PRINT 'PASS 2/5: juego.fn_JugadorSuspendidoEnPartido se ejecuto correctamente.';
+    PRINT N'PASS 2/5: juego.fn_JugadorSuspendidoEnPartido se ejecuto correctamente.';
 END TRY
 BEGIN CATCH
-    PRINT CONCAT('FAIL 2/5: ', ERROR_NUMBER(), ' - ', ERROR_MESSAGE());
+    PRINT CONCAT(N'FAIL 2/5: ', ERROR_NUMBER(), N' - ', ERROR_MESSAGE());
 END CATCH;
 
 -------------------------------------------------------------------------------
 -- 3. publicidad.fn_ImporteEnUSD
 -------------------------------------------------------------------------------
-PRINT '';
-PRINT '--- 3/5: publicidad.fn_ImporteEnUSD ---';
+PRINT N'';
+PRINT N'--- 3/5: publicidad.fn_ImporteEnUSD ---';
 
 BEGIN TRY
-    IF OBJECT_ID('publicidad.fn_ImporteEnUSD', 'FN') IS NULL
-        THROW 50001, 'No existe publicidad.fn_ImporteEnUSD', 1;
+    IF OBJECT_ID(N'publicidad.fn_ImporteEnUSD', N'FN') IS NULL
+        THROW 50001, N'No existe publicidad.fn_ImporteEnUSD', 1;
 
     IF @v_id_moneda IS NULL OR @v_fecha_cotizacion IS NULL
-        THROW 50001, 'No hay una cotizacion disponible para probar fn_ImporteEnUSD', 1;
+        THROW 50001, N'No hay una cotizacion disponible para probar fn_ImporteEnUSD', 1;
 
     SELECT
         @v_importe AS importe_origen,
@@ -134,53 +134,53 @@ BEGIN TRY
             @v_fecha_cotizacion
         ) AS importe_convertido_usd;
 
-    PRINT 'PASS 3/5: publicidad.fn_ImporteEnUSD se ejecuto correctamente.';
+    PRINT N'PASS 3/5: publicidad.fn_ImporteEnUSD se ejecuto correctamente.';
 END TRY
 BEGIN CATCH
-    PRINT CONCAT('FAIL 3/5: ', ERROR_NUMBER(), ' - ', ERROR_MESSAGE());
+    PRINT CONCAT(N'FAIL 3/5: ', ERROR_NUMBER(), N' - ', ERROR_MESSAGE());
 END CATCH;
 
 -------------------------------------------------------------------------------
 -- 4. torneo.vw_Posiciones
 -------------------------------------------------------------------------------
-PRINT '';
-PRINT '--- 4/5: torneo.vw_Posiciones ---';
+PRINT N'';
+PRINT N'--- 4/5: torneo.vw_Posiciones ---';
 
 BEGIN TRY
-    IF OBJECT_ID('torneo.vw_Posiciones', 'V') IS NULL
-        THROW 50001, 'No existe torneo.vw_Posiciones', 1;
+    IF OBJECT_ID(N'torneo.vw_Posiciones', N'V') IS NULL
+        THROW 50001, N'No existe torneo.vw_Posiciones', 1;
 
     SELECT TOP (32) *
     FROM torneo.vw_PosicionesGrupo;
 
-    PRINT 'PASS 4/5: torneo.vw_Posiciones se consulto correctamente.';
+    PRINT N'PASS 4/5: torneo.vw_Posiciones se consulto correctamente.';
 END TRY
 BEGIN CATCH
-    PRINT CONCAT('FAIL 4/5: ', ERROR_NUMBER(), ' - ', ERROR_MESSAGE());
+    PRINT CONCAT(N'FAIL 4/5: ', ERROR_NUMBER(), N' - ', ERROR_MESSAGE());
 END CATCH;
 
 -------------------------------------------------------------------------------
 -- 5. juego.vw_Goleadores
 -------------------------------------------------------------------------------
-PRINT '';
-PRINT '--- 5/5: juego.vw_Goleadores ---';
+PRINT N'';
+PRINT N'--- 5/5: juego.vw_Goleadores ---';
 
 BEGIN TRY
-    IF OBJECT_ID('juego.vw_Goleadores', 'V') IS NULL
-        THROW 50001, 'No existe juego.vw_Goleadores', 1;
+    IF OBJECT_ID(N'juego.vw_Goleadores', N'V') IS NULL
+        THROW 50001, N'No existe juego.vw_Goleadores', 1;
 
     SELECT TOP (10) *
     FROM juego.vw_Goleadores;
 
-    PRINT 'PASS 5/5: juego.vw_Goleadores se consulto correctamente.';
+    PRINT N'PASS 5/5: juego.vw_Goleadores se consulto correctamente.';
 END TRY
 BEGIN CATCH
-    PRINT CONCAT('FAIL 5/5: ', ERROR_NUMBER(), ' - ', ERROR_MESSAGE());
+    PRINT CONCAT(N'FAIL 5/5: ', ERROR_NUMBER(), N' - ', ERROR_MESSAGE());
 END CATCH;
 
-PRINT '';
-PRINT '=====================================================================';
-PRINT 'FIN PRUEBAS: 78_Test_Funciones_Vistas';
-PRINT 'PRUEBA DE SOLO LECTURA: NO SE REQUIERE TRANSACCION NI ROLLBACK';
-PRINT '=====================================================================';
+PRINT N'';
+PRINT N'=====================================================================';
+PRINT N'FIN PRUEBAS: 78_Test_Funciones_Vistas';
+PRINT N'PRUEBA DE SOLO LECTURA: NO SE REQUIERE TRANSACCION NI ROLLBACK';
+PRINT N'=====================================================================';
 GO

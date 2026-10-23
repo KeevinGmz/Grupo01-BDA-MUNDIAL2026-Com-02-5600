@@ -13,31 +13,31 @@ GO
 SET NOCOUNT ON;
 GO
 
-PRINT '=====================================================================';
-PRINT 'INICIO PRUEBAS DE ERROR: 63_Test_ABM_Soporte_ERR';
-PRINT '=====================================================================';
+PRINT N'=====================================================================';
+PRINT N'INICIO PRUEBAS DE ERROR: 63_Test_ABM_Soporte_ERR';
+PRINT N'=====================================================================';
 GO
 
 /* =====================================================================
    CASO 1: importacion con formato fuera del dominio permitido
 ===================================================================== */
-PRINT '';
-PRINT '-> Test 1: insertar importacion con formato EXE';
+PRINT N'';
+PRINT N'-> Test 1: insertar importacion con formato EXE';
 
 DECLARE @v_id_importacion INT;
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
 DECLARE @v_filas_antes INT;
 DECLARE @v_filas_despues INT;
-DECLARE @v_archivo VARCHAR(260) = 'test_formato_invalido.exe';
+DECLARE @v_archivo NVARCHAR(260) = N'test_formato_invalido.exe';
 
 -------------------------------------------------------------------------------
 -- 1. Validaciones previas
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID('soporte.usp_Importacion_Insertar', 'P') IS NULL
+IF OBJECT_ID(N'soporte.usp_Importacion_Insertar', N'P') IS NULL
 BEGIN
-    ;THROW 50001, '63_Test_ABM_Soporte_ERR: no existe soporte.usp_Importacion_Insertar',1;
+    ;THROW 50001, N'63_Test_ABM_Soporte_ERR: no existe soporte.usp_Importacion_Insertar',1;
 END;
 
 IF EXISTS
@@ -47,7 +47,7 @@ IF EXISTS
     WHERE i.archivo = @v_archivo
 )
 BEGIN
-    ;THROW 50001,'63_Test_ABM_Soporte_ERR: existe una importacion residual de una prueba anterior',1;
+    ;THROW 50001,N'63_Test_ABM_Soporte_ERR: existe una importacion residual de una prueba anterior',1;
 END;
 
 SELECT @v_filas_antes = COUNT(*)
@@ -62,7 +62,7 @@ BEGIN TRANSACTION;
 
 BEGIN TRY
     EXEC soporte.usp_Importacion_Insertar
-        @fuente = 'Prueba de formato invalido',
+        @fuente = N'Prueba de formato invalido',
         @archivo = @v_archivo,
         @formato = 'EXE',
         @fecha_inicio = '2026-10-03T10:00:00',
@@ -74,7 +74,7 @@ BEGIN TRY
         @id_importacion = @v_id_importacion OUTPUT;
 
     SET @v_error_numero = 0;
-    SET @v_error_mensaje = 'El SP no lanzo la excepcion esperada';
+    SET @v_error_mensaje = N'El SP no lanzo la excepcion esperada';
 END TRY
 BEGIN CATCH
     SET @v_error_numero = ERROR_NUMBER();
@@ -94,9 +94,9 @@ IF @@TRANCOUNT > 0
 
 PRINT CONCAT
 (
-    'Error capturado ',
+    N'Error capturado ',
     @v_error_numero,
-    ': ',
+    N': ',
     @v_error_mensaje
 );
 
@@ -110,18 +110,18 @@ SELECT
 IF @v_error_numero = 50001
    AND
    (
-       @v_error_mensaje LIKE '%formato%invalido%'
-       OR @v_error_mensaje LIKE '%formato%CSV%JSON%XML%'
-       OR @v_error_mensaje LIKE '%formato%permitido%'
+       @v_error_mensaje LIKE N'%formato%invalido%'
+       OR @v_error_mensaje LIKE N'%formato%CSV%JSON%XML%'
+       OR @v_error_mensaje LIKE N'%formato%permitido%'
    )
    AND @v_filas_antes = 0
    AND @v_filas_despues = 0
 BEGIN
-    PRINT 'PASS Test 1: se rechazo el formato EXE con error 50001 y no se inserto la importacion.';
+    PRINT N'PASS Test 1: se rechazo el formato EXE con error 50001 y no se inserto la importacion.';
 END
 ELSE
 BEGIN
-    PRINT 'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
+    PRINT N'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
 END;
 GO
 
@@ -134,16 +134,16 @@ SELECT CASE
          (
              SELECT 1
              FROM soporte.importacion AS i
-             WHERE i.archivo = 'test_formato_invalido.exe'
+             WHERE i.archivo = N'test_formato_invalido.exe'
          )
-        THEN 'PASS rollback: no quedaron residuos'
-    ELSE 'FAIL rollback: quedaron residuos'
+        THEN N'PASS rollback: no quedaron residuos'
+    ELSE N'FAIL rollback: quedaron residuos'
 END AS resultado_final;
 GO
 
-PRINT '';
-PRINT '=====================================================================';
-PRINT 'FIN PRUEBAS DE ERROR: 63_Test_ABM_Soporte_ERR';
-PRINT 'ROLLBACK EJECUTADO';
-PRINT '=====================================================================';
+PRINT N'';
+PRINT N'=====================================================================';
+PRINT N'FIN PRUEBAS DE ERROR: 63_Test_ABM_Soporte_ERR';
+PRINT N'ROLLBACK EJECUTADO';
+PRINT N'=====================================================================';
 GO

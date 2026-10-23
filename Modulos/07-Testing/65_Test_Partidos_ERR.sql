@@ -5,7 +5,7 @@ Comisión: 02-5600
 Grupo   : 01
 Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Caceres Lautaro Agustin
 Fecha   : 2026-10-03
-Objetivo: Validar errores de los SP de negocio de partidos:selecciones distintas, disponibilidad de sede y asistencia no superior a la capacidad.
+Objetivo: Validar errores de los SP de negocio de partidos:V-04 selecciones distintas, V-03 disponibilidad de sede y asistencia no superior a la capacidad.
 ===================================================================== */
 USE Mundial2026;
 GO
@@ -13,29 +13,29 @@ GO
 SET NOCOUNT ON;
 GO
 
-PRINT '=====================================================================';
-PRINT 'INICIO PRUEBAS DE ERROR: 65_Test_ERR_Partidos';
-PRINT '=====================================================================';
+PRINT N'=====================================================================';
+PRINT N'INICIO PRUEBAS DE ERROR: 65_Test_ERR_Partidos';
+PRINT N'=====================================================================';
 GO
 
 /* =====================================================================
    CASO 1: misma seleccion como local y visitante
 ===================================================================== */
-PRINT '';
-PRINT '-> Test 1: registrar un partido con la misma seleccion en ambos lados';
+PRINT N'';
+PRINT N'-> Test 1: registrar un partido con la misma seleccion en ambos lados';
 
 DECLARE @v_id_seleccion INT;
 DECLARE @v_id_sede INT;
 DECLARE @v_nro_fase TINYINT;
 DECLARE @v_id_partido INT;
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
 DECLARE @v_partidos_antes INT;
 DECLARE @v_partidos_despues INT;
 
-IF OBJECT_ID('torneo.usp_Negocio_RegistrarPartido', 'P') IS NULL
+IF OBJECT_ID(N'torneo.usp_Negocio_RegistrarPartido', N'P') IS NULL
 BEGIN
-    ;THROW 50001, '65_Test_ERR_Partidos: no existe usp_Negocio_RegistrarPartido', 1;
+    ;THROW 50001, N'65_Test_ERR_Partidos: no existe usp_Negocio_RegistrarPartido', 1;
 END;
 
 SELECT TOP (1) @v_id_seleccion = s.id_seleccion
@@ -53,7 +53,7 @@ ORDER BY f.nro_fase;
 
 IF @v_id_seleccion IS NULL OR @v_id_sede IS NULL OR @v_nro_fase IS NULL
 BEGIN
-    ;THROW 50001, '65_Test_ERR_Partidos: faltan seleccion, sede o fase para el Test 1', 1;
+    ;THROW 50001, N'65_Test_ERR_Partidos: faltan seleccion, sede o fase para el Test 1', 1;
 END;
 
 SELECT @v_partidos_antes = COUNT(*) FROM torneo.partido;
@@ -71,7 +71,7 @@ BEGIN TRY
         @id_partido = @v_id_partido OUTPUT;
 
     SET @v_error_numero = 0;
-    SET @v_error_mensaje = 'El SP acepto selecciones identicas';
+    SET @v_error_mensaje = N'El SP acepto selecciones identicas';
 END TRY
 BEGIN CATCH
     SET @v_error_numero = ERROR_NUMBER();
@@ -81,21 +81,21 @@ END CATCH;
 SELECT @v_partidos_despues = COUNT(*) FROM torneo.partido;
 IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
-PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
+PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
 
 IF @v_error_numero IN (50001, 50003)
-   AND (@v_error_mensaje LIKE '%seleccion%distint%' OR @v_error_mensaje LIKE '%local%visitante%igual%')
+   AND (@v_error_mensaje LIKE N'%seleccion%distint%' OR @v_error_mensaje LIKE N'%local%visitante%igual%')
    AND @v_partidos_despues = @v_partidos_antes
-    PRINT 'PASS Test 1: se rechazaron las selecciones identicas.';
+    PRINT N'PASS Test 1: se rechazaron las selecciones identicas.';
 ELSE
-    PRINT 'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
+    PRINT N'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
 GO
 
 /* =====================================================================
    CASO 2: misma sede en el mismo horario
 ===================================================================== */
-PRINT '';
-PRINT '-> Test 2: registrar dos partidos en la misma sede y horario';
+PRINT N'';
+PRINT N'-> Test 2: registrar dos partidos en la misma sede y horario';
 
 DECLARE @v_id_sede INT;
 DECLARE @v_nro_fase TINYINT;
@@ -107,7 +107,7 @@ DECLARE @v_id_partido_1 INT;
 DECLARE @v_id_partido_2 INT;
 DECLARE @v_fecha DATETIME2(0) = '2026-06-20T20:00:00';
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
 DECLARE @v_cantidad_slot INT;
 
 SELECT TOP (1) @v_id_sede = s.id_sede FROM torneo.sede AS s ORDER BY s.id_sede;
@@ -138,7 +138,7 @@ WHERE rn <= 4;
 
 IF @v_id_sede IS NULL OR @v_nro_fase IS NULL OR @v_sel_4 IS NULL
 BEGIN
-    ;THROW 50001, '65_Test_ERR_Partidos: se requiere una sede, fase y grupo con cuatro selecciones para el Test 2', 1;
+    ;THROW 50001, N'65_Test_ERR_Partidos: se requiere una sede, fase y grupo con cuatro selecciones para el Test 2', 1;
 END;
 
 -- Buscar hasta 30 dias un horario inicialmente libre.
@@ -158,7 +158,7 @@ END;
 
 IF @v_intentos = 30
 BEGIN
-    ;THROW 50001, '65_Test_ERR_Partidos: no se encontro un horario libre para preparar el Test 2', 1;
+    ;THROW 50001, N'65_Test_ERR_Partidos: no se encontro un horario libre para preparar el Test 2', 1;
 END;
 
 BEGIN TRANSACTION;
@@ -185,7 +185,7 @@ BEGIN TRY
             @id_partido = @v_id_partido_2 OUTPUT;
 
         SET @v_error_numero = 0;
-        SET @v_error_mensaje = 'El SP permitio dos partidos en la misma sede y horario';
+        SET @v_error_mensaje = N'El SP permitio dos partidos en la misma sede y horario';
     END TRY
     BEGIN CATCH
         SET @v_error_numero = ERROR_NUMBER();
@@ -204,21 +204,21 @@ BEGIN CATCH
     ;THROW;
 END CATCH;
 
-PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
+PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
 
 IF @v_error_numero IN (50001, 50003)
-   AND (@v_error_mensaje LIKE '%sede%ocupad%' OR @v_error_mensaje LIKE '%sede%horario%' OR @v_error_mensaje LIKE '%solap%')
+   AND (@v_error_mensaje LIKE N'%sede%ocupad%' OR @v_error_mensaje LIKE N'%sede%horario%' OR @v_error_mensaje LIKE N'%solap%')
    AND @v_cantidad_slot = 1
-    PRINT 'PASS Test 2: se rechazo el solapamiento de sede y horario.';
+    PRINT N'PASS Test 2: se rechazo el solapamiento de sede y horario.';
 ELSE
-    PRINT 'FAIL Test 2: numero, mensaje o cantidad de partidos distintos de lo esperado.';
+    PRINT N'FAIL Test 2: numero, mensaje o cantidad de partidos distintos de lo esperado.';
 GO
 
 /* =====================================================================
    CASO 3: cierre con asistencia superior a la capacidad
 ===================================================================== */
-PRINT '';
-PRINT '-> Test 3: cerrar partido con asistencia superior a la capacidad';
+PRINT N'';
+PRINT N'-> Test 3: cerrar partido con asistencia superior a la capacidad';
 
 DECLARE @v_id_sede INT;
 DECLARE @v_capacidad INT;
@@ -236,7 +236,7 @@ DECLARE @v_id_rol_principal TINYINT;
 DECLARE @v_id_partido INT;
 DECLARE @v_fecha DATETIME2(0) = '2026-07-05T18:00:00';
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
 DECLARE @v_estado_despues VARCHAR(12);
 DECLARE @v_asistencia_despues INT;
 
@@ -273,7 +273,7 @@ IF @v_id_sede IS NULL OR @v_capacidad IS NULL OR @v_nro_fase IS NULL
    OR @v_posicion_local IS NULL OR @v_posicion_visitante IS NULL
    OR @v_id_arbitro IS NULL OR @v_id_rol_principal IS NULL
 BEGIN
-    ;THROW 50001, '65_Test_ERR_Partidos: faltan datos para preparar el Test 3', 1;
+    ;THROW 50001, N'65_Test_ERR_Partidos: faltan datos para preparar el Test 3', 1;
 END;
 
 DECLARE @v_intentos TINYINT = 0;
@@ -295,7 +295,7 @@ END;
 
 IF @v_intentos = 30
 BEGIN
-    ;THROW 50001, '65_Test_ERR_Partidos: no se encontro un horario libre para preparar el Test 3', 1;
+    ;THROW 50001, N'65_Test_ERR_Partidos: no se encontro un horario libre para preparar el Test 3', 1;
 END;
 
 BEGIN TRANSACTION;
@@ -334,7 +334,7 @@ BEGIN TRY
 
         SET @v_error_numero = 0;
         SET @v_error_mensaje =
-            'El SP permitió asistencia superior a la capacidad';
+            N'El SP permitió asistencia superior a la capacidad';
     END TRY
     BEGIN CATCH
         SET @v_error_numero = ERROR_NUMBER();
@@ -354,20 +354,20 @@ BEGIN TRY
     ;THROW;
 END CATCH;
 
-PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
+PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
 
 IF @v_error_numero IN (50001, 50003)
-   AND (@v_error_mensaje LIKE '%asistencia%capacidad%' OR @v_error_mensaje LIKE '%capacidad%sede%')
+   AND (@v_error_mensaje LIKE N'%asistencia%capacidad%' OR @v_error_mensaje LIKE N'%capacidad%sede%')
    AND @v_estado_despues = 'EN_CURSO'
    AND @v_asistencia_despues IS NULL
-    PRINT 'PASS Test 3: se rechazo la asistencia superior a la capacidad.';
+    PRINT N'PASS Test 3: se rechazo la asistencia superior a la capacidad.';
 ELSE
-    PRINT 'FAIL Test 3: numero, mensaje o estado distintos de lo esperado.';
+    PRINT N'FAIL Test 3: numero, mensaje o estado distintos de lo esperado.';
 GO
 
-PRINT '';
-PRINT '=====================================================================';
-PRINT 'FIN PRUEBAS DE ERROR: 65_Test_ERR_Partidos';
-PRINT 'CADA CASO EJECUTO SU PROPIO ROLLBACK';
-PRINT '=====================================================================';
+PRINT N'';
+PRINT N'=====================================================================';
+PRINT N'FIN PRUEBAS DE ERROR: 65_Test_ERR_Partidos';
+PRINT N'CADA CASO EJECUTO SU PROPIO ROLLBACK';
+PRINT N'=====================================================================';
 GO

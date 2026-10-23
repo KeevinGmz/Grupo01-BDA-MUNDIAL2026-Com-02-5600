@@ -22,7 +22,7 @@ BEGIN TRY
     PRINT '-> Test 1.1: Insertar país con múltiples parámetros inválidos...';
     DECLARE @id_out SMALLINT;
     EXEC geo.usp_Pais_Insertar 
-        @nombre = '', 
+        @nombre = N'', 
         @cod_iso3 = 'ARGENTINA', -- Excede los 3 caracteres
         @cod_fifa = NULL, 
         @gentilicio = NULL, 
@@ -43,7 +43,7 @@ END CATCH;
 BEGIN TRY
     PRINT CHAR(10) + '-> Test 1.2: Insertar país con código ISO3 duplicado...';
     EXEC geo.usp_Pais_Insertar 
-        @nombre = 'Nación Duplicada', 
+        @nombre = N'Nación Duplicada', 
         @cod_iso3 = 'ARG', -- ISO3 existente de Argentina
         @cod_fifa = 'NDP', 
         @gentilicio = 'Duplicado', 

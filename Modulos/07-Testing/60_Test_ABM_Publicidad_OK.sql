@@ -16,9 +16,9 @@ BEGIN TRANSACTION;
 
     DECLARE @v_id_anunciante INT;
     EXEC publicidad.usp_Anunciante_Insertar
-        @razon_social = 'Empresa De Prueba S.A.',
+        @razon_social = N'Empresa De Prueba S.A.',
         @identificacion_fiscal = 'TAX-99999',
-        @contacto = 'contacto@prueba.com',
+        @contacto = N'contacto@prueba.com',
         @id_pais = 1,
         @id_anunciante = @v_id_anunciante OUTPUT;
 

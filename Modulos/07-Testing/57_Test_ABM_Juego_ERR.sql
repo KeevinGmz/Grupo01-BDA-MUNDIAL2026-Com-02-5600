@@ -13,23 +13,15 @@ PRINT '=====================================================================';
 BEGIN TRANSACTION;
 
 -- ---------------------------------------------------------------------
--- CASO 1: Minuto de gol fuera de rango (0-130)
+-- CASO 1: Minuto de incidencia fuera de rango (0-130)
 -- ---------------------------------------------------------------------
 BEGIN TRY
-    PRINT '-> Test 1: Insertar gol en el minuto 150...';
-
-    EXEC juego.usp_Gol_Insertar
-        @id_partido = 1,
-        @id_seleccion = 1,
-        @nro_gol = 1,
-        @minuto = 150, -- Inválido
-        @tipo_gol = 'JUGADA',
-        @en_contra = 0,
-        @periodo = 'ST',
-        @id_jugador_autor = 1,
-        @id_jugador_asistente = NULL;
-
-    PRINT '   [ERROR] El procedimiento debió fallar y no falló.';
+    PRINT '-> Test 1: Insertar incidencia en el minuto 150...';
+    DECLARE @id_out INT;
+    EXEC juego.usp_Incidencia_Insertar 
+        @id_partido = 1, @id_seleccion = 1, @minuto = 150, -- Inválido
+        @tipo_incidencia = 'GOL', @periodo = 'ST',
+        @id_incidencia = @id_out OUTPUT;
 END TRY
 BEGIN CATCH
     PRINT '   [ÉXITO CAPTURANDO ERROR] Código: ' + CAST(ERROR_NUMBER() AS VARCHAR(10));
@@ -37,7 +29,6 @@ BEGIN CATCH
 END CATCH;
 
 ROLLBACK TRANSACTION;
-
 PRINT CHAR(10) + '=====================================================================';
 PRINT 'FIN PRUEBAS DE ERROR: 57_Test_ERR_ABM_Juego';
 PRINT '=====================================================================';

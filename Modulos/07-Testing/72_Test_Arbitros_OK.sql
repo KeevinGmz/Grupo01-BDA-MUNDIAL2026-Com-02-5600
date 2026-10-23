@@ -13,14 +13,14 @@ GO
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-PRINT '=====================================================================';
-PRINT 'INICIO PRUEBA EXITOSA: 72_Test_OK_Arbitraje';
-PRINT '=====================================================================';
+PRINT N'=====================================================================';
+PRINT N'INICIO PRUEBA EXITOSA: 72_Test_OK_Arbitraje';
+PRINT N'=====================================================================';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_pais_local SMALLINT;
 DECLARE @v_id_pais_visitante SMALLINT;
-DECLARE @v_advertencia VARCHAR(500);
+DECLARE @v_advertencia NVARCHAR(500);
 DECLARE @v_designaciones_antes INT;
 DECLARE @v_designaciones_despues INT;
 DECLARE @v_cantidad_roles INT;
@@ -31,14 +31,14 @@ DECLARE @v_terna arbitraje.tt_Designacion;
 -- 1. Validar los objetos requeridos
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID('arbitraje.usp_Negocio_DesignarTerna', 'P') IS NULL
+IF OBJECT_ID(N'arbitraje.usp_Negocio_DesignarTerna', N'P') IS NULL
 BEGIN
-    ;THROW 50001, '72_Test_OK_Arbitraje: no existe arbitraje.usp_Negocio_DesignarTerna',1;
+    ;THROW 50001, N'72_Test_OK_Arbitraje: no existe arbitraje.usp_Negocio_DesignarTerna',1;
 END;
 
-IF TYPE_ID('arbitraje.tt_Designacion') IS NULL
+IF TYPE_ID(N'arbitraje.tt_Designacion') IS NULL
 BEGIN
-    ;THROW 50001,'72_Test_OK_Arbitraje: no existe arbitraje.tt_Designacion', 1;
+    ;THROW 50001,N'72_Test_OK_Arbitraje: no existe arbitraje.tt_Designacion', 1;
 END;
 
 SELECT @v_cantidad_roles = COUNT(*)
@@ -46,7 +46,7 @@ FROM arbitraje.rol_arbitral;
 
 IF @v_cantidad_roles <> 5
 BEGIN
-    ;THROW 50001, '72_Test_OK_Arbitraje: deben existir exactamente cinco roles arbitrales',1;
+    ;THROW 50001, N'72_Test_OK_Arbitraje: deben existir exactamente cinco roles arbitrales',1;
 END;
 
 -------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ ORDER BY p.id_partido;
 
 IF @v_id_partido IS NULL
 BEGIN
-    ;THROW 50001, '72_Test_OK_Arbitraje: se requiere un partido PROGRAMADO sin designaciones y con cinco arbitros neutrales disponibles', 1;
+    ;THROW 50001, N'72_Test_OK_Arbitraje: se requiere un partido PROGRAMADO sin designaciones y con cinco arbitros neutrales disponibles', 1;
 END;
 
 SELECT @v_cantidad_arbitros_neutrales = COUNT(*)
@@ -98,7 +98,7 @@ WHERE pa.id_pais NOT IN (@v_id_pais_local, @v_id_pais_visitante);
 
 IF @v_cantidad_arbitros_neutrales < 5
 BEGIN
-    ;THROW 50001, '72_Test_OK_Arbitraje: no hay cinco arbitros neutrales disponibles',1;
+    ;THROW 50001, N'72_Test_OK_Arbitraje: no hay cinco arbitros neutrales disponibles',1;
 END;
 
 -------------------------------------------------------------------------------
@@ -137,7 +137,7 @@ JOIN arbitros AS a
 
 IF (SELECT COUNT(*) FROM @v_terna) <> 5
 BEGIN
-    ;THROW 50001, '72_Test_OK_Arbitraje: el TVP no contiene las cinco designaciones requeridas',1;
+    ;THROW 50001, N'72_Test_OK_Arbitraje: el TVP no contiene las cinco designaciones requeridas',1;
 END;
 
 IF EXISTS
@@ -148,10 +148,10 @@ IF EXISTS
     HAVING COUNT(*) > 1
 )
 BEGIN
-    ;THROW 50001, '72_Test_OK_Arbitraje: un arbitro no puede ocupar mas de un rol en el mismo partido',1;
+    ;THROW 50001, N'72_Test_OK_Arbitraje: un arbitro no puede ocupar mas de un rol en el mismo partido',1;
 END;
 
-PRINT '--- EVIDENCIA DEL TVP ANTES DE DESIGNAR LA TERNA ---';
+PRINT N'--- EVIDENCIA DEL TVP ANTES DE DESIGNAR LA TERNA ---';
 
 SELECT
     @v_id_partido AS id_partido,
@@ -217,12 +217,12 @@ BEGIN TRY
                  WHERE da.id_partido = @v_id_partido
                    AND pa.id_pais IN (@v_id_pais_local, @v_id_pais_visitante)
              )
-            THEN 'PASS designar terna arbitral'
-        ELSE 'FAIL designar terna arbitral'
+            THEN N'PASS designar terna arbitral'
+        ELSE N'FAIL designar terna arbitral'
     END AS resultado;
 
-    PRINT '--- EVIDENCIA DESPUES DE DESIGNAR LA TERNA ---';
-    PRINT CONCAT('Advertencia emitida: ', COALESCE(@v_advertencia, 'Ninguna'));
+    PRINT N'--- EVIDENCIA DESPUES DE DESIGNAR LA TERNA ---';
+    PRINT CONCAT(N'Advertencia emitida: ', COALESCE(@v_advertencia, N'Ninguna'));
 
     SELECT
         da.id_partido,
@@ -241,7 +241,7 @@ BEGIN TRY
     ORDER BY da.id_rol;
 
     ROLLBACK TRANSACTION;
-    PRINT 'PASS general: prueba finalizada y transaccion revertida.';
+    PRINT N'PASS general: prueba finalizada y transaccion revertida.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
@@ -249,9 +249,9 @@ BEGIN CATCH
 
     PRINT CONCAT
     (
-        'FAIL general. Error ',
+        N'FAIL general. Error ',
         ERROR_NUMBER(),
-        ': ',
+        N': ',
         ERROR_MESSAGE()
     );
 
@@ -259,8 +259,8 @@ BEGIN CATCH
 END CATCH;
 GO
 
-PRINT '=====================================================================';
-PRINT 'FIN PRUEBA EXITOSA: 72_Test_OK_Arbitraje';
-PRINT 'ROLLBACK EJECUTADO';
-PRINT '=====================================================================';
+PRINT N'=====================================================================';
+PRINT N'FIN PRUEBA EXITOSA: 72_Test_OK_Arbitraje';
+PRINT N'ROLLBACK EJECUTADO';
+PRINT N'=====================================================================';
 GO

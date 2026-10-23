@@ -13,7 +13,7 @@ GO
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-PRINT '=== 62_Test_ABM_Soporte_OK: importacion e importacion_error ===';
+PRINT N'=== 62_Test_ABM_Soporte_OK: importacion e importacion_error ===';
 
 DECLARE @v_id_importacion INT;
 DECLARE @v_nro_error INT = 1;
@@ -21,19 +21,19 @@ DECLARE @v_importaciones_antes INT;
 DECLARE @v_errores_antes INT;
 DECLARE @v_importaciones_despues INT;
 DECLARE @v_errores_despues INT;
-DECLARE @v_archivo VARCHAR(260) = 'test_fixture_abm.csv';
+DECLARE @v_archivo NVARCHAR(260) = N'test_fixture_abm.csv';
 
 -------------------------------------------------------------------------------
 -- 1. Validaciones previas
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID('soporte.usp_Importacion_Insertar', 'P') IS NULL
-   OR OBJECT_ID('soporte.usp_Importacion_Modificar', 'P') IS NULL
-   OR OBJECT_ID('soporte.usp_Importacion_Eliminar', 'P') IS NULL
-   OR OBJECT_ID('soporte.usp_ImportacionError_Insertar', 'P') IS NULL
-   OR OBJECT_ID('soporte.usp_ImportacionError_Eliminar', 'P') IS NULL
+IF OBJECT_ID(N'soporte.usp_Importacion_Insertar', N'P') IS NULL
+   OR OBJECT_ID(N'soporte.usp_Importacion_Modificar', N'P') IS NULL
+   OR OBJECT_ID(N'soporte.usp_Importacion_Eliminar', N'P') IS NULL
+   OR OBJECT_ID(N'soporte.usp_ImportacionError_Insertar', N'P') IS NULL
+   OR OBJECT_ID(N'soporte.usp_ImportacionError_Eliminar', N'P') IS NULL
 BEGIN
-    ;THROW 50001,'62_Test_ABM_Soporte_OK: faltan uno o mas procedimientos ABM requeridos',1;
+    ;THROW 50001,N'62_Test_ABM_Soporte_OK: faltan uno o mas procedimientos ABM requeridos',1;
 END;
 
 IF EXISTS
@@ -43,7 +43,7 @@ IF EXISTS
     WHERE i.archivo = @v_archivo
 )
 BEGIN
-    ;THROW 50001,'62_Test_ABM_Soporte_OK: existe una importacion residual de una prueba anterior', 1;
+    ;THROW 50001,N'62_Test_ABM_Soporte_OK: existe una importacion residual de una prueba anterior', 1;
 END;
 
 BEGIN TRY
@@ -59,7 +59,7 @@ BEGIN TRY
     SELECT @v_errores_antes = COUNT(*)
     FROM soporte.importacion_error;
 
-    PRINT '--- EVIDENCIA ANTES DE INSERTAR ---';
+    PRINT N'--- EVIDENCIA ANTES DE INSERTAR ---';
 
     SELECT
         @v_importaciones_antes AS importaciones_antes,
@@ -74,7 +74,7 @@ BEGIN TRY
     ---------------------------------------------------------------------------
 
     EXEC soporte.usp_Importacion_Insertar
-        @fuente = 'Dataset Test',
+        @fuente = N'Dataset Test',
         @archivo = @v_archivo,
         @formato = 'CSV',
         @fecha_inicio = '2026-10-03T10:00:00',
@@ -95,7 +95,7 @@ BEGIN TRY
                  SELECT 1
                  FROM soporte.importacion AS i
                  WHERE i.id_importacion = @v_id_importacion
-                   AND i.fuente = 'Dataset Test'
+                   AND i.fuente = N'Dataset Test'
                    AND i.archivo = @v_archivo
                    AND i.formato = 'CSV'
                    AND i.fecha_inicio = '2026-10-03T10:00:00'
@@ -105,15 +105,15 @@ BEGIN TRY
                    AND i.filas_error = 0
                    AND i.estado = 'EN_CURSO'
              )
-            THEN 'PASS importacion insertar'
-        ELSE 'FAIL importacion insertar'
+            THEN N'PASS importacion insertar'
+        ELSE N'FAIL importacion insertar'
     END AS resultado;
 
     PRINT CONCAT
     (
-        '--- EVIDENCIA DESPUES DE INSERTAR IMPORTACION. ID: ',
+        N'--- EVIDENCIA DESPUES DE INSERTAR IMPORTACION. ID: ',
         @v_id_importacion,
-        ' ---'
+        N' ---'
     );
 
     SELECT i.*
@@ -128,9 +128,9 @@ BEGIN TRY
         @id_importacion = @v_id_importacion,
         @nro_error = @v_nro_error,
         @nro_fila = 45,
-        @columna = 'fecha_partido',
-        @valor = 'fecha-invalida',
-        @mensaje = 'Formato de fecha invalido';
+        @columna = N'fecha_partido',
+        @valor = N'fecha-invalida',
+        @mensaje = N'Formato de fecha invalido';
 
     SELECT @v_errores_despues = COUNT(*)
     FROM soporte.importacion_error;
@@ -144,15 +144,15 @@ BEGIN TRY
                  WHERE ie.id_importacion = @v_id_importacion
                    AND ie.nro_error = @v_nro_error
                    AND ie.nro_fila = 45
-                   AND ie.columna = 'fecha_partido'
-                   AND ie.valor = 'fecha-invalida'
-                   AND ie.mensaje = 'Formato de fecha invalido'
+                   AND ie.columna = N'fecha_partido'
+                   AND ie.valor = N'fecha-invalida'
+                   AND ie.mensaje = N'Formato de fecha invalido'
              )
-            THEN 'PASS importacion_error insertar'
-        ELSE 'FAIL importacion_error insertar'
+            THEN N'PASS importacion_error insertar'
+        ELSE N'FAIL importacion_error insertar'
     END AS resultado;
 
-    PRINT '--- EVIDENCIA DESPUES DE INSERTAR DETALLE DE ERROR ---';
+    PRINT N'--- EVIDENCIA DESPUES DE INSERTAR DETALLE DE ERROR ---';
 
     SELECT ie.*
     FROM soporte.importacion_error AS ie
@@ -165,7 +165,7 @@ BEGIN TRY
 
     EXEC soporte.usp_Importacion_Modificar
         @id_importacion = @v_id_importacion,
-        @fuente = 'Dataset Test Modificado',
+        @fuente = N'Dataset Test Modificado',
         @archivo = @v_archivo,
         @formato = 'CSV',
         @fecha_inicio = '2026-10-03T10:00:00',
@@ -181,7 +181,7 @@ BEGIN TRY
                  SELECT 1
                  FROM soporte.importacion AS i
                  WHERE i.id_importacion = @v_id_importacion
-                   AND i.fuente = 'Dataset Test Modificado'
+                   AND i.fuente = N'Dataset Test Modificado'
                    AND i.archivo = @v_archivo
                    AND i.formato = 'CSV'
                    AND i.fecha_inicio = '2026-10-03T10:00:00'
@@ -191,11 +191,11 @@ BEGIN TRY
                    AND i.filas_error = 2
                    AND i.estado = 'CON_ERROR'
              )
-            THEN 'PASS importacion modificar'
-        ELSE 'FAIL importacion modificar'
+            THEN N'PASS importacion modificar'
+        ELSE N'FAIL importacion modificar'
     END AS resultado;
 
-    PRINT '--- EVIDENCIA DESPUES DE MODIFICAR IMPORTACION ---';
+    PRINT N'--- EVIDENCIA DESPUES DE MODIFICAR IMPORTACION ---';
 
     SELECT i.*
     FROM soporte.importacion AS i
@@ -228,11 +228,11 @@ BEGIN TRY
              )
          AND (SELECT COUNT(*) FROM soporte.importacion_error) = @v_errores_antes
          AND (SELECT COUNT(*) FROM soporte.importacion) = @v_importaciones_antes
-            THEN 'PASS importacion_error e importacion eliminar'
-        ELSE 'FAIL importacion_error e importacion eliminar'
+            THEN N'PASS importacion_error e importacion eliminar'
+        ELSE N'FAIL importacion_error e importacion eliminar'
     END AS resultado;
 
-    PRINT '--- EVIDENCIA DESPUES DE ELIMINAR ---';
+    PRINT N'--- EVIDENCIA DESPUES DE ELIMINAR ---';
 
     SELECT ie.*
     FROM soporte.importacion_error AS ie
@@ -249,7 +249,7 @@ BEGIN TRY
 
     ROLLBACK TRANSACTION;
 
-    PRINT 'PASS general: prueba finalizada y transaccion revertida.';
+    PRINT N'PASS general: prueba finalizada y transaccion revertida.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
@@ -257,9 +257,9 @@ BEGIN CATCH
 
     PRINT CONCAT
     (
-        'FAIL general. Error ',
+        N'FAIL general. Error ',
         ERROR_NUMBER(),
-        ': ',
+        N': ',
         ERROR_MESSAGE()
     );
 
@@ -276,9 +276,9 @@ SELECT CASE
          (
              SELECT 1
              FROM soporte.importacion AS i
-             WHERE i.archivo = 'test_fixture_abm.csv'
+             WHERE i.archivo = N'test_fixture_abm.csv'
          )
-        THEN 'PASS rollback: no quedaron residuos'
-    ELSE 'FAIL rollback: quedaron residuos'
+        THEN N'PASS rollback: no quedaron residuos'
+    ELSE N'FAIL rollback: quedaron residuos'
 END AS resultado_final;
 GO

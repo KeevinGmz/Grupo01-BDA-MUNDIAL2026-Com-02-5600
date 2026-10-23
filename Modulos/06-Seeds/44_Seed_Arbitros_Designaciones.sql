@@ -13,7 +13,7 @@ GO
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-DECLARE @v_errores VARCHAR(2000) = '';
+DECLARE @v_errores NVARCHAR(2000) = N'';
 DECLARE @v_propia BIT = 0;
 DECLARE @v_sp BIT = 0;
 DECLARE @v_id_categoria TINYINT;
@@ -22,49 +22,49 @@ DECLARE @v_id_categoria TINYINT;
 -- 1. Validaciones previas
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID('persona.usp_Arbitro_Insertar', 'P') IS NULL
-    SET @v_errores += 'no existe persona.usp_Arbitro_Insertar; ';
+IF OBJECT_ID(N'persona.usp_Arbitro_Insertar', N'P') IS NULL
+    SET @v_errores += N'no existe persona.usp_Arbitro_Insertar; ';
 
-IF OBJECT_ID('arbitraje.usp_Negocio_DesignarTerna', 'P') IS NULL
-    SET @v_errores += 'no existe arbitraje.usp_Negocio_DesignarTerna; ';
+IF OBJECT_ID(N'arbitraje.usp_Negocio_DesignarTerna', N'P') IS NULL
+    SET @v_errores += N'no existe arbitraje.usp_Negocio_DesignarTerna; ';
 
-IF TYPE_ID('arbitraje.tt_Designacio') IS NULL
-    SET @v_errores += 'no existe el tipo arbitraje.tt_Designacion; ';
+IF TYPE_ID(N'arbitraje.tt_Designacion') IS NULL
+    SET @v_errores += N'no existe el tipo arbitraje.tt_Designacion; ';
 
 SELECT TOP (1) @v_id_categoria = ca.id_categoria
 FROM persona.categoria_arbitral AS ca
 ORDER BY ca.id_categoria;
 
 IF @v_id_categoria IS NULL
-    SET @v_errores += 'debe existir al menos una categoria arbitral; ';
+    SET @v_errores += N'debe existir al menos una categoria arbitral; ';
 
 IF (SELECT COUNT(*) FROM geo.pais) < 5
-    SET @v_errores += 'deben existir al menos cinco paises para distribuir los arbitros; ';
+    SET @v_errores += N'deben existir al menos cinco paises para distribuir los arbitros; ';
 
 IF (SELECT COUNT(*) FROM torneo.partido) = 0
-    SET @v_errores += 'debe existir al menos un partido para realizar designaciones; ';
+    SET @v_errores += N'debe existir al menos un partido para realizar designaciones; ';
 
 IF NOT EXISTS
 (
-    SELECT 1 FROM arbitraje.rol_arbitral WHERE descripcion = 'PRINCIPAL'
+    SELECT 1 FROM arbitraje.rol_arbitral WHERE descripcion = N'PRINCIPAL'
 )
-    SET @v_errores += 'falta el rol PRINCIPAL; ';
+    SET @v_errores += N'falta el rol PRINCIPAL; ';
 
 IF NOT EXISTS
 (
-    SELECT 1 FROM arbitraje.rol_arbitral WHERE descripcion = 'ASISTENTE_1'
+    SELECT 1 FROM arbitraje.rol_arbitral WHERE descripcion = N'ASISTENTE_1'
 )
-    SET @v_errores += 'falta el rol ASISTENTE_1; ';
+    SET @v_errores += N'falta el rol ASISTENTE_1; ';
 
 IF NOT EXISTS
 (
-    SELECT 1 FROM arbitraje.rol_arbitral WHERE descripcion = 'ASISTENTE_2'
+    SELECT 1 FROM arbitraje.rol_arbitral WHERE descripcion = N'ASISTENTE_2'
 )
-    SET @v_errores += 'falta el rol ASISTENTE_2; ';
+    SET @v_errores += N'falta el rol ASISTENTE_2; ';
 
-IF @v_errores <> ''
+IF @v_errores <> N''
 BEGIN
-    SET @v_errores = LEFT(CONCAT('44_Seed_Arbitros_Designaciones: ', @v_errores), 2048);
+    SET @v_errores = LEFT(CONCAT(N'44_Seed_Arbitros_Designaciones: ', @v_errores), 2048);
     ;THROW 50001, @v_errores, 1;
 END;
 
@@ -109,9 +109,9 @@ BEGIN TRY
     DECLARE @v_id_arbitro INT;
     DECLARE @v_id_pais SMALLINT;
     DECLARE @v_orden_pais TINYINT;
-    DECLARE @v_nro_doc VARCHAR(30);
-    DECLARE @v_nombre VARCHAR(80);
-    DECLARE @v_apellido VARCHAR(80);
+    DECLARE @v_nro_doc NVARCHAR(30);
+    DECLARE @v_nombre NVARCHAR(80);
+    DECLARE @v_apellido NVARCHAR(80);
     DECLARE @v_fecha_nac DATE;
 
     WHILE @v_nro <= 15
@@ -122,9 +122,9 @@ BEGIN TRY
         FROM @v_paises AS p
         WHERE p.orden = @v_orden_pais;
 
-        SET @v_nro_doc = CONCAT('ARB-SEED-', RIGHT(CONCAT('000', @v_nro), 3));
-        SET @v_nombre = CONCAT('Arbitro ', RIGHT(CONCAT('00', @v_nro), 2));
-        SET @v_apellido = 'Seed';
+        SET @v_nro_doc = CONCAT(N'ARB-SEED-', RIGHT(CONCAT(N'000', @v_nro), 3));
+        SET @v_nombre = CONCAT(N'Arbitro ', RIGHT(CONCAT(N'00', @v_nro), 2));
+        SET @v_apellido = N'Seed';
         SET @v_fecha_nac = DATEADD(YEAR, -35 - (@v_nro % 10), CONVERT(DATE, '2026-01-01'));
         SET @v_id_arbitro = NULL;
 
@@ -158,11 +158,11 @@ BEGIN TRY
         FROM persona.persona AS p
         JOIN persona.arbitro AS a ON a.id_persona = p.id_persona
         WHERE p.tipo_doc = 'PAS'
-          AND p.nro_doc LIKE 'ARB-SEED-%'
+          AND p.nro_doc LIKE N'ARB-SEED-%'
     ) <> 15
     BEGIN
         ;THROW 50003,
-               '44_Seed_Arbitros_Designaciones: no quedaron creados exactamente 15 arbitros seed',
+               N'44_Seed_Arbitros_Designaciones: no quedaron creados exactamente 15 arbitros seed',
                1;
     END;
 
@@ -191,7 +191,7 @@ BEGIN TRY
     DECLARE @v_orden_partido INT = 1;
     DECLARE @v_cant_partidos INT;
     DECLARE @v_id_partido INT;
-    DECLARE @v_advertencia VARCHAR(500);
+    DECLARE @v_advertencia NVARCHAR(500);
 
     SELECT @v_cant_partidos = COUNT(*) FROM @v_partidos;
 
@@ -210,16 +210,16 @@ BEGIN TRY
                 ROW_NUMBER() OVER
                 (
                     ORDER BY CASE r.descripcion
-                        WHEN 'PRINCIPAL' THEN 1
-                        WHEN 'ASISTENTE_1' THEN 2
-                        WHEN 'ASISTENTE_2' THEN 3
-                        WHEN 'CUARTO' THEN 4
-                        WHEN 'VAR' THEN 5
+                        WHEN N'PRINCIPAL' THEN 1
+                        WHEN N'ASISTENTE_1' THEN 2
+                        WHEN N'ASISTENTE_2' THEN 3
+                        WHEN N'CUARTO' THEN 4
+                        WHEN N'VAR' THEN 5
                         ELSE 99 END
                 ) AS rn
             FROM arbitraje.rol_arbitral AS r
             WHERE r.descripcion IN
-                  ('PRINCIPAL', 'ASISTENTE_1', 'ASISTENTE_2', 'CUARTO', 'VAR')
+                  (N'PRINCIPAL', N'ASISTENTE_1', N'ASISTENTE_2', N'CUARTO', N'VAR')
         ),
         arbitros_aptos AS
         (
@@ -230,7 +230,7 @@ BEGIN TRY
             JOIN persona.persona AS p
               ON p.id_persona = a.id_persona
             WHERE p.tipo_doc = 'PAS'
-              AND p.nro_doc LIKE 'ARB-SEED-%'
+              AND p.nro_doc LIKE N'ARB-SEED-%'
               AND NOT EXISTS
                   (
                       SELECT 1
@@ -267,18 +267,18 @@ BEGIN TRY
         ) < 3
         BEGIN
             ;THROW 50003,
-                   '44_Seed_Arbitros_Designaciones: no hay suficientes arbitros compatibles para un partido',
+                   N'44_Seed_Arbitros_Designaciones: no hay suficientes arbitros compatibles para un partido',
                    1;
         END;
 
-        SET @v_advertencia = '';
+        SET @v_advertencia = N'';
 
         EXEC arbitraje.usp_Negocio_DesignarTerna
             @id_partido = @v_id_partido,
             @terna = @v_terna,
             @advertencia = @v_advertencia OUTPUT;
 
-        IF NULLIF(@v_advertencia, '') IS NOT NULL
+        IF NULLIF(@v_advertencia, N'') IS NOT NULL
             PRINT @v_advertencia;
 
         SET @v_orden_partido += 1;
@@ -323,7 +323,7 @@ CROSS APPLY
       ON per.id_persona = a.id_persona
     WHERE per.id_pais = s.id_pais
       AND per.tipo_doc = 'PAS'
-      AND per.nro_doc LIKE 'ARB-SEED-%'
+      AND per.nro_doc LIKE N'ARB-SEED-%'
     ORDER BY a.id_persona
 ) AS arb
 WHERE p.estado <> 'FINALIZADO'
@@ -332,13 +332,13 @@ ORDER BY p.fecha_hora_utc, p.id_partido;
 IF @v_partido_prueba IS NULL OR @v_arbitro_conflicto IS NULL
 BEGIN
     ;THROW 50003,
-           '44_Seed_Arbitros_Designaciones: no se pudo preparar el caso de rechazo por nacionalidad',
+           N'44_Seed_Arbitros_Designaciones: no se pudo preparar el caso de rechazo por nacionalidad',
            1;
 END;
 
 BEGIN TRY
     DECLARE @v_terna_invalida arbitraje.tt_Designacion;
-    DECLARE @v_advertencia_prueba VARCHAR(500);
+    DECLARE @v_advertencia_prueba NVARCHAR(500);
 
     ;WITH roles AS
     (
@@ -347,16 +347,16 @@ BEGIN TRY
             ROW_NUMBER() OVER
             (
                 ORDER BY CASE r.descripcion
-                    WHEN 'PRINCIPAL' THEN 1
-                    WHEN 'ASISTENTE_1' THEN 2
-                    WHEN 'ASISTENTE_2' THEN 3
-                    WHEN 'CUARTO' THEN 4
-                    WHEN 'VAR' THEN 5
+                    WHEN N'PRINCIPAL' THEN 1
+                    WHEN N'ASISTENTE_1' THEN 2
+                    WHEN N'ASISTENTE_2' THEN 3
+                    WHEN N'CUARTO' THEN 4
+                    WHEN N'VAR' THEN 5
                     ELSE 99 END
             ) AS rn
         FROM arbitraje.rol_arbitral AS r
         WHERE r.descripcion IN
-              ('PRINCIPAL', 'ASISTENTE_1', 'ASISTENTE_2', 'CUARTO', 'VAR')
+              (N'PRINCIPAL', N'ASISTENTE_1', N'ASISTENTE_2', N'CUARTO', N'VAR')
     ),
     arbitros AS
     (
@@ -371,7 +371,7 @@ BEGIN TRY
         JOIN persona.persona AS p
           ON p.id_persona = a.id_persona
         WHERE p.tipo_doc = 'PAS'
-          AND p.nro_doc LIKE 'ARB-SEED-%'
+          AND p.nro_doc LIKE N'ARB-SEED-%'
     )
     INSERT INTO @v_terna_invalida (id_rol, id_arbitro)
     SELECT r.id_rol, a.id_arbitro
@@ -385,14 +385,14 @@ BEGIN TRY
         @advertencia = @v_advertencia_prueba OUTPUT;
 
     ;THROW 50003,
-           '44_Seed_Arbitros_Designaciones: FAIL, la designacion incompatible fue aceptada',
+           N'44_Seed_Arbitros_Designaciones: FAIL, la designacion incompatible fue aceptada',
            1;
 END TRY
 BEGIN CATCH
     IF ERROR_NUMBER() = 50003
-       AND ERROR_MESSAGE() LIKE '%nacionalidad%'
+       AND ERROR_MESSAGE() LIKE N'%nacionalidad%'
     BEGIN
-        PRINT 'PASS caso 5: la designacion fue rechazada por coincidencia de nacionalidad.';
+        PRINT N'PASS caso 5: la designacion fue rechazada por coincidencia de nacionalidad.';
     END
     ELSE
     BEGIN
@@ -411,13 +411,13 @@ FROM persona.persona AS p
 JOIN persona.arbitro AS a
   ON a.id_persona = p.id_persona
 WHERE p.tipo_doc = 'PAS'
-  AND p.nro_doc LIKE 'ARB-SEED-%';
+  AND p.nro_doc LIKE N'ARB-SEED-%';
 
 SELECT
     da.id_partido,
     ra.descripcion AS rol,
     da.id_arbitro,
-    CONCAT(p.apellido, ', ', p.nombre) AS arbitro,
+    CONCAT(p.apellido, N', ', p.nombre) AS arbitro,
     pais.nombre AS pais,
     da.fecha_designacion,
     da.estado

@@ -13,13 +13,13 @@ GO
 CREATE OR ALTER PROCEDURE arbitraje.usp_Negocio_DesignarTerna
     @id_partido INT,
     @terna arbitraje.tt_Designacion READONLY,
-    @advertencia VARCHAR(500) OUTPUT
+    @advertencia NVARCHAR(500) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_codigo INT = 50001;
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
@@ -28,7 +28,7 @@ BEGIN
     DECLARE @v_fecha_hora_partido DATETIME2(0);
     DECLARE @v_fecha_designacion DATETIME2(0) = SYSUTCDATETIME();
 
-    SET @advertencia = '';
+    SET @advertencia = N'';
 
     SELECT
         @v_estado = p.estado,
@@ -39,12 +39,12 @@ BEGIN
 
     -- 1) Validaciones acumuladas antes de abrir la transaccion
     IF @v_estado IS NULL
-        SET @v_errores += 'partido inexistente; ';
+        SET @v_errores += N'partido inexistente; ';
 
     IF @v_estado = 'FINALIZADO'
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'no se puede reemplazar la designacion de un partido FINALIZADO; ';
+        SET @v_errores += N'no se puede reemplazar la designacion de un partido FINALIZADO; ';
     END
 
     -- PRINCIPAL, ASISTENTE_1 y ASISTENTE_2 son obligatorios.
@@ -54,11 +54,11 @@ BEGIN
         FROM @terna AS t
         JOIN arbitraje.rol_arbitral AS r
           ON r.id_rol = t.id_rol
-        WHERE r.descripcion = 'PRINCIPAL'
+        WHERE r.descripcion = N'PRINCIPAL'
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'falta el rol obligatorio PRINCIPAL; ';
+        SET @v_errores += N'falta el rol obligatorio PRINCIPAL; ';
     END
 
     IF NOT EXISTS
@@ -67,11 +67,11 @@ BEGIN
         FROM @terna AS t
         JOIN arbitraje.rol_arbitral AS r
           ON r.id_rol = t.id_rol
-        WHERE r.descripcion = 'ASISTENTE_1'
+        WHERE r.descripcion = N'ASISTENTE_1'
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'falta el rol obligatorio ASISTENTE_1; ';
+        SET @v_errores += N'falta el rol obligatorio ASISTENTE_1; ';
     END
 
     IF NOT EXISTS
@@ -80,11 +80,11 @@ BEGIN
         FROM @terna AS t
         JOIN arbitraje.rol_arbitral AS r
           ON r.id_rol = t.id_rol
-        WHERE r.descripcion = 'ASISTENTE_2'
+        WHERE r.descripcion = N'ASISTENTE_2'
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'falta el rol obligatorio ASISTENTE_2; ';
+        SET @v_errores += N'falta el rol obligatorio ASISTENTE_2; ';
     END
 
     -- CUARTO y VAR son opcionales. No se admiten roles fuera del cuerpo previsto.
@@ -96,7 +96,7 @@ BEGIN
           ON r.id_rol = t.id_rol
         WHERE r.id_rol IS NULL
     )
-        SET @v_errores += 'la terna contiene roles inexistentes; ';
+        SET @v_errores += N'la terna contiene roles inexistentes; ';
 
     IF EXISTS
     (
@@ -105,17 +105,17 @@ BEGIN
         JOIN arbitraje.rol_arbitral AS r
           ON r.id_rol = t.id_rol
         WHERE r.descripcion NOT IN
-              ('PRINCIPAL', 'ASISTENTE_1', 'ASISTENTE_2', 'CUARTO', 'VAR')
+              (N'PRINCIPAL', N'ASISTENTE_1', N'ASISTENTE_2', N'CUARTO', N'VAR')
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'la terna contiene un rol no permitido; ';
+        SET @v_errores += N'la terna contiene un rol no permitido; ';
     END
 
     IF (SELECT COUNT(*) FROM @terna) NOT BETWEEN 3 AND 5
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'el cuerpo arbitral debe tener entre 3 y 5 integrantes; ';
+        SET @v_errores += N'el cuerpo arbitral debe tener entre 3 y 5 integrantes; ';
     END
 
     IF EXISTS
@@ -127,7 +127,7 @@ BEGIN
     )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'un arbitro no puede ocupar mas de un rol en la terna; ';
+        SET @v_errores += N'un arbitro no puede ocupar mas de un rol en la terna; ';
     END
 
     IF EXISTS
@@ -138,7 +138,7 @@ BEGIN
           ON a.id_persona = t.id_arbitro
         WHERE a.id_persona IS NULL
     )
-        SET @v_errores += 'la terna contiene arbitros inexistentes; ';
+        SET @v_errores += N'la terna contiene arbitros inexistentes; ';
 
     -- Conflicto de nacionalidad con cualquiera de los equipos del partido.
     IF @v_estado IS NOT NULL
@@ -156,7 +156,7 @@ BEGIN
        )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'un arbitro tiene la misma nacionalidad que una seleccion del partido; ';
+        SET @v_errores += N'un arbitro tiene la misma nacionalidad que una seleccion del partido; ';
     END
 
     -- Ningun arbitro puede estar designado en otro partido a menos de tres horas.
@@ -175,14 +175,14 @@ BEGIN
        )
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'un arbitro esta designado en otro partido con menos de tres horas de diferencia; ';
+        SET @v_errores += N'un arbitro esta designado en otro partido con menos de tres horas de diferencia; ';
     END
 
-    IF @v_errores <> ''
+    IF @v_errores <> N''
     BEGIN
         SET @v_errores = LEFT
         (
-            CONCAT('arbitraje.usp_Negocio_DesignarTerna: ', @v_errores),
+            CONCAT(N'arbitraje.usp_Negocio_DesignarTerna: ', @v_errores),
             2048
         );
         THROW @v_codigo, @v_errores, 1;
@@ -194,23 +194,23 @@ BEGIN
         (
             CONCAT
             (
-                'ADVERTENCIA: ',
+                N'ADVERTENCIA: ',
                 STRING_AGG
                 (
                     CONVERT
                     (
-                        VARCHAR(MAX),
+                        NVARCHAR(MAX),
                         CONCAT
                         (
                             per.apellido,
-                            ', ',
+                            N', ',
                             per.nombre,
-                            ' (',
+                            N' (',
                             pais.nombre,
-                            ')'
+                            N')'
                         )
                     ),
-                    '; '
+                    N'; '
                 ) WITHIN GROUP (ORDER BY per.apellido, per.nombre, pais.nombre)
             ),
             500
@@ -242,7 +242,7 @@ BEGIN
               )
         );
 
-        SET @advertencia = ISNULL(@advertencia, '');
+        SET @advertencia = ISNULL(@advertencia, N'');
     END
 
     BEGIN TRY

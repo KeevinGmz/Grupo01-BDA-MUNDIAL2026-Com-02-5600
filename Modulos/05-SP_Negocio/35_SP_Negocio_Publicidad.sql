@@ -18,7 +18,7 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_codigo INT = 50001;
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
@@ -33,7 +33,7 @@ BEGIN
     DECLARE @v_espacios INT;
 
     IF @reemplazar IS NULL
-        SET @v_errores += 'reemplazar obligatorio; ';
+        SET @v_errores += N'reemplazar obligatorio; ';
 
     SELECT
         @v_utc = p.fecha_hora_utc,
@@ -45,7 +45,7 @@ BEGIN
     WHERE p.id_partido = @id_partido;
 
     IF @v_id_sede IS NULL
-        SET @v_errores += 'partido inexistente o sede sin ciudad valida; ';
+        SET @v_errores += N'partido inexistente o sede sin ciudad valida; ';
 
     SELECT
         @v_pais1 = MIN(sel.id_pais),
@@ -55,7 +55,7 @@ BEGIN
     WHERE ep.id_partido = @id_partido;
 
     IF @v_id_sede IS NOT NULL AND (@v_pais1 IS NULL OR @v_pais2 IS NULL)
-        SET @v_errores += 'el partido no tiene sus dos selecciones registradas; ';
+        SET @v_errores += N'el partido no tiene sus dos selecciones registradas; ';
 
     SELECT @v_espacios = COUNT(*)
     FROM publicidad.espacio_publicitario AS e
@@ -65,14 +65,14 @@ BEGIN
     IF @v_id_sede IS NOT NULL AND ISNULL(@v_espacios, 0) <> 4
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'la sede debe tener exactamente los espacios publicitarios 1 a 4; ';
+        SET @v_errores += N'la sede debe tener exactamente los espacios publicitarios 1 a 4; ';
     END
 
     IF EXISTS (SELECT 1 FROM publicidad.exhibicion WHERE id_partido = @id_partido)
        AND ISNULL(@reemplazar, 0) = 0
     BEGIN
         SET @v_codigo = 50002;
-        SET @v_errores += 'el partido ya tiene exhibiciones y reemplazar es 0; ';
+        SET @v_errores += N'el partido ya tiene exhibiciones y reemplazar es 0; ';
     END
 
     SELECT TOP (1) @v_prime_desde = CONVERT(INT, pr.valor)
@@ -90,12 +90,12 @@ BEGIN
     IF @v_id_sede IS NOT NULL AND (@v_prime_desde IS NULL OR @v_prime_hasta IS NULL)
     BEGIN
         SET @v_codigo = 50003;
-        SET @v_errores += 'faltan parametros vigentes de prime time; ';
+        SET @v_errores += N'faltan parametros vigentes de prime time; ';
     END
 
-    IF @v_errores <> ''
+    IF @v_errores <> N''
     BEGIN
-        SET @v_errores = LEFT(CONCAT('publicidad.usp_Negocio_AsignarPublicidad: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT(N'publicidad.usp_Negocio_AsignarPublicidad: ', @v_errores), 2048);
         THROW @v_codigo, @v_errores, 1;
     END
 
@@ -187,9 +187,9 @@ BEGIN
     BEGIN
         SET @v_errores = CONCAT
         (
-            'publicidad.usp_Negocio_AsignarPublicidad: faltan ',
+            N'publicidad.usp_Negocio_AsignarPublicidad: faltan ',
             4 - @v_candidatas,
-            ' piezas candidatas para completar los cuatro espacios'
+            N' piezas candidatas para completar los cuatro espacios'
         );
         THROW 50003, @v_errores, 1;
     END
@@ -244,8 +244,6 @@ BEGIN
 END;
 GO
 
-
-
 CREATE OR ALTER PROCEDURE publicidad.usp_Negocio_SimularPrimeTime
     @id_partido INT,
     @fecha_hora_utc_alternativa DATETIME2(0) = NULL
@@ -263,7 +261,7 @@ BEGIN
     WHERE p.id_partido = @id_partido;
 
     IF @v_fecha_partido IS NULL
-        THROW 50001, 'publicidad.usp_Negocio_SimularPrimeTime: partido inexistente', 1;
+        THROW 50001, N'publicidad.usp_Negocio_SimularPrimeTime: partido inexistente', 1;
 
     SET @v_fecha = ISNULL(@fecha_hora_utc_alternativa, @v_fecha_partido);
 
@@ -280,7 +278,7 @@ BEGIN
     ORDER BY pr.vigente_desde DESC;
 
     IF @v_prime_desde IS NULL OR @v_prime_hasta IS NULL
-        THROW 50003, 'publicidad.usp_Negocio_SimularPrimeTime: faltan parametros vigentes de prime time', 1;
+        THROW 50003, N'publicidad.usp_Negocio_SimularPrimeTime: faltan parametros vigentes de prime time', 1;
 
     SELECT
         pa.id_pais,

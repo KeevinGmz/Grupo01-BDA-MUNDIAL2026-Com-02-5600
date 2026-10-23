@@ -16,21 +16,21 @@ GO
 
 -- 1. juego.tipo_tarjeta
 CREATE OR ALTER PROCEDURE juego.usp_TipoTarjeta_Insertar
-    @descripcion VARCHAR(30),
+    @descripcion NVARCHAR(30),
     @id_tipo TINYINT OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
-        IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL
-            SET @v_errores += 'descripcion obligatoria; ';
+        IF NULLIF(LTRIM(RTRIM(@descripcion)), N'') IS NULL
+            SET @v_errores += N'descripcion obligatoria; ';
         IF EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE descripcion = @descripcion)
-            SET @v_errores += 'descripcion ya registrada; ';
+            SET @v_errores += N'descripcion ya registrada; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_tipo_tarjeta_insertar;
@@ -50,22 +50,22 @@ GO
 
 CREATE OR ALTER PROCEDURE juego.usp_TipoTarjeta_Modificar
     @id_tipo TINYINT,
-    @descripcion VARCHAR(30)
+    @descripcion NVARCHAR(30)
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo)
-            SET @v_errores += 'tipo_tarjeta inexistente; ';
-        IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL
-            SET @v_errores += 'descripcion obligatoria; ';
+            SET @v_errores += N'tipo_tarjeta inexistente; ';
+        IF NULLIF(LTRIM(RTRIM(@descripcion)), N'') IS NULL
+            SET @v_errores += N'descripcion obligatoria; ';
         IF EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE descripcion = @descripcion AND id_tipo <> @id_tipo)
-            SET @v_errores += 'descripcion ya registrada; ';
+            SET @v_errores += N'descripcion ya registrada; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_tipo_tarjeta_modificar;
@@ -86,22 +86,22 @@ CREATE OR ALTER PROCEDURE juego.usp_TipoTarjeta_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo)
-            THROW 50001, 'tipo_tarjeta inexistente', 1;
+            THROW 50001, N'tipo_tarjeta inexistente', 1;
 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM juego.tarjeta WHERE id_tipo = @id_tipo;
-        IF @v_n > 0 SET @v_errores += CONCAT('tarjeta(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'tarjeta(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM juego.criterio_suspension WHERE id_tipo = @id_tipo;
-        IF @v_n > 0 SET @v_errores += CONCAT('criterio_suspension(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'criterio_suspension(', @v_n, N'); ');
 
-        IF @v_errores <> ''
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = CONCAT('No se puede eliminar, tiene dependientes: ', @v_errores);
+            SET @v_errores = CONCAT(N'No se puede eliminar, tiene dependientes: ', @v_errores);
             THROW 50002, @v_errores, 1;
         END
 
@@ -131,26 +131,26 @@ CREATE OR ALTER PROCEDURE juego.usp_Alineacion_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM torneo.equipo_en_partido WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion)
-            SET @v_errores += 'equipo_en_partido inexistente; ';
+            SET @v_errores += N'equipo_en_partido inexistente; ';
         IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador)
-            SET @v_errores += 'jugador inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM persona.posicion WHERE id_posicion = @id_posicion)
-            SET @v_errores += 'posicion inexistente; ';
+            SET @v_errores += N'jugador inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.posicion WHERE id_posicion = @id_posicion)
+            SET @v_errores += N'posicion inexistente; ';
         IF NOT EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion AND id_jugador = @id_jugador AND estado = 'ACTIVO')
-            SET @v_errores += 'jugador no convocado activo; ';
+            SET @v_errores += N'jugador no convocado activo; ';
         IF @dorsal < 1 OR @dorsal > 99
-            SET @v_errores += 'dorsal fuera de rango (1-99); ';
+            SET @v_errores += N'dorsal fuera de rango (1-99); ';
         IF EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador)
-            SET @v_errores += 'alineacion ya registrada para el jugador; ';
+            SET @v_errores += N'alineacion ya registrada para el jugador; ';
         IF EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND dorsal = @dorsal)
-            SET @v_errores += 'dorsal ya utilizado en el partido por la seleccion; ';
+            SET @v_errores += N'dorsal ya utilizado en el partido por la seleccion; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_alineacion_insertar;
@@ -179,18 +179,18 @@ CREATE OR ALTER PROCEDURE juego.usp_Alineacion_Modificar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador)
-            SET @v_errores += 'alineacion inexistente; ';
+            SET @v_errores += N'alineacion inexistente; ';
         IF @dorsal < 1 OR @dorsal > 99
-            SET @v_errores += 'dorsal fuera de rango (1-99); ';
+            SET @v_errores += N'dorsal fuera de rango (1-99); ';
         IF EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND dorsal = @dorsal AND id_jugador <> @id_jugador)
-            SET @v_errores += 'dorsal ya utilizado por otro jugador; ';
+            SET @v_errores += N'dorsal ya utilizado por otro jugador; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_alineacion_modificar;
@@ -218,24 +218,24 @@ CREATE OR ALTER PROCEDURE juego.usp_Alineacion_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador)
-            THROW 50001, 'alineacion inexistente', 1;
+            THROW 50001, N'alineacion inexistente', 1;
 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM juego.sustitucion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND (id_jugador_sale = @id_jugador OR id_jugador_entra = @id_jugador);
-        IF @v_n > 0 SET @v_errores += CONCAT('sustitucion(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'sustitucion(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM juego.gol WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND (id_jugador_autor = @id_jugador OR id_jugador_asistente = @id_jugador);
-        IF @v_n > 0 SET @v_errores += CONCAT('gol(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'gol(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM juego.tarjeta WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador;
-        IF @v_n > 0 SET @v_errores += CONCAT('tarjeta(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'tarjeta(', @v_n, N'); ');
 
-        IF @v_errores <> ''
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = CONCAT('No se puede eliminar, tiene dependientes: ', @v_errores);
+            SET @v_errores = CONCAT(N'No se puede eliminar, tiene dependientes: ', @v_errores);
             THROW 50002, @v_errores, 1;
         END
 
@@ -266,24 +266,24 @@ CREATE OR ALTER PROCEDURE juego.usp_Sustitucion_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_sale)
-            SET @v_errores += 'jugador_sale no alineado; ';
+            SET @v_errores += N'jugador_sale no alineado; ';
         IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_entra)
-            SET @v_errores += 'jugador_entra no alineado; ';
+            SET @v_errores += N'jugador_entra no alineado; ';
         IF @id_jugador_sale = @id_jugador_entra
-            SET @v_errores += 'jugador sale y entra deben ser distintos; ';
+            SET @v_errores += N'jugador sale y entra deben ser distintos; ';
         IF @minuto < 1 OR @minuto > 130
-            SET @v_errores += 'minuto fuera de rango (1-130); ';
-        IF @motivo NOT IN ('TACTICO', 'LESIO', 'PRECAUCIO')
-            SET @v_errores += 'motivo invalido; ';
+            SET @v_errores += N'minuto fuera de rango (1-130); ';
+        IF @motivo NOT IN ('TACTICO', 'LESION', 'PRECAUCION')
+            SET @v_errores += N'motivo invalido; ';
         IF EXISTS (SELECT 1 FROM juego.sustitucion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_sustitucion = @nro_sustitucion)
-            SET @v_errores += 'nro_sustitucion ya registrado; ';
+            SET @v_errores += N'nro_sustitucion ya registrado; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_sustitucion_insertar;
@@ -313,20 +313,20 @@ CREATE OR ALTER PROCEDURE juego.usp_Sustitucion_Modificar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.sustitucion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_sustitucion = @nro_sustitucion)
-            SET @v_errores += 'sustitucion inexistente; ';
+            SET @v_errores += N'sustitucion inexistente; ';
         IF @minuto < 1 OR @minuto > 130
-            SET @v_errores += 'minuto fuera de rango (1-130); ';
-        IF @motivo NOT IN ('TACTICO', 'LESIO', 'PRECAUCIO')
-            SET @v_errores += 'motivo invalido; ';
+            SET @v_errores += N'minuto fuera de rango (1-130); ';
+        IF @motivo NOT IN ('TACTICO', 'LESION', 'PRECAUCION')
+            SET @v_errores += N'motivo invalido; ';
         IF @id_jugador_sale = @id_jugador_entra
-            SET @v_errores += 'jugador sale y entra deben ser distintos; ';
+            SET @v_errores += N'jugador sale y entra deben ser distintos; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_sustitucion_modificar;
@@ -355,12 +355,12 @@ CREATE OR ALTER PROCEDURE juego.usp_Sustitucion_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.sustitucion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_sustitucion = @nro_sustitucion)
-            THROW 50001, 'sustitucion inexistente', 1;
+            THROW 50001, N'sustitucion inexistente', 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_sustitucion_eliminar;
@@ -390,24 +390,24 @@ CREATE OR ALTER PROCEDURE juego.usp_Gol_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_autor)
-            SET @v_errores += 'jugador_autor no alineado; ';
+            SET @v_errores += N'jugador_autor no alineado; ';
         IF @id_jugador_asistente IS NOT NULL AND NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_asistente)
-            SET @v_errores += 'jugador_asistente no alineado; ';
+            SET @v_errores += N'jugador_asistente no alineado; ';
         IF @id_jugador_asistente IS NOT NULL AND @id_jugador_autor = @id_jugador_asistente
-            SET @v_errores += 'autor y asistente deben ser distintos; ';
+            SET @v_errores += N'autor y asistente deben ser distintos; ';
         IF @minuto < 0 OR @minuto > 130
-            SET @v_errores += 'minuto fuera de rango (0-130); ';
-        IF @periodo NOT IN ('PT', 'ST', 'ADIC', 'ALARG', 'PE')
-            SET @v_errores += 'periodo invalido; ';
+            SET @v_errores += N'minuto fuera de rango (0-130); ';
+        IF @periodo NOT IN ('PT', 'ST', 'ADIC', 'ALARG', 'PEN')
+            SET @v_errores += N'periodo invalido; ';
         IF EXISTS (SELECT 1 FROM juego.gol WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_gol = @nro_gol)
-            SET @v_errores += 'nro_gol ya registrado; ';
+            SET @v_errores += N'nro_gol ya registrado; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_gol_insertar;
@@ -438,20 +438,20 @@ CREATE OR ALTER PROCEDURE juego.usp_Gol_Modificar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.gol WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_gol = @nro_gol)
-            SET @v_errores += 'gol inexistente; ';
+            SET @v_errores += N'gol inexistente; ';
         IF @minuto < 0 OR @minuto > 130
-            SET @v_errores += 'minuto fuera de rango (0-130); ';
-        IF @periodo NOT IN ('PT', 'ST', 'ADIC', 'ALARG', 'PE')
-            SET @v_errores += 'periodo invalido; ';
+            SET @v_errores += N'minuto fuera de rango (0-130); ';
+        IF @periodo NOT IN ('PT', 'ST', 'ADIC', 'ALARG', 'PEN')
+            SET @v_errores += N'periodo invalido; ';
         IF @id_jugador_asistente IS NOT NULL AND @id_jugador_autor = @id_jugador_asistente
-            SET @v_errores += 'autor y asistente deben ser distintos; ';
+            SET @v_errores += N'autor y asistente deben ser distintos; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_gol_modificar;
@@ -481,12 +481,12 @@ CREATE OR ALTER PROCEDURE juego.usp_Gol_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.gol WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_gol = @nro_gol)
-            THROW 50001, 'gol inexistente', 1;
+            THROW 50001, N'gol inexistente', 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_gol_eliminar;
@@ -508,27 +508,27 @@ CREATE OR ALTER PROCEDURE juego.usp_Tarjeta_Insertar
     @id_seleccion INT,
     @nro_tarjeta TINYINT,
     @minuto SMALLINT,
-    @motivo VARCHAR(100),
+    @motivo NVARCHAR(100),
     @id_tipo TINYINT,
     @id_arbitro INT,
     @id_jugador INT
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador)
-            SET @v_errores += 'jugador no alineado; ';
+            SET @v_errores += N'jugador no alineado; ';
         IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo)
-            SET @v_errores += 'tipo_tarjeta inexistente; ';
+            SET @v_errores += N'tipo_tarjeta inexistente; ';
         IF NOT EXISTS (SELECT 1 FROM persona.arbitro WHERE id_persona = @id_arbitro)
-            SET @v_errores += 'arbitro inexistente; ';
+            SET @v_errores += N'arbitro inexistente; ';
         IF EXISTS (SELECT 1 FROM juego.tarjeta WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_tarjeta = @nro_tarjeta)
-            SET @v_errores += 'nro_tarjeta ya registrado; ';
+            SET @v_errores += N'nro_tarjeta ya registrado; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_tarjeta_insertar;
@@ -551,25 +551,25 @@ CREATE OR ALTER PROCEDURE juego.usp_Tarjeta_Modificar
     @id_seleccion INT,
     @nro_tarjeta TINYINT,
     @minuto SMALLINT,
-    @motivo VARCHAR(100),
+    @motivo NVARCHAR(100),
     @id_tipo TINYINT,
     @id_arbitro INT,
     @id_jugador INT
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.tarjeta WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_tarjeta = @nro_tarjeta)
-            SET @v_errores += 'tarjeta inexistente; ';
+            SET @v_errores += N'tarjeta inexistente; ';
         IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo)
-            SET @v_errores += 'tipo_tarjeta inexistente; ';
+            SET @v_errores += N'tipo_tarjeta inexistente; ';
         IF NOT EXISTS (SELECT 1 FROM persona.arbitro WHERE id_persona = @id_arbitro)
-            SET @v_errores += 'arbitro inexistente; ';
+            SET @v_errores += N'arbitro inexistente; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_tarjeta_modificar;
@@ -598,12 +598,12 @@ CREATE OR ALTER PROCEDURE juego.usp_Tarjeta_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.tarjeta WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_tarjeta = @nro_tarjeta)
-            THROW 50001, 'tarjeta inexistente', 1;
+            THROW 50001, N'tarjeta inexistente', 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_tarjeta_eliminar;
@@ -629,16 +629,16 @@ CREATE OR ALTER PROCEDURE juego.usp_CriterioSuspension_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo)
-            SET @v_errores += 'tipo_tarjeta inexistente; ';
+            SET @v_errores += N'tipo_tarjeta inexistente; ';
         IF @cant_tarjetas_requeridas <= 0 OR @cant_partidos_suspension <= 0
-            SET @v_errores += 'cantidades deben ser mayores a 0; ';
+            SET @v_errores += N'cantidades deben ser mayores a 0; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_criterio_suspension_insertar;
@@ -666,18 +666,18 @@ CREATE OR ALTER PROCEDURE juego.usp_CriterioSuspension_Modificar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.criterio_suspension WHERE id_criterio = @id_criterio)
-            SET @v_errores += 'criterio_suspension inexistente; ';
+            SET @v_errores += N'criterio_suspension inexistente; ';
         IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo)
-            SET @v_errores += 'tipo_tarjeta inexistente; ';
+            SET @v_errores += N'tipo_tarjeta inexistente; ';
         IF @cant_tarjetas_requeridas <= 0 OR @cant_partidos_suspension <= 0
-            SET @v_errores += 'cantidades deben ser mayores a 0; ';
+            SET @v_errores += N'cantidades deben ser mayores a 0; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_criterio_suspension_modificar;
@@ -703,20 +703,20 @@ CREATE OR ALTER PROCEDURE juego.usp_CriterioSuspension_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.criterio_suspension WHERE id_criterio = @id_criterio)
-            THROW 50001, 'criterio_suspension inexistente', 1;
+            THROW 50001, N'criterio_suspension inexistente', 1;
 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM juego.suspension WHERE id_criterio = @id_criterio;
-        IF @v_n > 0 SET @v_errores += CONCAT('suspension(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'suspension(', @v_n, N'); ');
 
-        IF @v_errores <> ''
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = CONCAT('No se puede eliminar, tiene dependientes: ', @v_errores);
+            SET @v_errores = CONCAT(N'No se puede eliminar, tiene dependientes: ', @v_errores);
             THROW 50002, @v_errores, 1;
         END
 
@@ -741,23 +741,23 @@ CREATE OR ALTER PROCEDURE juego.usp_Suspension_Insertar
     @cant_partidos TINYINT,
     @estado VARCHAR(10),
     @fecha_alta DATETIME2(0),
-    @motivo VARCHAR(200),
+    @motivo NVARCHAR(200),
     @id_suspension INT OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador)
-            SET @v_errores += 'jugador inexistente; ';
+            SET @v_errores += N'jugador inexistente; ';
         IF NOT EXISTS (SELECT 1 FROM juego.criterio_suspension WHERE id_criterio = @id_criterio)
-            SET @v_errores += 'criterio_suspension inexistente; ';
+            SET @v_errores += N'criterio_suspension inexistente; ';
         IF @estado NOT IN ('PENDIENTE', 'CUMPLIDA', 'ANULADA')
-            SET @v_errores += 'estado invalido; ';
+            SET @v_errores += N'estado invalido; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_suspension_insertar;
@@ -783,24 +783,24 @@ CREATE OR ALTER PROCEDURE juego.usp_Suspension_Modificar
     @cant_partidos TINYINT,
     @estado VARCHAR(10),
     @fecha_alta DATETIME2(0),
-    @motivo VARCHAR(200)
+    @motivo NVARCHAR(200)
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.suspension WHERE id_suspension = @id_suspension)
-            SET @v_errores += 'suspension inexistente; ';
+            SET @v_errores += N'suspension inexistente; ';
         IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador)
-            SET @v_errores += 'jugador inexistente; ';
+            SET @v_errores += N'jugador inexistente; ';
         IF NOT EXISTS (SELECT 1 FROM juego.criterio_suspension WHERE id_criterio = @id_criterio)
-            SET @v_errores += 'criterio_suspension inexistente; ';
+            SET @v_errores += N'criterio_suspension inexistente; ';
         IF @estado NOT IN ('PENDIENTE', 'CUMPLIDA', 'ANULADA')
-            SET @v_errores += 'estado invalido; ';
+            SET @v_errores += N'estado invalido; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_suspension_modificar;
@@ -828,20 +828,20 @@ CREATE OR ALTER PROCEDURE juego.usp_Suspension_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.suspension WHERE id_suspension = @id_suspension)
-            THROW 50001, 'suspension inexistente', 1;
+            THROW 50001, N'suspension inexistente', 1;
 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM juego.suspension_partido WHERE id_suspension = @id_suspension;
-        IF @v_n > 0 SET @v_errores += CONCAT('suspension_partido(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'suspension_partido(', @v_n, N'); ');
 
-        IF @v_errores <> ''
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = CONCAT('No se puede eliminar, tiene dependientes: ', @v_errores);
+            SET @v_errores = CONCAT(N'No se puede eliminar, tiene dependientes: ', @v_errores);
             THROW 50002, @v_errores, 1;
         END
 
@@ -866,18 +866,18 @@ CREATE OR ALTER PROCEDURE juego.usp_SuspensionPartido_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.suspension WHERE id_suspension = @id_suspension)
-            SET @v_errores += 'suspension inexistente; ';
+            SET @v_errores += N'suspension inexistente; ';
         IF NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido)
-            SET @v_errores += 'partido inexistente; ';
+            SET @v_errores += N'partido inexistente; ';
         IF EXISTS (SELECT 1 FROM juego.suspension_partido WHERE id_suspension = @id_suspension AND id_partido = @id_partido)
-            SET @v_errores += 'suspension_partido ya registrado; ';
+            SET @v_errores += N'suspension_partido ya registrado; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_suspension_partido_insertar;
@@ -900,14 +900,14 @@ CREATE OR ALTER PROCEDURE juego.usp_SuspensionPartido_Modificar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.suspension_partido WHERE id_suspension = @id_suspension AND id_partido = @id_partido)
-            SET @v_errores += 'suspension_partido inexistente; ';
+            SET @v_errores += N'suspension_partido inexistente; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> N'' THROW 50001, @v_errores, 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_suspension_partido_modificar;
@@ -929,12 +929,12 @@ CREATE OR ALTER PROCEDURE juego.usp_SuspensionPartido_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
 
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM juego.suspension_partido WHERE id_suspension = @id_suspension AND id_partido = @id_partido)
-            THROW 50001, 'suspension_partido inexistente', 1;
+            THROW 50001, N'suspension_partido inexistente', 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE SAVE TRANSACTION sv_suspension_partido_eliminar;

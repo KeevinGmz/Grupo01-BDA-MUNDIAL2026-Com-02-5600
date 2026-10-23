@@ -18,15 +18,15 @@ CREATE OR ALTER PROCEDURE torneo.usp_Grupo_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF @id_letra IS NULL OR @id_letra NOT BETWEEN 'A' AND 'L' SET @v_errores += 'id_letra obligatoria y debe estar entre A y L; ';
-        IF EXISTS (SELECT 1 FROM torneo.grupo WHERE id_letra = @id_letra) SET @v_errores += 'id_letra ya registrado; ';
-        IF @v_errores <> ''
+        IF @id_letra IS NULL OR @id_letra NOT BETWEEN 'A' AND 'L' SET @v_errores += N'id_letra obligatoria y debe estar entre A y L; ';
+        IF EXISTS (SELECT 1 FROM torneo.grupo WHERE id_letra = @id_letra) SET @v_errores += N'id_letra ya registrado; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Grupo_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Grupo_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -53,19 +53,19 @@ CREATE OR ALTER PROCEDURE torneo.usp_Grupo_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.grupo WHERE id_letra = @id_letra) THROW 50001, 'torneo.usp_Grupo_Eliminar: grupo inexistente', 1;
+        IF NOT EXISTS (SELECT 1 FROM torneo.grupo WHERE id_letra = @id_letra) THROW 50001, N'torneo.usp_Grupo_Eliminar: grupo inexistente', 1;
 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM torneo.seleccion WHERE id_letra = @id_letra;
-        IF @v_n > 0 SET @v_errores += CONCAT('seleccion(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'seleccion(', @v_n, N'); ');
 
-        IF @v_errores <> ''
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Grupo_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Grupo_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
             THROW 50002, @v_errores, 1;
         END
 
@@ -91,27 +91,27 @@ GO
 
 CREATE OR ALTER PROCEDURE torneo.usp_Fase_Insertar
     @nro_fase TINYINT,
-    @nombre VARCHAR(40),
+    @nombre NVARCHAR(40),
     @es_eliminacion BIT,
     @admite_alargue BIT,
     @admite_penales BIT
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF @nro_fase NOT BETWEEN 1 AND 7 SET @v_errores += 'nro_fase debe estar entre 1 y 7; ';
-        IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
-        IF @es_eliminacion IS NULL SET @v_errores += 'es_eliminacion obligatorio; ';
-        IF @admite_alargue IS NULL SET @v_errores += 'admite_alargue obligatorio; ';
-        IF @admite_penales IS NULL SET @v_errores += 'admite_penales obligatorio; ';
-        IF EXISTS (SELECT 1 FROM torneo.fase WHERE nro_fase = @nro_fase) SET @v_errores += 'nro_fase ya registrado; ';
-        IF EXISTS (SELECT 1 FROM torneo.fase WHERE nombre = @nombre) SET @v_errores += 'nombre de fase ya registrado; ';
-        IF @v_errores <> ''
+        IF @nro_fase NOT BETWEEN 1 AND 7 SET @v_errores += N'nro_fase debe estar entre 1 y 7; ';
+        IF NULLIF(LTRIM(RTRIM(@nombre)), N'') IS NULL SET @v_errores += N'nombre obligatorio; ';
+        IF @es_eliminacion IS NULL SET @v_errores += N'es_eliminacion obligatorio; ';
+        IF @admite_alargue IS NULL SET @v_errores += N'admite_alargue obligatorio; ';
+        IF @admite_penales IS NULL SET @v_errores += N'admite_penales obligatorio; ';
+        IF EXISTS (SELECT 1 FROM torneo.fase WHERE nro_fase = @nro_fase) SET @v_errores += N'nro_fase ya registrado; ';
+        IF EXISTS (SELECT 1 FROM torneo.fase WHERE nombre = @nombre) SET @v_errores += N'nombre de fase ya registrado; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Fase_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Fase_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -137,26 +137,26 @@ GO
 
 CREATE OR ALTER PROCEDURE torneo.usp_Fase_Modificar
     @nro_fase TINYINT,
-    @nombre VARCHAR(40),
+    @nombre NVARCHAR(40),
     @es_eliminacion BIT,
     @admite_alargue BIT,
     @admite_penales BIT
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.fase WHERE nro_fase = @nro_fase) SET @v_errores += 'fase inexistente; ';
-        IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
-        IF @es_eliminacion IS NULL SET @v_errores += 'es_eliminacion obligatorio; ';
-        IF @admite_alargue IS NULL SET @v_errores += 'admite_alargue obligatorio; ';
-        IF @admite_penales IS NULL SET @v_errores += 'admite_penales obligatorio; ';
-        IF EXISTS (SELECT 1 FROM torneo.fase WHERE nombre = @nombre AND nro_fase <> @nro_fase) SET @v_errores += 'nombre de fase ya registrado; ';
-        IF @v_errores <> ''
+        IF NOT EXISTS (SELECT 1 FROM torneo.fase WHERE nro_fase = @nro_fase) SET @v_errores += N'fase inexistente; ';
+        IF NULLIF(LTRIM(RTRIM(@nombre)), N'') IS NULL SET @v_errores += N'nombre obligatorio; ';
+        IF @es_eliminacion IS NULL SET @v_errores += N'es_eliminacion obligatorio; ';
+        IF @admite_alargue IS NULL SET @v_errores += N'admite_alargue obligatorio; ';
+        IF @admite_penales IS NULL SET @v_errores += N'admite_penales obligatorio; ';
+        IF EXISTS (SELECT 1 FROM torneo.fase WHERE nombre = @nombre AND nro_fase <> @nro_fase) SET @v_errores += N'nombre de fase ya registrado; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Fase_Modificar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Fase_Modificar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -185,19 +185,19 @@ CREATE OR ALTER PROCEDURE torneo.usp_Fase_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.fase WHERE nro_fase = @nro_fase) THROW 50001, 'torneo.usp_Fase_Eliminar: fase inexistente', 1;
+        IF NOT EXISTS (SELECT 1 FROM torneo.fase WHERE nro_fase = @nro_fase) THROW 50001, N'torneo.usp_Fase_Eliminar: fase inexistente', 1;
 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM torneo.partido WHERE nro_fase = @nro_fase;
-        IF @v_n > 0 SET @v_errores += CONCAT('partido(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'partido(', @v_n, N'); ');
 
-        IF @v_errores <> ''
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Fase_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Fase_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
             THROW 50002, @v_errores, 1;
         END
 
@@ -226,21 +226,21 @@ CREATE OR ALTER PROCEDURE torneo.usp_ParametroReglamento_Insertar
     @clave VARCHAR(40),
     @vigente_desde DATE,
     @valor INT,
-    @descripcion VARCHAR(200) = NULL
+    @descripcion NVARCHAR(200) = NULL
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NULLIF(LTRIM(RTRIM(@clave)), '') IS NULL SET @v_errores += 'clave obligatoria; ';
-        IF @vigente_desde IS NULL SET @v_errores += 'vigente_desde obligatorio; ';
-        IF @valor IS NULL SET @v_errores += 'valor obligatorio; ';
-        IF EXISTS (SELECT 1 FROM torneo.parametro_reglamento WHERE clave = @clave AND vigente_desde = @vigente_desde) SET @v_errores += 'parametro_reglamento ya registrado con esa clave y fecha; ';
-        IF @v_errores <> ''
+        IF NULLIF(LTRIM(RTRIM(@clave)), N'') IS NULL SET @v_errores += N'clave obligatoria; ';
+        IF @vigente_desde IS NULL SET @v_errores += N'vigente_desde obligatorio; ';
+        IF @valor IS NULL SET @v_errores += N'valor obligatorio; ';
+        IF EXISTS (SELECT 1 FROM torneo.parametro_reglamento WHERE clave = @clave AND vigente_desde = @vigente_desde) SET @v_errores += N'parametro_reglamento ya registrado con esa clave y fecha; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_ParametroReglamento_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_ParametroReglamento_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -268,20 +268,20 @@ CREATE OR ALTER PROCEDURE torneo.usp_ParametroReglamento_Modificar
     @clave VARCHAR(40),
     @vigente_desde DATE,
     @valor INT,
-    @descripcion VARCHAR(200) = NULL
+    @descripcion NVARCHAR(200) = NULL
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NULLIF(LTRIM(RTRIM(@clave)), '') IS NULL SET @v_errores += 'clave obligatoria; ';
-        IF @vigente_desde IS NULL SET @v_errores += 'vigente_desde obligatorio; ';
-        IF NOT EXISTS (SELECT 1 FROM torneo.parametro_reglamento WHERE clave = @clave AND vigente_desde = @vigente_desde) SET @v_errores += 'parametro_reglamento inexistente; ';
-        IF @v_errores <> ''
+        IF NULLIF(LTRIM(RTRIM(@clave)), N'') IS NULL SET @v_errores += N'clave obligatoria; ';
+        IF @vigente_desde IS NULL SET @v_errores += N'vigente_desde obligatorio; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.parametro_reglamento WHERE clave = @clave AND vigente_desde = @vigente_desde) SET @v_errores += N'parametro_reglamento inexistente; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_ParametroReglamento_Modificar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_ParametroReglamento_Modificar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -315,7 +315,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.parametro_reglamento WHERE clave = @clave AND vigente_desde = @vigente_desde) THROW 50001, 'torneo.usp_ParametroReglamento_Eliminar: parametro_reglamento inexistente', 1;
+        IF NOT EXISTS (SELECT 1 FROM torneo.parametro_reglamento WHERE clave = @clave AND vigente_desde = @vigente_desde) THROW 50001, N'torneo.usp_ParametroReglamento_Eliminar: parametro_reglamento inexistente', 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_param_reglamento_eliminar; SET @v_sp = 1; END
@@ -347,18 +347,18 @@ CREATE OR ALTER PROCEDURE torneo.usp_Seleccion_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.grupo WHERE id_letra = @id_letra) SET @v_errores += 'grupo inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += 'pais inexistente; ';
-        IF @es_anfitrion IS NULL SET @v_errores += 'es_anfitrion obligatorio; ';
-        IF (SELECT COUNT(*) FROM torneo.seleccion WHERE id_letra = @id_letra) >= 4 SET @v_errores += 'el grupo ya tiene el maximo de 4 selecciones; ';
-        IF EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_pais = @id_pais) SET @v_errores += 'el pais ya tiene una seleccion asignada; ';
-        IF @v_errores <> ''
+        IF NOT EXISTS (SELECT 1 FROM torneo.grupo WHERE id_letra = @id_letra) SET @v_errores += N'grupo inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += N'pais inexistente; ';
+        IF @es_anfitrion IS NULL SET @v_errores += N'es_anfitrion obligatorio; ';
+        IF (SELECT COUNT(*) FROM torneo.seleccion WHERE id_letra = @id_letra) >= 4 SET @v_errores += N'el grupo ya tiene el maximo de 4 selecciones; ';
+        IF EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_pais = @id_pais) SET @v_errores += N'el pais ya tiene una seleccion asignada; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Seleccion_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Seleccion_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -391,19 +391,19 @@ CREATE OR ALTER PROCEDURE torneo.usp_Seleccion_Modificar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion) SET @v_errores += 'seleccion inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM torneo.grupo WHERE id_letra = @id_letra) SET @v_errores += 'grupo inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += 'pais inexistente; ';
-        IF @es_anfitrion IS NULL SET @v_errores += 'es_anfitrion obligatorio; ';
-        IF (SELECT COUNT(*) FROM torneo.seleccion WHERE id_letra = @id_letra AND id_seleccion <> @id_seleccion) >= 4 SET @v_errores += 'el grupo ya tiene el maximo de 4 selecciones; ';
-        IF EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_pais = @id_pais AND id_seleccion <> @id_seleccion) SET @v_errores += 'pais ya asignado a otra seleccion; ';
-        IF @v_errores <> ''
+        IF NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion) SET @v_errores += N'seleccion inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.grupo WHERE id_letra = @id_letra) SET @v_errores += N'grupo inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += N'pais inexistente; ';
+        IF @es_anfitrion IS NULL SET @v_errores += N'es_anfitrion obligatorio; ';
+        IF (SELECT COUNT(*) FROM torneo.seleccion WHERE id_letra = @id_letra AND id_seleccion <> @id_seleccion) >= 4 SET @v_errores += N'el grupo ya tiene el maximo de 4 selecciones; ';
+        IF EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_pais = @id_pais AND id_seleccion <> @id_seleccion) SET @v_errores += N'pais ya asignado a otra seleccion; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Seleccion_Modificar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Seleccion_Modificar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -432,25 +432,25 @@ CREATE OR ALTER PROCEDURE torneo.usp_Seleccion_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion) THROW 50001, 'torneo.usp_Seleccion_Eliminar: seleccion inexistente', 1;
+        IF NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion) THROW 50001, N'torneo.usp_Seleccion_Eliminar: seleccion inexistente', 1;
 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM persona.miembro_cuerpo_tecnico WHERE id_seleccion = @id_seleccion;
-        IF @v_n > 0 SET @v_errores += CONCAT('miembro_cuerpo_tecnico(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'miembro_cuerpo_tecnico(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM torneo.equipo_en_partido WHERE id_seleccion = @id_seleccion;
-        IF @v_n > 0 SET @v_errores += CONCAT('equipo_en_partido(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'equipo_en_partido(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion;
-        IF @v_n > 0 SET @v_errores += CONCAT('convocatoria(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'convocatoria(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM torneo.cambio_convocatoria WHERE id_seleccion = @id_seleccion;
-        IF @v_n > 0 SET @v_errores += CONCAT('cambio_convocatoria(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'cambio_convocatoria(', @v_n, N'); ');
 
-        IF @v_errores <> ''
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Seleccion_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Seleccion_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
             THROW 50002, @v_errores, 1;
         END
 
@@ -475,9 +475,9 @@ GO
 -- ----------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE torneo.usp_Sede_Insertar
-    @nombre_estadio VARCHAR(100),
+    @nombre_estadio NVARCHAR(100),
     @capacidad INT,
-    @direccion VARCHAR(200) = NULL,
+    @direccion NVARCHAR(200) = NULL,
     @latitud DECIMAL(9,6) = NULL,
     @longitud DECIMAL(9,6) = NULL,
     @id_ciudad INT,
@@ -485,20 +485,20 @@ CREATE OR ALTER PROCEDURE torneo.usp_Sede_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NULLIF(LTRIM(RTRIM(@nombre_estadio)), '') IS NULL SET @v_errores += 'nombre_estadio obligatorio; ';
-        IF @capacidad IS NULL OR @capacidad <= 0 SET @v_errores += 'capacidad obligatoria y debe ser mayor a 0; ';
-        IF @latitud IS NOT NULL AND @latitud NOT BETWEEN -90 AND 90 SET @v_errores += 'latitud fuera de rango (-90 a 90); ';
-        IF @longitud IS NOT NULL AND @longitud NOT BETWEEN -180 AND 180 SET @v_errores += 'longitud fuera de rango (-180 a 180); ';
-        IF (@latitud IS NULL AND @longitud IS NOT NULL) OR (@latitud IS NOT NULL AND @longitud IS NULL) SET @v_errores += 'latitud y longitud deben informarse juntas; ';
-        IF NOT EXISTS (SELECT 1 FROM geo.ciudad WHERE id_ciudad = @id_ciudad) SET @v_errores += 'ciudad inexistente; ';
-        IF EXISTS (SELECT 1 FROM torneo.sede WHERE nombre_estadio = @nombre_estadio) SET @v_errores += 'nombre_estadio ya registrado; ';
-        IF @v_errores <> ''
+        IF NULLIF(LTRIM(RTRIM(@nombre_estadio)), N'') IS NULL SET @v_errores += N'nombre_estadio obligatorio; ';
+        IF @capacidad IS NULL OR @capacidad <= 0 SET @v_errores += N'capacidad obligatoria y debe ser mayor a 0; ';
+        IF @latitud IS NOT NULL AND @latitud NOT BETWEEN -90 AND 90 SET @v_errores += N'latitud fuera de rango (-90 a 90); ';
+        IF @longitud IS NOT NULL AND @longitud NOT BETWEEN -180 AND 180 SET @v_errores += N'longitud fuera de rango (-180 a 180); ';
+        IF (@latitud IS NULL AND @longitud IS NOT NULL) OR (@latitud IS NOT NULL AND @longitud IS NULL) SET @v_errores += N'latitud y longitud deben informarse juntas; ';
+        IF NOT EXISTS (SELECT 1 FROM geo.ciudad WHERE id_ciudad = @id_ciudad) SET @v_errores += N'ciudad inexistente; ';
+        IF EXISTS (SELECT 1 FROM torneo.sede WHERE nombre_estadio = @nombre_estadio) SET @v_errores += N'nombre_estadio ya registrado; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Sede_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Sede_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -524,30 +524,30 @@ GO
 
 CREATE OR ALTER PROCEDURE torneo.usp_Sede_Modificar
     @id_sede INT,
-    @nombre_estadio VARCHAR(100),
+    @nombre_estadio NVARCHAR(100),
     @capacidad INT,
-    @direccion VARCHAR(200) = NULL,
+    @direccion NVARCHAR(200) = NULL,
     @latitud DECIMAL(9,6) = NULL,
     @longitud DECIMAL(9,6) = NULL,
     @id_ciudad INT
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.sede WHERE id_sede = @id_sede) SET @v_errores += 'sede inexistente; ';
-        IF NULLIF(LTRIM(RTRIM(@nombre_estadio)), '') IS NULL SET @v_errores += 'nombre_estadio obligatorio; ';
-        IF @capacidad IS NULL OR @capacidad <= 0 SET @v_errores += 'capacidad obligatoria y debe ser mayor a 0; ';
-        IF @latitud IS NOT NULL AND @latitud NOT BETWEEN -90 AND 90 SET @v_errores += 'latitud fuera de rango; ';
-        IF @longitud IS NOT NULL AND @longitud NOT BETWEEN -180 AND 180 SET @v_errores += 'longitud fuera de rango; ';
-        IF (@latitud IS NULL AND @longitud IS NOT NULL) OR (@latitud IS NOT NULL AND @longitud IS NULL) SET @v_errores += 'latitud y longitud deben informarse juntas; ';
-        IF NOT EXISTS (SELECT 1 FROM geo.ciudad WHERE id_ciudad = @id_ciudad) SET @v_errores += 'ciudad inexistente; ';
-        IF EXISTS (SELECT 1 FROM torneo.sede WHERE nombre_estadio = @nombre_estadio AND id_sede <> @id_sede) SET @v_errores += 'nombre_estadio ya registrado; ';
-        IF @v_errores <> ''
+        IF NOT EXISTS (SELECT 1 FROM torneo.sede WHERE id_sede = @id_sede) SET @v_errores += N'sede inexistente; ';
+        IF NULLIF(LTRIM(RTRIM(@nombre_estadio)), N'') IS NULL SET @v_errores += N'nombre_estadio obligatorio; ';
+        IF @capacidad IS NULL OR @capacidad <= 0 SET @v_errores += N'capacidad obligatoria y debe ser mayor a 0; ';
+        IF @latitud IS NOT NULL AND @latitud NOT BETWEEN -90 AND 90 SET @v_errores += N'latitud fuera de rango; ';
+        IF @longitud IS NOT NULL AND @longitud NOT BETWEEN -180 AND 180 SET @v_errores += N'longitud fuera de rango; ';
+        IF (@latitud IS NULL AND @longitud IS NOT NULL) OR (@latitud IS NOT NULL AND @longitud IS NULL) SET @v_errores += N'latitud y longitud deben informarse juntas; ';
+        IF NOT EXISTS (SELECT 1 FROM geo.ciudad WHERE id_ciudad = @id_ciudad) SET @v_errores += N'ciudad inexistente; ';
+        IF EXISTS (SELECT 1 FROM torneo.sede WHERE nombre_estadio = @nombre_estadio AND id_sede <> @id_sede) SET @v_errores += N'nombre_estadio ya registrado; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Sede_Modificar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Sede_Modificar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -576,23 +576,23 @@ CREATE OR ALTER PROCEDURE torneo.usp_Sede_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.sede WHERE id_sede = @id_sede) THROW 50001, 'torneo.usp_Sede_Eliminar: sede inexistente', 1;
+        IF NOT EXISTS (SELECT 1 FROM torneo.sede WHERE id_sede = @id_sede) THROW 50001, N'torneo.usp_Sede_Eliminar: sede inexistente', 1;
 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM torneo.partido WHERE id_sede = @id_sede;
-        IF @v_n > 0 SET @v_errores += CONCAT('partido(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'partido(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM publicidad.espacio_publicitario WHERE id_sede = @id_sede;
-        IF @v_n > 0 SET @v_errores += CONCAT('espacio_publicitario(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'espacio_publicitario(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM publicidad.exhibicion WHERE id_sede = @id_sede;
-        IF @v_n > 0 SET @v_errores += CONCAT('exhibicion(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'exhibicion(', @v_n, N'); ');
 
-        IF @v_errores <> ''
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Sede_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Sede_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
             THROW 50002, @v_errores, 1;
         END
 
@@ -628,20 +628,20 @@ CREATE OR ALTER PROCEDURE torneo.usp_Partido_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF @fecha_hora_utc IS NULL SET @v_errores += 'fecha_hora_utc obligatoria; ';
-        IF @estado IS NULL OR @estado NOT IN ('PROGRAMADO','EN_CURSO','FINALIZADO','SUSPENDIDO') SET @v_errores += 'estado invalido; ';
-        IF @asistencia_publico IS NOT NULL AND @asistencia_publico < 0 SET @v_errores += 'asistencia_publico no puede ser negativa; ';
-        IF @definido_por_penales IS NULL SET @v_errores += 'definido_por_penales obligatorio; ';
-        IF NOT EXISTS (SELECT 1 FROM torneo.sede WHERE id_sede = @id_sede) SET @v_errores += 'sede inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM torneo.fase WHERE nro_fase = @nro_fase) SET @v_errores += 'fase inexistente; ';
-        IF EXISTS (SELECT 1 FROM torneo.partido WHERE fecha_hora_utc = @fecha_hora_utc AND id_sede = @id_sede) SET @v_errores += 'ya existe un partido en la misma sede a esa hora; ';
-        IF @v_errores <> ''
+        IF @fecha_hora_utc IS NULL SET @v_errores += N'fecha_hora_utc obligatoria; ';
+        IF @estado IS NULL OR @estado NOT IN ('PROGRAMADO','EN_CURSO','FINALIZADO','SUSPENDIDO') SET @v_errores += N'estado invalido; ';
+        IF @asistencia_publico IS NOT NULL AND @asistencia_publico < 0 SET @v_errores += N'asistencia_publico no puede ser negativa; ';
+        IF @definido_por_penales IS NULL SET @v_errores += N'definido_por_penales obligatorio; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.sede WHERE id_sede = @id_sede) SET @v_errores += N'sede inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.fase WHERE nro_fase = @nro_fase) SET @v_errores += N'fase inexistente; ';
+        IF EXISTS (SELECT 1 FROM torneo.partido WHERE fecha_hora_utc = @fecha_hora_utc AND id_sede = @id_sede) SET @v_errores += N'ya existe un partido en la misma sede a esa hora; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Partido_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Partido_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -676,21 +676,21 @@ CREATE OR ALTER PROCEDURE torneo.usp_Partido_Modificar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido) SET @v_errores += 'partido inexistente; ';
-        IF @fecha_hora_utc IS NULL SET @v_errores += 'fecha_hora_utc obligatoria; ';
-        IF @estado IS NULL OR @estado NOT IN ('PROGRAMADO','EN_CURSO','FINALIZADO','SUSPENDIDO') SET @v_errores += 'estado invalido; ';
-        IF @asistencia_publico IS NOT NULL AND @asistencia_publico < 0 SET @v_errores += 'asistencia_publico no puede ser negativa; ';
-        IF @definido_por_penales IS NULL SET @v_errores += 'definido_por_penales obligatorio; ';
-        IF NOT EXISTS (SELECT 1 FROM torneo.sede WHERE id_sede = @id_sede) SET @v_errores += 'sede inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM torneo.fase WHERE nro_fase = @nro_fase) SET @v_errores += 'fase inexistente; ';
-        IF EXISTS (SELECT 1 FROM torneo.partido WHERE fecha_hora_utc = @fecha_hora_utc AND id_sede = @id_sede AND id_partido <> @id_partido) SET @v_errores += 'ya existe un partido en la misma sede a esa hora; ';
-        IF @v_errores <> ''
+        IF NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido) SET @v_errores += N'partido inexistente; ';
+        IF @fecha_hora_utc IS NULL SET @v_errores += N'fecha_hora_utc obligatoria; ';
+        IF @estado IS NULL OR @estado NOT IN ('PROGRAMADO','EN_CURSO','FINALIZADO','SUSPENDIDO') SET @v_errores += N'estado invalido; ';
+        IF @asistencia_publico IS NOT NULL AND @asistencia_publico < 0 SET @v_errores += N'asistencia_publico no puede ser negativa; ';
+        IF @definido_por_penales IS NULL SET @v_errores += N'definido_por_penales obligatorio; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.sede WHERE id_sede = @id_sede) SET @v_errores += N'sede inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.fase WHERE nro_fase = @nro_fase) SET @v_errores += N'fase inexistente; ';
+        IF EXISTS (SELECT 1 FROM torneo.partido WHERE fecha_hora_utc = @fecha_hora_utc AND id_sede = @id_sede AND id_partido <> @id_partido) SET @v_errores += N'ya existe un partido en la misma sede a esa hora; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Partido_Modificar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Partido_Modificar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -719,34 +719,34 @@ CREATE OR ALTER PROCEDURE torneo.usp_Partido_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido) THROW 50001, 'torneo.usp_Partido_Eliminar: partido inexistente', 1;
+        IF NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido) THROW 50001, N'torneo.usp_Partido_Eliminar: partido inexistente', 1;
 
         -- Según B.3: Si el partido tiene eventos, alineaciones, exhibiciones o designaciones, no se borra: se informa
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM torneo.equipo_en_partido WHERE id_partido = @id_partido;
-        IF @v_n > 0 SET @v_errores += CONCAT('equipo_en_partido(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'equipo_en_partido(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM juego.alineacion WHERE id_partido = @id_partido;
-        IF @v_n > 0 SET @v_errores += CONCAT('alineacion(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'alineacion(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM juego.sustitucion WHERE id_partido = @id_partido;
-        IF @v_n > 0 SET @v_errores += CONCAT('sustitucion(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'sustitucion(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM juego.gol WHERE id_partido = @id_partido;
-        IF @v_n > 0 SET @v_errores += CONCAT('gol(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'gol(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM juego.tarjeta WHERE id_partido = @id_partido;
-        IF @v_n > 0 SET @v_errores += CONCAT('tarjeta(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'tarjeta(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM juego.suspension_partido WHERE id_partido = @id_partido;
-        IF @v_n > 0 SET @v_errores += CONCAT('suspension_partido(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'suspension_partido(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM arbitraje.designacion_arbitral WHERE id_partido = @id_partido;
-        IF @v_n > 0 SET @v_errores += CONCAT('designacion_arbitral(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'designacion_arbitral(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM publicidad.exhibicion WHERE id_partido = @id_partido;
-        IF @v_n > 0 SET @v_errores += CONCAT('exhibicion(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'exhibicion(', @v_n, N'); ');
 
-        IF @v_errores <> ''
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Partido_Eliminar: No se puede eliminar porque tiene dependientes o actividad registrada. Para anularlo, modifique su estado a SUSPENDIDO: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Partido_Eliminar: No se puede eliminar porque tiene dependientes o actividad registrada. Para anularlo, modifique su estado a SUSPENDIDO: ', @v_errores), 2048);
             THROW 50002, @v_errores, 1;
         END
 
@@ -779,23 +779,23 @@ CREATE OR ALTER PROCEDURE torneo.usp_EquipoEnPartido_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido) SET @v_errores += 'partido inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion) SET @v_errores += 'seleccion inexistente; ';
-        IF @condicion IS NULL OR @condicion NOT IN ('L','V') SET @v_errores += 'condicion debe ser L o V; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido) SET @v_errores += N'partido inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion) SET @v_errores += N'seleccion inexistente; ';
+        IF @condicion IS NULL OR @condicion NOT IN ('L','V') SET @v_errores += N'condicion debe ser L o V; ';
         IF @esquema_tactico IS NOT NULL
            AND @esquema_tactico NOT LIKE '[1-9]-[0-9]-[0-9]'
            AND @esquema_tactico NOT LIKE '[1-9]-[0-9]-[0-9]-[0-9]'
            AND @esquema_tactico NOT LIKE '[1-9]-[0-9]-[0-9]-[0-9]-[0-9]'
-            SET @v_errores += 'esquema_tactico con formato invalido; ';
-        IF EXISTS (SELECT 1 FROM torneo.equipo_en_partido WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion) SET @v_errores += 'equipo_en_partido ya registrado; ';
-        IF EXISTS (SELECT 1 FROM torneo.equipo_en_partido WHERE id_partido = @id_partido AND condicion = @condicion) SET @v_errores += 'ya existe un equipo con esa condicion (L/V) en el partido; ';
-        IF @v_errores <> ''
+            SET @v_errores += N'esquema_tactico con formato invalido; ';
+        IF EXISTS (SELECT 1 FROM torneo.equipo_en_partido WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion) SET @v_errores += N'equipo_en_partido ya registrado; ';
+        IF EXISTS (SELECT 1 FROM torneo.equipo_en_partido WHERE id_partido = @id_partido AND condicion = @condicion) SET @v_errores += N'ya existe un equipo con esa condicion (L/V) en el partido; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_EquipoEnPartido_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_EquipoEnPartido_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -826,21 +826,21 @@ CREATE OR ALTER PROCEDURE torneo.usp_EquipoEnPartido_Modificar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.equipo_en_partido WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion) SET @v_errores += 'equipo_en_partido inexistente; ';
-        IF @condicion IS NULL OR @condicion NOT IN ('L','V') SET @v_errores += 'condicion debe ser L o V; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.equipo_en_partido WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion) SET @v_errores += N'equipo_en_partido inexistente; ';
+        IF @condicion IS NULL OR @condicion NOT IN ('L','V') SET @v_errores += N'condicion debe ser L o V; ';
         IF @esquema_tactico IS NOT NULL
            AND @esquema_tactico NOT LIKE '[1-9]-[0-9]-[0-9]'
            AND @esquema_tactico NOT LIKE '[1-9]-[0-9]-[0-9]-[0-9]'
            AND @esquema_tactico NOT LIKE '[1-9]-[0-9]-[0-9]-[0-9]-[0-9]'
-            SET @v_errores += 'esquema_tactico con formato invalido; ';
-        IF EXISTS (SELECT 1 FROM torneo.equipo_en_partido WHERE id_partido = @id_partido AND condicion = @condicion AND id_seleccion <> @id_seleccion) SET @v_errores += 'ya existe otro equipo con esa condicion en el partido; ';
-        IF @v_errores <> ''
+            SET @v_errores += N'esquema_tactico con formato invalido; ';
+        IF EXISTS (SELECT 1 FROM torneo.equipo_en_partido WHERE id_partido = @id_partido AND condicion = @condicion AND id_seleccion <> @id_seleccion) SET @v_errores += N'ya existe otro equipo con esa condicion en el partido; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_EquipoEnPartido_Modificar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_EquipoEnPartido_Modificar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -870,25 +870,25 @@ CREATE OR ALTER PROCEDURE torneo.usp_EquipoEnPartido_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.equipo_en_partido WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion) THROW 50001, 'torneo.usp_EquipoEnPartido_Eliminar: equipo_en_partido inexistente', 1;
+        IF NOT EXISTS (SELECT 1 FROM torneo.equipo_en_partido WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion) THROW 50001, N'torneo.usp_EquipoEnPartido_Eliminar: equipo_en_partido inexistente', 1;
 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion;
-        IF @v_n > 0 SET @v_errores += CONCAT('alineacion(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'alineacion(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM juego.sustitucion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion;
-        IF @v_n > 0 SET @v_errores += CONCAT('sustitucion(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'sustitucion(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM juego.gol WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion;
-        IF @v_n > 0 SET @v_errores += CONCAT('gol(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'gol(', @v_n, N'); ');
         SELECT @v_n = COUNT(*) FROM juego.tarjeta WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion;
-        IF @v_n > 0 SET @v_errores += CONCAT('tarjeta(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'tarjeta(', @v_n, N'); ');
 
-        IF @v_errores <> ''
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_EquipoEnPartido_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_EquipoEnPartido_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
             THROW 50002, @v_errores, 1;
         END
 
@@ -920,20 +920,20 @@ CREATE OR ALTER PROCEDURE torneo.usp_Convocatoria_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion) SET @v_errores += 'seleccion inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador) SET @v_errores += 'jugador inexistente; ';
-        IF @dorsal IS NULL OR @dorsal NOT BETWEEN 1 AND 99 SET @v_errores += 'dorsal debe estar entre 1 y 99; ';
-        IF @estado IS NULL OR @estado NOT IN ('ACTIVO','BAJA') SET @v_errores += 'estado invalido; ';
-        IF EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion AND id_jugador = @id_jugador) SET @v_errores += 'jugador ya convocado en la seleccion; ';
-        IF EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion AND dorsal = @dorsal) SET @v_errores += 'dorsal ya ocupado en la seleccion; ';
-        IF EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_jugador = @id_jugador) SET @v_errores += 'jugador ya figura convocado en otra seleccion ; ';
-        IF @v_errores <> ''
+        IF NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion) SET @v_errores += N'seleccion inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador) SET @v_errores += N'jugador inexistente; ';
+        IF @dorsal IS NULL OR @dorsal NOT BETWEEN 1 AND 99 SET @v_errores += N'dorsal debe estar entre 1 y 99; ';
+        IF @estado IS NULL OR @estado NOT IN ('ACTIVO','BAJA') SET @v_errores += N'estado invalido; ';
+        IF EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion AND id_jugador = @id_jugador) SET @v_errores += N'jugador ya convocado en la seleccion; ';
+        IF EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion AND dorsal = @dorsal) SET @v_errores += N'dorsal ya ocupado en la seleccion; ';
+        IF EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_jugador = @id_jugador) SET @v_errores += N'jugador ya figura convocado en otra seleccion ; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Convocatoria_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Convocatoria_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -964,17 +964,17 @@ CREATE OR ALTER PROCEDURE torneo.usp_Convocatoria_Modificar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion AND id_jugador = @id_jugador) SET @v_errores += 'convocatoria inexistente; ';
-        IF @dorsal IS NULL OR @dorsal NOT BETWEEN 1 AND 99 SET @v_errores += 'dorsal debe estar entre 1 y 99; ';
-        IF @estado IS NULL OR @estado NOT IN ('ACTIVO','BAJA') SET @v_errores += 'estado invalido; ';
-        IF EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion AND dorsal = @dorsal AND id_jugador <> @id_jugador) SET @v_errores += 'dorsal ya ocupado por otro jugador en la seleccion; ';
-        IF @v_errores <> ''
+        IF NOT EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion AND id_jugador = @id_jugador) SET @v_errores += N'convocatoria inexistente; ';
+        IF @dorsal IS NULL OR @dorsal NOT BETWEEN 1 AND 99 SET @v_errores += N'dorsal debe estar entre 1 y 99; ';
+        IF @estado IS NULL OR @estado NOT IN ('ACTIVO','BAJA') SET @v_errores += N'estado invalido; ';
+        IF EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion AND dorsal = @dorsal AND id_jugador <> @id_jugador) SET @v_errores += N'dorsal ya ocupado por otro jugador en la seleccion; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Convocatoria_Modificar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Convocatoria_Modificar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -1005,11 +1005,11 @@ CREATE OR ALTER PROCEDURE torneo.usp_Convocatoria_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion AND id_jugador = @id_jugador) THROW 50001, 'torneo.usp_Convocatoria_Eliminar: convocatoria inexistente', 1;
+        IF NOT EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion AND id_jugador = @id_jugador) THROW 50001, N'torneo.usp_Convocatoria_Eliminar: convocatoria inexistente', 1;
 
         -- Según B.3: Si el jugador figura en una alineación, se marca estado BAJA en lugar de borrar (baja lógica)
         IF EXISTS (SELECT 1 FROM juego.alineacion WHERE id_seleccion = @id_seleccion AND id_jugador = @id_jugador)
@@ -1025,11 +1025,11 @@ BEGIN
 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM torneo.cambio_convocatoria WHERE id_seleccion = @id_seleccion AND id_jugador = @id_jugador;
-        IF @v_n > 0 SET @v_errores += CONCAT('cambio_convocatoria(', @v_n, '); ');
+        IF @v_n > 0 SET @v_errores += CONCAT(N'cambio_convocatoria(', @v_n, N'); ');
 
-        IF @v_errores <> ''
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_Convocatoria_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_Convocatoria_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
             THROW 50002, @v_errores, 1;
         END
 
@@ -1058,23 +1058,23 @@ CREATE OR ALTER PROCEDURE torneo.usp_CambioConvocatoria_Insertar
     @id_seleccion INT,
     @id_jugador INT,
     @tipo VARCHAR(4),
-    @motivo VARCHAR(200) = NULL,
+    @motivo NVARCHAR(200) = NULL,
     @fecha DATE,
     @id_cambio INT OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion) SET @v_errores += 'seleccion inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador) SET @v_errores += 'jugador inexistente; ';
-        IF @tipo IS NULL OR @tipo NOT IN ('ALTA','BAJA') SET @v_errores += 'tipo debe ser ALTA o BAJA; ';
-        IF @fecha IS NULL SET @v_errores += 'fecha obligatoria; ';
-        IF @v_errores <> ''
+        IF NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion) SET @v_errores += N'seleccion inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador) SET @v_errores += N'jugador inexistente; ';
+        IF @tipo IS NULL OR @tipo NOT IN ('ALTA','BAJA') SET @v_errores += N'tipo debe ser ALTA o BAJA; ';
+        IF @fecha IS NULL SET @v_errores += N'fecha obligatoria; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_CambioConvocatoria_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_CambioConvocatoria_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -1103,23 +1103,23 @@ CREATE OR ALTER PROCEDURE torneo.usp_CambioConvocatoria_Modificar
     @id_seleccion INT,
     @id_jugador INT,
     @tipo VARCHAR(4),
-    @motivo VARCHAR(200) = NULL,
+    @motivo NVARCHAR(200) = NULL,
     @fecha DATE
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.cambio_convocatoria WHERE id_cambio = @id_cambio) SET @v_errores += 'cambio_convocatoria inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion) SET @v_errores += 'seleccion inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador) SET @v_errores += 'jugador inexistente; ';
-        IF @tipo IS NULL OR @tipo NOT IN ('ALTA','BAJA') SET @v_errores += 'tipo debe ser ALTA o BAJA; ';
-        IF @fecha IS NULL SET @v_errores += 'fecha obligatoria; ';
-        IF @v_errores <> ''
+        IF NOT EXISTS (SELECT 1 FROM torneo.cambio_convocatoria WHERE id_cambio = @id_cambio) SET @v_errores += N'cambio_convocatoria inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion) SET @v_errores += N'seleccion inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador) SET @v_errores += N'jugador inexistente; ';
+        IF @tipo IS NULL OR @tipo NOT IN ('ALTA','BAJA') SET @v_errores += N'tipo debe ser ALTA o BAJA; ';
+        IF @fecha IS NULL SET @v_errores += N'fecha obligatoria; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('torneo.usp_CambioConvocatoria_Modificar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'torneo.usp_CambioConvocatoria_Modificar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -1151,7 +1151,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.cambio_convocatoria WHERE id_cambio = @id_cambio) THROW 50001, 'torneo.usp_CambioConvocatoria_Eliminar: cambio_convocatoria inexistente', 1;
+        IF NOT EXISTS (SELECT 1 FROM torneo.cambio_convocatoria WHERE id_cambio = @id_cambio) THROW 50001, N'torneo.usp_CambioConvocatoria_Eliminar: cambio_convocatoria inexistente', 1;
 
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_cambio_conv_eliminar; SET @v_sp = 1; END

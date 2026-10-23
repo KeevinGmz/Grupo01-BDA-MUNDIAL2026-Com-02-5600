@@ -13,13 +13,13 @@ GO
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-PRINT '=== 52_Test_ABM_Persona_OK: jugador, camino feliz ===';
+PRINT N'=== 52_Test_ABM_Persona_OK: jugador, camino feliz ===';
 
 DECLARE @v_id_pais SMALLINT;
 DECLARE @v_id_club INT;
 DECLARE @v_id_posicion TINYINT;
 DECLARE @v_id_persona INT;
-DECLARE @v_nro_doc VARCHAR(30) = 'JUG-TEST-0001';
+DECLARE @v_nro_doc NVARCHAR(30) = N'JUG-TEST-0001';
 DECLARE @v_personas_antes INT;
 DECLARE @v_jugadores_antes INT;
 DECLARE @v_personas_despues INT;
@@ -29,12 +29,12 @@ DECLARE @v_jugadores_despues INT;
 -- 1. Validaciones previas
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID('persona.usp_Jugador_Insertar', 'P') IS NULL
-   OR OBJECT_ID('persona.usp_Jugador_Modificar', 'P') IS NULL
-   OR OBJECT_ID('persona.usp_Jugador_Eliminar', 'P') IS NULL
+IF OBJECT_ID(N'persona.usp_Jugador_Insertar', N'P') IS NULL
+   OR OBJECT_ID(N'persona.usp_Jugador_Modificar', N'P') IS NULL
+   OR OBJECT_ID(N'persona.usp_Jugador_Eliminar', N'P') IS NULL
 BEGIN
     ;THROW 50001,
-           '52_Test_ABM_Persona_OK: faltan uno o mas procedimientos ABM de jugador',
+           N'52_Test_ABM_Persona_OK: faltan uno o mas procedimientos ABM de jugador',
            1;
 END;
 
@@ -52,17 +52,17 @@ ORDER BY p.id_posicion;
 
 IF @v_id_pais IS NULL
 BEGIN
-    ;THROW 50001, '52_Test_ABM_Persona_OK: debe existir al menos un pais',1;
+    ;THROW 50001, N'52_Test_ABM_Persona_OK: debe existir al menos un pais',1;
 END;
 
 IF @v_id_club IS NULL
 BEGIN
-    ;THROW 50001, '52_Test_ABM_Persona_OK: debe existir al menos un club',1;
+    ;THROW 50001, N'52_Test_ABM_Persona_OK: debe existir al menos un club',1;
 END;
 
 IF @v_id_posicion IS NULL
 BEGIN
-    ;THROW 50001, '52_Test_ABM_Persona_OK: debe existir al menos una posicio', 1;
+    ;THROW 50001, N'52_Test_ABM_Persona_OK: debe existir al menos una posicion', 1;
 END;
 
 IF EXISTS
@@ -73,7 +73,7 @@ IF EXISTS
       AND p.nro_doc = @v_nro_doc
 )
 BEGIN
-    ;THROW 50001,'52_Test_ABM_Persona_OK: ya existe el documento de prueba JUG-TEST-0001', 1;
+    ;THROW 50001,N'52_Test_ABM_Persona_OK: ya existe el documento de prueba JUG-TEST-0001', 1;
 END;
 
 BEGIN TRY
@@ -89,7 +89,7 @@ BEGIN TRY
     SELECT @v_jugadores_antes = COUNT(*)
     FROM persona.jugador;
 
-    PRINT '--- EVIDENCIA ANTES DE INSERTAR ---';
+    PRINT N'--- EVIDENCIA ANTES DE INSERTAR ---';
 
     SELECT
         @v_personas_antes AS personas_antes,
@@ -107,8 +107,8 @@ BEGIN TRY
     EXEC persona.usp_Jugador_Insertar
         @tipo_doc = 'DNI',
         @nro_doc = @v_nro_doc,
-        @nombre = 'Jugador',
-        @apellido = 'De Prueba',
+        @nombre = N'Jugador',
+        @apellido = N'De Prueba',
         @fecha_nac = '1998-05-10',
         @id_pais = @v_id_pais,
         @pie_habil = 'D',
@@ -142,11 +142,11 @@ BEGIN TRY
                    AND j.id_club = @v_id_club
                    AND j.id_posicion_habitual = @v_id_posicion
              )
-            THEN 'PASS jugador insertar: persona y subtipo creados'
-        ELSE 'FAIL jugador insertar'
+            THEN N'PASS jugador insertar: persona y subtipo creados'
+        ELSE N'FAIL jugador insertar'
     END AS resultado;
 
-    PRINT '--- EVIDENCIA DESPUES DE INSERTAR ---';
+    PRINT N'--- EVIDENCIA DESPUES DE INSERTAR ---';
 
     SELECT
         p.*,
@@ -167,8 +167,8 @@ BEGIN TRY
         @id_persona = @v_id_persona,
         @tipo_doc = 'DNI',
         @nro_doc = @v_nro_doc,
-        @nombre = 'Jugador Modificado',
-        @apellido = 'De Prueba Modificado',
+        @nombre = N'Jugador Modificado',
+        @apellido = N'De Prueba Modificado',
         @fecha_nac = '1998-05-10',
         @id_pais = @v_id_pais,
         @pie_habil = 'I',
@@ -184,18 +184,18 @@ BEGIN TRY
                  JOIN persona.jugador AS j
                    ON j.id_persona = p.id_persona
                  WHERE p.id_persona = @v_id_persona
-                   AND p.nombre = 'Jugador Modificado'
-                   AND p.apellido = 'De Prueba Modificado'
+                   AND p.nombre = N'Jugador Modificado'
+                   AND p.apellido = N'De Prueba Modificado'
                    AND j.pie_habil = 'I'
                    AND j.altura_cm = 185
                    AND j.id_club = @v_id_club
                    AND j.id_posicion_habitual = @v_id_posicion
              )
-            THEN 'PASS jugador modificar: persona y subtipo actualizados'
-        ELSE 'FAIL jugador modificar'
+            THEN N'PASS jugador modificar: persona y subtipo actualizados'
+        ELSE N'FAIL jugador modificar'
     END AS resultado;
 
-    PRINT '--- EVIDENCIA DESPUES DE MODIFICAR ---';
+    PRINT N'--- EVIDENCIA DESPUES DE MODIFICAR ---';
 
     SELECT
         p.*,
@@ -228,11 +228,11 @@ BEGIN TRY
                  FROM persona.persona AS p
                  WHERE p.id_persona = @v_id_persona
              )
-            THEN 'PASS jugador eliminar: persona y subtipo eliminados'
-        ELSE 'FAIL jugador eliminar'
+            THEN N'PASS jugador eliminar: persona y subtipo eliminados'
+        ELSE N'FAIL jugador eliminar'
     END AS resultado;
 
-    PRINT '--- EVIDENCIA DESPUES DE ELIMINAR ---';
+    PRINT N'--- EVIDENCIA DESPUES DE ELIMINAR ---';
 
     SELECT p.*
     FROM persona.persona AS p
@@ -248,7 +248,7 @@ BEGIN TRY
 
     ROLLBACK TRANSACTION;
 
-    PRINT 'PASS general: prueba finalizada y transaccion revertida.';
+    PRINT N'PASS general: prueba finalizada y transaccion revertida.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
@@ -256,9 +256,9 @@ BEGIN CATCH
 
     PRINT CONCAT
     (
-        'FAIL general. Error ',
+        N'FAIL general. Error ',
         ERROR_NUMBER(),
-        ': ',
+        N': ',
         ERROR_MESSAGE()
     );
 
@@ -276,9 +276,9 @@ SELECT CASE
              SELECT 1
              FROM persona.persona AS p
              WHERE p.tipo_doc = 'DNI'
-               AND p.nro_doc = 'JUG-TEST-0001'
+               AND p.nro_doc = N'JUG-TEST-0001'
          )
-        THEN 'PASS rollback: no quedaron residuos'
-    ELSE 'FAIL rollback: quedaron residuos'
+        THEN N'PASS rollback: no quedaron residuos'
+    ELSE N'FAIL rollback: quedaron residuos'
 END AS resultado_final;
 GO

@@ -17,10 +17,10 @@ BEGIN TRANSACTION;
     -- 1. Insertar país
     DECLARE @v_id_pais SMALLINT;
     EXEC geo.usp_Pais_Insertar 
-        @nombre = 'País De Prueba', 
+        @nombre = N'País De Prueba', 
         @cod_iso3 = 'TST', 
         @cod_fifa = 'TST', 
-        @gentilicio = 'Testiano', 
+        @gentilicio = N'Testiano', 
         @id_confederacion = 1, 
         @id_pais = @v_id_pais OUTPUT;
 
@@ -30,10 +30,10 @@ BEGIN TRANSACTION;
     -- 2. Modificar país
     EXEC geo.usp_Pais_Modificar 
         @id_pais = @v_id_pais, 
-        @nombre = 'País De Prueba Modificado', 
+        @nombre = N'País De Prueba Modificado', 
         @cod_iso3 = 'TST', 
         @cod_fifa = 'TST', 
-        @gentilicio = 'Testiano Mod', 
+        @gentilicio = N'Testiano Mod', 
         @id_confederacion = 1;
 
     PRINT '--- EVIDENCIA DESPUES DE MODIFICAR PAIS ---';

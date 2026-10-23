@@ -13,20 +13,20 @@ GO
 SET NOCOUNT ON;
 GO
 
-PRINT '=====================================================================';
-PRINT 'INICIO PRUEBAS DE ERROR: 67_Test_ERR_Convocatoria';
-PRINT '=====================================================================';
+PRINT N'=====================================================================';
+PRINT N'INICIO PRUEBAS DE ERROR: 67_Test_ERR_Convocatoria';
+PRINT N'=====================================================================';
 GO
 
 /* =====================================================================
    CASO 1: dorsal duplicado dentro de la convocatoria recibida
 ===================================================================== */
-PRINT '';
-PRINT '-> Test 1: registrar una convocatoria con un dorsal repetido';
+PRINT N'';
+PRINT N'-> Test 1: registrar una convocatoria con un dorsal repetido';
 
 DECLARE @v_id_seleccion INT;
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
 DECLARE @v_filas_antes INT;
 DECLARE @v_filas_despues INT;
 DECLARE @v_cantidad_requerida INT = 26;
@@ -37,14 +37,14 @@ DECLARE @v_convocados torneo.tt_Convocado;
 -- 1. Validaciones previas
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID('torneo.usp_Negocio_RegistrarConvocatoria', 'P') IS NULL
+IF OBJECT_ID(N'torneo.usp_Negocio_RegistrarConvocatoria', N'P') IS NULL
 BEGIN
-    ;THROW 50001,'67_Test_ERR_Convocatoria: no existe torneo.usp_Negocio_RegistrarConvocatoria', 1;
+    ;THROW 50001,N'67_Test_ERR_Convocatoria: no existe torneo.usp_Negocio_RegistrarConvocatoria', 1;
 END;
 
-IF TYPE_ID('torneo.tt_Convocado') IS NULL
+IF TYPE_ID(N'torneo.tt_Convocado') IS NULL
 BEGIN
-    ;THROW 50001,'67_Test_ERR_Convocatoria: no existe el tipo torneo.tt_Convocado',1;
+    ;THROW 50001,N'67_Test_ERR_Convocatoria: no existe el tipo torneo.tt_Convocado',1;
 END;
 
 SELECT TOP (1)
@@ -75,7 +75,7 @@ ORDER BY s.id_seleccion;
 
 IF @v_id_seleccion IS NULL
 BEGIN
-    ;THROW 50001,'67_Test_ERR_Convocatoria: se requiere una seleccion sin convocatoria activa y con al menos 26 jugadores elegibles no convocados',1;
+    ;THROW 50001,N'67_Test_ERR_Convocatoria: se requiere una seleccion sin convocatoria activa y con al menos 26 jugadores elegibles no convocados',1;
 END;
 
 -------------------------------------------------------------------------------
@@ -122,7 +122,7 @@ WHERE je.rn <= @v_cantidad_requerida;
 
 IF (SELECT COUNT(*) FROM @v_convocados) <> @v_cantidad_requerida
 BEGIN
-    ;THROW 50001, '67_Test_ERR_Convocatoria: no se pudo completar la lista de prueba', 1;
+    ;THROW 50001, N'67_Test_ERR_Convocatoria: no se pudo completar la lista de prueba', 1;
 END;
 
 IF 2 <>
@@ -132,14 +132,14 @@ IF 2 <>
        WHERE c.dorsal = 10
    )
 BEGIN
-    ;THROW 50001, '67_Test_ERR_Convocatoria: no se pudo preparar el dorsal duplicado',1;
+    ;THROW 50001, N'67_Test_ERR_Convocatoria: no se pudo preparar el dorsal duplicado',1;
 END;
 
 SELECT @v_filas_antes = COUNT(*)
 FROM torneo.convocatoria AS c
 WHERE c.id_seleccion = @v_id_seleccion;
 
-PRINT '--- EVIDENCIA DEL TVP ANTES DEL INTENTO ---';
+PRINT N'--- EVIDENCIA DEL TVP ANTES DEL INTENTO ---';
 
 SELECT
     @v_id_seleccion AS id_seleccion_prueba,
@@ -164,7 +164,7 @@ BEGIN TRY
 
     SET @v_error_numero = 0;
     SET @v_error_mensaje =
-        'El SP permitio registrar una convocatoria con dorsal duplicado';
+        N'El SP permitio registrar una convocatoria con dorsal duplicado';
 END TRY
 BEGIN CATCH
     SET @v_error_numero = ERROR_NUMBER();
@@ -184,9 +184,9 @@ IF @@TRANCOUNT > 0
 
 PRINT CONCAT
 (
-    'Error capturado ',
+    N'Error capturado ',
     @v_error_numero,
-    ': ',
+    N': ',
     @v_error_mensaje
 );
 
@@ -199,23 +199,23 @@ SELECT
 IF @v_error_numero IN (50001, 50003)
    AND
    (
-       @v_error_mensaje LIKE '%dorsal%duplic%'
-       OR @v_error_mensaje LIKE '%dorsal%repet%'
-       OR @v_error_mensaje LIKE '%dorsales%unicos%'
+       @v_error_mensaje LIKE N'%dorsal%duplic%'
+       OR @v_error_mensaje LIKE N'%dorsal%repet%'
+       OR @v_error_mensaje LIKE N'%dorsales%unicos%'
    )
    AND @v_filas_despues = @v_filas_antes
 BEGIN
-    PRINT 'PASS Test 1: se rechazo el dorsal duplicado y no se registro la convocatoria.';
+    PRINT N'PASS Test 1: se rechazo el dorsal duplicado y no se registro la convocatoria.';
 END
 ELSE
 BEGIN
-    PRINT 'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
+    PRINT N'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
 END;
 GO
 
-PRINT '';
-PRINT '=====================================================================';
-PRINT 'FIN PRUEBAS DE ERROR: 67_Test_ERR_Convocatoria';
-PRINT 'ROLLBACK EJECUTADO';
-PRINT '=====================================================================';
+PRINT N'';
+PRINT N'=====================================================================';
+PRINT N'FIN PRUEBAS DE ERROR: 67_Test_ERR_Convocatoria';
+PRINT N'ROLLBACK EJECUTADO';
+PRINT N'=====================================================================';
 GO

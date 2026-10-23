@@ -15,21 +15,21 @@ GO
 -- ============================================================================
 
 CREATE OR ALTER PROCEDURE arbitraje.usp_RolArbitral_Insertar
-    @descripcion VARCHAR(30),
+    @descripcion NVARCHAR(30),
     @id_rol TINYINT OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
         -- 1) Validaciones: todas antes de abrir la transaccion; se acumulan
-        IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL SET @v_errores += 'descripcion obligatoria; ';
-        IF EXISTS (SELECT 1 FROM arbitraje.rol_arbitral WHERE descripcion = @descripcion) SET @v_errores += 'descripcion ya registrada; ';
-        IF @v_errores <> ''
+        IF NULLIF(LTRIM(RTRIM(@descripcion)), N'') IS NULL SET @v_errores += N'descripcion obligatoria; ';
+        IF EXISTS (SELECT 1 FROM arbitraje.rol_arbitral WHERE descripcion = @descripcion) SET @v_errores += N'descripcion ya registrada; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('arbitraje.usp_RolArbitral_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'arbitraje.usp_RolArbitral_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -55,21 +55,21 @@ GO
 
 CREATE OR ALTER PROCEDURE arbitraje.usp_RolArbitral_Modificar
     @id_rol TINYINT,
-    @descripcion VARCHAR(30)
+    @descripcion NVARCHAR(30)
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
         -- 1) Validaciones: todas antes de abrir la transaccion; se acumulan
-        IF NOT EXISTS (SELECT 1 FROM arbitraje.rol_arbitral WHERE id_rol = @id_rol) SET @v_errores += 'rol_arbitral inexistente; ';
-        IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL SET @v_errores += 'descripcion obligatoria; ';
-        IF EXISTS (SELECT 1 FROM arbitraje.rol_arbitral WHERE descripcion = @descripcion AND id_rol <> @id_rol) SET @v_errores += 'descripcion ya registrada; ';
-        IF @v_errores <> ''
+        IF NOT EXISTS (SELECT 1 FROM arbitraje.rol_arbitral WHERE id_rol = @id_rol) SET @v_errores += N'rol_arbitral inexistente; ';
+        IF NULLIF(LTRIM(RTRIM(@descripcion)), N'') IS NULL SET @v_errores += N'descripcion obligatoria; ';
+        IF EXISTS (SELECT 1 FROM arbitraje.rol_arbitral WHERE descripcion = @descripcion AND id_rol <> @id_rol) SET @v_errores += N'descripcion ya registrada; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('arbitraje.usp_RolArbitral_Modificar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'arbitraje.usp_RolArbitral_Modificar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -97,21 +97,21 @@ CREATE OR ALTER PROCEDURE arbitraje.usp_RolArbitral_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
         -- 1) El registro debe existir
         IF NOT EXISTS (SELECT 1 FROM arbitraje.rol_arbitral WHERE id_rol = @id_rol)
-            THROW 50001, 'arbitraje.usp_RolArbitral_Eliminar: rol_arbitral inexistente', 1;
+            THROW 50001, N'arbitraje.usp_RolArbitral_Eliminar: rol_arbitral inexistente', 1;
 
         -- 2) Dependientes: una linea por cada tabla con FK a esta fila
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM arbitraje.designacion_arbitral WHERE id_rol = @id_rol;
-        IF @v_n > 0 SET @v_errores += CONCAT('designacion_arbitral(', @v_n, '); ');
-        IF @v_errores <> ''
+        IF @v_n > 0 SET @v_errores += CONCAT(N'designacion_arbitral(', @v_n, N'); ');
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('arbitraje.usp_RolArbitral_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'arbitraje.usp_RolArbitral_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
             THROW 50002, @v_errores, 1;
         END
 
@@ -145,18 +145,18 @@ CREATE OR ALTER PROCEDURE arbitraje.usp_DesignacionArbitral_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
         -- 1) Validaciones comunes del ABM y V-11 del plan
-        IF NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido) SET @v_errores += 'partido inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM arbitraje.rol_arbitral WHERE id_rol = @id_rol) SET @v_errores += 'rol_arbitral inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM persona.arbitro WHERE id_persona = @id_arbitro) SET @v_errores += 'arbitro inexistente; ';
-        IF @fecha_designacion IS NULL SET @v_errores += 'fecha_designacion obligatoria; ';
-        IF @estado IS NULL OR @estado NOT IN ('DESIGNADA', 'ANULADA') SET @v_errores += 'estado invalido; ';
-        IF EXISTS (SELECT 1 FROM arbitraje.designacion_arbitral WHERE id_partido = @id_partido AND id_rol = @id_rol) SET @v_errores += 'designacion ya registrada para el partido y rol; ';
-        IF EXISTS (SELECT 1 FROM arbitraje.designacion_arbitral WHERE id_partido = @id_partido AND id_arbitro = @id_arbitro) SET @v_errores += 'arbitro ya asignado al partido en otro rol; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido) SET @v_errores += N'partido inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM arbitraje.rol_arbitral WHERE id_rol = @id_rol) SET @v_errores += N'rol_arbitral inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM persona.arbitro WHERE id_persona = @id_arbitro) SET @v_errores += N'arbitro inexistente; ';
+        IF @fecha_designacion IS NULL SET @v_errores += N'fecha_designacion obligatoria; ';
+        IF @estado IS NULL OR @estado NOT IN ('DESIGNADA', 'ANULADA') SET @v_errores += N'estado invalido; ';
+        IF EXISTS (SELECT 1 FROM arbitraje.designacion_arbitral WHERE id_partido = @id_partido AND id_rol = @id_rol) SET @v_errores += N'designacion ya registrada para el partido y rol; ';
+        IF EXISTS (SELECT 1 FROM arbitraje.designacion_arbitral WHERE id_partido = @id_partido AND id_arbitro = @id_arbitro) SET @v_errores += N'arbitro ya asignado al partido en otro rol; ';
 
         IF EXISTS (
             SELECT 1
@@ -166,7 +166,7 @@ BEGIN
             JOIN torneo.seleccion s ON s.id_seleccion = ep.id_seleccion
             WHERE pe.id_persona = @id_arbitro
               AND pe.id_pais = s.id_pais
-        ) SET @v_errores += 'el pais del arbitro coincide con el de una seleccion del partido; ';
+        ) SET @v_errores += N'el pais del arbitro coincide con el de una seleccion del partido; ';
 
         IF EXISTS (
             SELECT 1
@@ -176,11 +176,11 @@ BEGIN
             WHERE p_nuevo.id_partido = @id_partido
               AND da.id_partido <> @id_partido
               AND ABS(DATEDIFF(MINUTE, p_nuevo.fecha_hora_utc, p_otro.fecha_hora_utc)) < 180
-        ) SET @v_errores += 'arbitro designado en otro partido con menos de 3 horas de diferencia; ';
+        ) SET @v_errores += N'arbitro designado en otro partido con menos de 3 horas de diferencia; ';
 
-        IF @v_errores <> ''
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('arbitraje.usp_DesignacionArbitral_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'arbitraje.usp_DesignacionArbitral_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -213,16 +213,16 @@ CREATE OR ALTER PROCEDURE arbitraje.usp_DesignacionArbitral_Modificar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
         -- 1) Validaciones: PK, FK, UQ, CK y reglas V-11 aplicables al nuevo arbitro
-        IF NOT EXISTS (SELECT 1 FROM arbitraje.designacion_arbitral WHERE id_partido = @id_partido AND id_rol = @id_rol) SET @v_errores += 'designacion_arbitral inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM persona.arbitro WHERE id_persona = @id_arbitro) SET @v_errores += 'arbitro inexistente; ';
-        IF @fecha_designacion IS NULL SET @v_errores += 'fecha_designacion obligatoria; ';
-        IF @estado IS NULL OR @estado NOT IN ('DESIGNADA', 'ANULADA') SET @v_errores += 'estado invalido; ';
-        IF EXISTS (SELECT 1 FROM arbitraje.designacion_arbitral WHERE id_partido = @id_partido AND id_arbitro = @id_arbitro AND id_rol <> @id_rol) SET @v_errores += 'arbitro ya asignado a otro rol en el partido; ';
+        IF NOT EXISTS (SELECT 1 FROM arbitraje.designacion_arbitral WHERE id_partido = @id_partido AND id_rol = @id_rol) SET @v_errores += N'designacion_arbitral inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM persona.arbitro WHERE id_persona = @id_arbitro) SET @v_errores += N'arbitro inexistente; ';
+        IF @fecha_designacion IS NULL SET @v_errores += N'fecha_designacion obligatoria; ';
+        IF @estado IS NULL OR @estado NOT IN ('DESIGNADA', 'ANULADA') SET @v_errores += N'estado invalido; ';
+        IF EXISTS (SELECT 1 FROM arbitraje.designacion_arbitral WHERE id_partido = @id_partido AND id_arbitro = @id_arbitro AND id_rol <> @id_rol) SET @v_errores += N'arbitro ya asignado a otro rol en el partido; ';
 
         IF EXISTS (
             SELECT 1
@@ -231,7 +231,7 @@ BEGIN
             JOIN torneo.seleccion s ON s.id_seleccion = ep.id_seleccion
             WHERE pe.id_persona = @id_arbitro
               AND pe.id_pais = s.id_pais
-        ) SET @v_errores += 'el pais del arbitro coincide con el de una seleccion del partido; ';
+        ) SET @v_errores += N'el pais del arbitro coincide con el de una seleccion del partido; ';
 
         IF EXISTS (
             SELECT 1
@@ -241,11 +241,11 @@ BEGIN
             WHERE p_nuevo.id_partido = @id_partido
               AND da.id_partido <> @id_partido
               AND ABS(DATEDIFF(MINUTE, p_nuevo.fecha_hora_utc, p_otro.fecha_hora_utc)) < 180
-        ) SET @v_errores += 'arbitro designado en otro partido con menos de 3 horas de diferencia; ';
+        ) SET @v_errores += N'arbitro designado en otro partido con menos de 3 horas de diferencia; ';
 
-        IF @v_errores <> ''
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('arbitraje.usp_DesignacionArbitral_Modificar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'arbitraje.usp_DesignacionArbitral_Modificar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -281,7 +281,7 @@ BEGIN
     BEGIN TRY
         -- 1) El registro debe existir
         IF NOT EXISTS (SELECT 1 FROM arbitraje.designacion_arbitral WHERE id_partido = @id_partido AND id_rol = @id_rol)
-            THROW 50001, 'arbitraje.usp_DesignacionArbitral_Eliminar: designacion_arbitral inexistente', 1;
+            THROW 50001, N'arbitraje.usp_DesignacionArbitral_Eliminar: designacion_arbitral inexistente', 1;
 
         -- 2) Sin dependientes: informe_post_partido es entidad fuerte y no tiene FK
         -- 3) Transaccion propia o savepoint si ya hay una abierta
@@ -308,23 +308,23 @@ GO
 CREATE OR ALTER PROCEDURE arbitraje.usp_InformePostPartido_Insertar
     @fecha_informe DATETIME2(0),
     @tipo VARCHAR(30),
-    @descripcion VARCHAR(1000),
-    @sancion_aplicada VARCHAR(200) = NULL,
+    @descripcion NVARCHAR(1000),
+    @sancion_aplicada NVARCHAR(200) = NULL,
     @id_informe INT OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
         -- 1) Validaciones: todas antes de abrir la transaccion; se acumulan
-        IF @fecha_informe IS NULL SET @v_errores += 'fecha_informe obligatoria; ';
-        IF NULLIF(LTRIM(RTRIM(@tipo)), '') IS NULL SET @v_errores += 'tipo obligatorio; ';
-        IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL SET @v_errores += 'descripcion obligatoria; ';
-        IF @v_errores <> ''
+        IF @fecha_informe IS NULL SET @v_errores += N'fecha_informe obligatoria; ';
+        IF NULLIF(LTRIM(RTRIM(@tipo)), '') IS NULL SET @v_errores += N'tipo obligatorio; ';
+        IF NULLIF(LTRIM(RTRIM(@descripcion)), N'') IS NULL SET @v_errores += N'descripcion obligatoria; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('arbitraje.usp_InformePostPartido_Insertar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'arbitraje.usp_InformePostPartido_Insertar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -353,23 +353,23 @@ CREATE OR ALTER PROCEDURE arbitraje.usp_InformePostPartido_Modificar
     @id_informe INT,
     @fecha_informe DATETIME2(0),
     @tipo VARCHAR(30),
-    @descripcion VARCHAR(1000),
-    @sancion_aplicada VARCHAR(200) = NULL
+    @descripcion NVARCHAR(1000),
+    @sancion_aplicada NVARCHAR(200) = NULL
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
         -- 1) Validaciones: todas antes de abrir la transaccion; se acumulan
-        IF NOT EXISTS (SELECT 1 FROM arbitraje.informe_post_partido WHERE id_informe = @id_informe) SET @v_errores += 'informe_post_partido inexistente; ';
-        IF @fecha_informe IS NULL SET @v_errores += 'fecha_informe obligatoria; ';
-        IF NULLIF(LTRIM(RTRIM(@tipo)), '') IS NULL SET @v_errores += 'tipo obligatorio; ';
-        IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL SET @v_errores += 'descripcion obligatoria; ';
-        IF @v_errores <> ''
+        IF NOT EXISTS (SELECT 1 FROM arbitraje.informe_post_partido WHERE id_informe = @id_informe) SET @v_errores += N'informe_post_partido inexistente; ';
+        IF @fecha_informe IS NULL SET @v_errores += N'fecha_informe obligatoria; ';
+        IF NULLIF(LTRIM(RTRIM(@tipo)), '') IS NULL SET @v_errores += N'tipo obligatorio; ';
+        IF NULLIF(LTRIM(RTRIM(@descripcion)), N'') IS NULL SET @v_errores += N'descripcion obligatoria; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = LEFT(CONCAT('arbitraje.usp_InformePostPartido_Modificar: ', @v_errores), 2048);
+            SET @v_errores = LEFT(CONCAT(N'arbitraje.usp_InformePostPartido_Modificar: ', @v_errores), 2048);
             THROW 50001, @v_errores, 1;
         END
 
@@ -404,7 +404,7 @@ BEGIN
     BEGIN TRY
         -- 1) El registro debe existir
         IF NOT EXISTS (SELECT 1 FROM arbitraje.informe_post_partido WHERE id_informe = @id_informe)
-            THROW 50001, 'arbitraje.usp_InformePostPartido_Eliminar: informe_post_partido inexistente', 1;
+            THROW 50001, N'arbitraje.usp_InformePostPartido_Eliminar: informe_post_partido inexistente', 1;
 
         -- 2) Sin dependientes: entidad fuerte sin FK entrantes
         -- 3) Transaccion propia o savepoint si ya hay una abierta

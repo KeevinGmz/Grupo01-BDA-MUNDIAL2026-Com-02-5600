@@ -13,9 +13,9 @@ GO
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-PRINT '=====================================================================';
-PRINT 'INICIO PRUEBA EXITOSA: 68_Test_OK_Alineacion';
-PRINT '=====================================================================';
+PRINT N'=====================================================================';
+PRINT N'INICIO PRUEBA EXITOSA: 68_Test_OK_Alineacion';
+PRINT N'=====================================================================';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_seleccion INT;
@@ -31,14 +31,14 @@ DECLARE @v_alineacion juego.tt_Alineacion;
 -- 1. Validaciones previas
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID('juego.usp_Negocio_RegistrarAlineacion', 'P') IS NULL
+IF OBJECT_ID(N'juego.usp_Negocio_RegistrarAlineacion', N'P') IS NULL
 BEGIN
-    ;THROW 50001,'68_Test_OK_Alineacion: no existe juego.usp_Negocio_RegistrarAlineacion',1;
+    ;THROW 50001,N'68_Test_OK_Alineacion: no existe juego.usp_Negocio_RegistrarAlineacion',1;
 END;
 
-IF TYPE_ID('juego.tt_Alineacion') IS NULL
+IF TYPE_ID(N'juego.tt_Alineacion') IS NULL
 BEGIN
-    ;THROW 50001,'68_Test_OK_Alineacion: no existe el tipo juego.tt_Alineacion',1;
+    ;THROW 50001,N'68_Test_OK_Alineacion: no existe el tipo juego.tt_Alineacion',1;
 END;
 
 SELECT TOP (1)
@@ -70,7 +70,7 @@ IF @v_id_partido IS NULL
    OR @v_id_seleccion IS NULL
    OR @v_cantidad_convocados < 11
 BEGIN
-    ;THROW 50001,'68_Test_OK_Alineacion: se requiere un equipo en un partido, sin alineacion previa y con al menos 11 convocados activos',1;
+    ;THROW 50001,N'68_Test_OK_Alineacion: se requiere un equipo en un partido, sin alineacion previa y con al menos 11 convocados activos',1;
 END;
 
 -------------------------------------------------------------------------------
@@ -111,12 +111,12 @@ FROM convocados AS c;
 
 IF (SELECT COUNT(*) FROM @v_alineacion) <> @v_cantidad_convocados
 BEGIN
-    ;THROW 50001,'68_Test_OK_Alineacion: el TVP no contiene todos los convocados activos',1;
+    ;THROW 50001,N'68_Test_OK_Alineacion: el TVP no contiene todos los convocados activos',1;
 END;
 
 IF (SELECT COUNT(*) FROM @v_alineacion WHERE es_titular = 1) <> 11
 BEGIN
-    ;THROW 50001, '68_Test_OK_Alineacion: el TVP debe contener exactamente 11 titulares',1;
+    ;THROW 50001, N'68_Test_OK_Alineacion: el TVP debe contener exactamente 11 titulares',1;
 END;
 
 SELECT @v_alineados_antes = COUNT(*)
@@ -124,7 +124,7 @@ FROM juego.alineacion AS a
 WHERE a.id_partido = @v_id_partido
   AND a.id_seleccion = @v_id_seleccion;
 
-PRINT '--- EVIDENCIA ANTES DE REGISTRAR LA ALINEACION ---';
+PRINT N'--- EVIDENCIA ANTES DE REGISTRAR LA ALINEACION ---';
 
 SELECT
     @v_id_partido AS id_partido_prueba,
@@ -190,11 +190,11 @@ BEGIN TRY
                    AND ep.id_seleccion = @v_id_seleccion
                    AND ep.esquema_tactico = @v_esquema_prueba
              )
-            THEN 'PASS registrar alineacion mediante TVP'
-        ELSE 'FAIL registrar alineacion mediante TVP'
+            THEN N'PASS registrar alineacion mediante TVP'
+        ELSE N'FAIL registrar alineacion mediante TVP'
     END AS resultado;
 
-    PRINT '--- EVIDENCIA DESPUES DE REGISTRAR LA ALINEACION ---';
+    PRINT N'--- EVIDENCIA DESPUES DE REGISTRAR LA ALINEACION ---';
 
     SELECT a.*
     FROM juego.alineacion AS a
@@ -211,7 +211,7 @@ BEGIN TRY
       AND ep.id_seleccion = @v_id_seleccion;
 
     ROLLBACK TRANSACTION;
-    PRINT 'PASS general: prueba finalizada y transaccion revertida.';
+    PRINT N'PASS general: prueba finalizada y transaccion revertida.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
@@ -219,9 +219,9 @@ BEGIN CATCH
 
     PRINT CONCAT
     (
-        'FAIL general. Error ',
+        N'FAIL general. Error ',
         ERROR_NUMBER(),
-        ': ',
+        N': ',
         ERROR_MESSAGE()
     );
 
@@ -229,8 +229,8 @@ BEGIN CATCH
 END CATCH;
 GO
 
-PRINT '=====================================================================';
-PRINT 'FIN PRUEBA EXITOSA: 68_Test_OK_Alineacion';
-PRINT 'ROLLBACK EJECUTADO';
-PRINT '=====================================================================';
+PRINT N'=====================================================================';
+PRINT N'FIN PRUEBA EXITOSA: 68_Test_OK_Alineacion';
+PRINT N'ROLLBACK EJECUTADO';
+PRINT N'=====================================================================';
 GO
