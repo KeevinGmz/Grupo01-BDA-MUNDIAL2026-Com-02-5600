@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
 Comisión: 02-5600
@@ -57,6 +57,11 @@ FROM juego.alineacion AS a
 JOIN torneo.partido AS p
   ON p.id_partido = a.id_partido
 WHERE p.estado IN ('PROGRAMADO', 'EN_CURSO')
+  -- Se elige un partido sin eventos previos (el seed 44 ya registra eventos
+  -- en algunos partidos: un titular podría haber salido o sido expulsado).
+  AND NOT EXISTS (SELECT 1 FROM juego.gol AS g WHERE g.id_partido = a.id_partido)
+  AND NOT EXISTS (SELECT 1 FROM juego.tarjeta AS t WHERE t.id_partido = a.id_partido)
+  AND NOT EXISTS (SELECT 1 FROM juego.sustitucion AS su WHERE su.id_partido = a.id_partido)
 GROUP BY a.id_partido, a.id_seleccion
 HAVING SUM(CASE WHEN a.es_titular = 1 THEN 1 ELSE 0 END) >= 2
    AND SUM(CASE WHEN a.es_titular = 0 THEN 1 ELSE 0 END) >= 1
@@ -250,7 +255,7 @@ BEGIN TRY
         @id_jugador_sale = @v_jugador_sale,
         @id_jugador_entra = @v_jugador_entra,
         @minuto = 65,
-        @motivo = 'TACTICA',
+        @motivo = 'TACTICO',
         @nro_sustitucion = @v_nro_sustitucion OUTPUT;
 
     SELECT CASE
