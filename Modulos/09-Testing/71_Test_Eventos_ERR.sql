@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
 Comisión: 02-5600
@@ -147,6 +147,9 @@ END;
       ON p.id_partido = a.id_partido
     WHERE p.estado = 'EN_CURSO'
       AND a.es_titular = 0
+      -- Suplentes que todavía no ingresaron (el seed 44 ya registra un cambio).
+      AND NOT EXISTS (SELECT 1 FROM juego.sustitucion AS su
+                      WHERE su.id_partido = a.id_partido AND su.id_jugador_entra = a.id_jugador)
 )
 SELECT TOP (1)
     @v_id_partido = s1.id_partido,
@@ -183,7 +186,7 @@ BEGIN TRY
         @id_jugador_sale = @v_jugador_sale,
         @id_jugador_entra = @v_jugador_entra,
         @minuto = 60,
-        @motivo = 'TACTICA',
+        @motivo = 'TACTICO',
         @nro_sustitucion = @v_nro_sustitucion OUTPUT;
 
     SET @v_error_numero = 0;
