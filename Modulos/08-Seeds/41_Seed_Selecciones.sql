@@ -129,6 +129,7 @@ BEGIN TRY
         IF @v_cant_activos = 0
         BEGIN
             DECLARE @v_lista torneo.tt_Convocado;
+            DELETE FROM @v_lista;   -- DECLARE dentro del WHILE no reinicia la variable
             DECLARE @v_dorsal TINYINT = 1;
             DECLARE @v_id_jugador INT;
             DECLARE @v_nro_doc NVARCHAR(30);
@@ -209,6 +210,69 @@ BEGIN TRY
         SET @v_orden_seleccion += 1;
     END
 
+
+    ---------------------------------------------------------------------------
+    -- Entrega 6: jugadores de reserva (no convocados).
+    -- Con las plantillas reales importadas todos los jugadores cargados están
+    -- convocados. Las pruebas de reemplazo de convocado (66), convocatoria con
+    -- dorsal repetido (67) y jugador no convocado (69) necesitan jugadores
+    -- elegibles sin convocar: 26 para la primera selección y 1 para cada otra.
+    ---------------------------------------------------------------------------
+    DECLARE @v_res_orden INT = 1;
+    DECLARE @v_res_cant_sel INT = (SELECT COUNT(*) FROM torneo.seleccion);
+    DECLARE @v_res_id_sel INT;
+    DECLARE @v_res_id_pais SMALLINT;
+    DECLARE @v_res_nro INT;
+    DECLARE @v_res_tope INT;
+    DECLARE @v_res_doc NVARCHAR(30);
+    DECLARE @v_res_nombre NVARCHAR(80);
+    DECLARE @v_res_apellido NVARCHAR(80);
+    DECLARE @v_res_fecha DATE;
+    DECLARE @v_res_id_jugador INT;
+
+    WHILE @v_res_orden <= @v_res_cant_sel
+    BEGIN
+        SELECT @v_res_id_sel = x.id_seleccion, @v_res_id_pais = x.id_pais
+        FROM
+        (
+            SELECT s.id_seleccion, s.id_pais, ROW_NUMBER() OVER (ORDER BY s.id_seleccion) AS rn
+            FROM torneo.seleccion AS s
+        ) AS x
+        WHERE x.rn = @v_res_orden;
+
+        SET @v_res_tope = CASE WHEN @v_res_orden = 1 THEN 26 ELSE 1 END;
+        SET @v_res_nro = 1;
+
+        WHILE @v_res_nro <= @v_res_tope
+        BEGIN
+            SET @v_res_doc = CONCAT(N'RES-', RIGHT(CONCAT(N'000000', @v_res_id_sel), 6), N'-', RIGHT(CONCAT(N'00', @v_res_nro), 2));
+
+            IF NOT EXISTS (SELECT 1 FROM persona.persona AS p WHERE p.tipo_doc = 'DNI' AND p.nro_doc = @v_res_doc)
+            BEGIN
+                SET @v_res_nombre = CONCAT(N'Reserva ', RIGHT(CONCAT(N'00', @v_res_nro), 2));
+                SET @v_res_apellido = CONCAT(N'Seleccion ', @v_res_id_sel);
+                SET @v_res_fecha = DATEADD(DAY, -@v_res_nro, DATEFROMPARTS(2001, 3, 1));
+                SET @v_res_id_jugador = NULL;
+
+                EXEC persona.usp_Jugador_Insertar
+                    @tipo_doc = 'DNI',
+                    @nro_doc = @v_res_doc,
+                    @nombre = @v_res_nombre,
+                    @apellido = @v_res_apellido,
+                    @fecha_nac = @v_res_fecha,
+                    @id_pais = @v_res_id_pais,
+                    @pie_habil = 'D',
+                    @altura_cm = 178,
+                    @id_club = @v_id_club,
+                    @id_posicion_habitual = @v_id_posicion,
+                    @id_persona = @v_res_id_jugador OUTPUT;
+            END
+
+            SET @v_res_nro += 1;
+        END
+
+        SET @v_res_orden += 1;
+    END
   
     -- Control final del requisito de aceptacion.
    
