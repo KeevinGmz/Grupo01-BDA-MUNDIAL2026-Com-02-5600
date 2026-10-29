@@ -1,11 +1,11 @@
-/* =====================================================================
+Ôªø/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
 Comision: 02-5600
 Grupo   : 01
 Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Caceres Lautaro Agustin
 Fecha   : 2026-10-03
-Objetivo: Carga los cat·logos base fijos, es re-ejecutable.
+Objetivo: Carga los cat√°logos base fijos, es re-ejecutable.
    ===================================================================== */
 USE Mundial2026;
 GO
@@ -14,12 +14,12 @@ GO
 INSERT INTO geo.confederacion (nombre, sigla)
 SELECT v.nombre, v.sigla
 FROM (VALUES
-    (N'UniÛn de Asociaciones Europeas de F˙tbol', N'UEFA'),
-    (N'ConfederaciÛn Sudamericana de F˙tbol',     N'CONMEBOL'),
-    (N'ConfederaciÛn de Norte, Centro AmÈrica y Caribe', N'CONCACAF'),
-    (N'ConfederaciÛn Africana de F˙tbol',         N'CAF'),
-    (N'ConfederaciÛn Asi·tica de F˙tbol',         N'AFC'),
-    (N'ConfederaciÛn de F˙tbol de OceanÌa',       N'OFC')
+    (N'Uni√≥n de Asociaciones Europeas de F√∫tbol', N'UEFA'),
+    (N'Confederaci√≥n Sudamericana de F√∫tbol',     N'CONMEBOL'),
+    (N'Confederaci√≥n de Norte, Centro Am√©rica y Caribe', N'CONCACAF'),
+    (N'Confederaci√≥n Africana de F√∫tbol',         N'CAF'),
+    (N'Confederaci√≥n Asi√°tica de F√∫tbol',         N'AFC'),
+    (N'Confederaci√≥n de F√∫tbol de Ocean√≠a',       N'OFC')
 ) AS v(nombre, sigla)
 WHERE NOT EXISTS (SELECT 1 FROM geo.confederacion c WHERE c.sigla = v.sigla);
 GO
@@ -55,6 +55,25 @@ INSERT INTO arbitraje.rol_arbitral (descripcion)
 SELECT v.descripcion
 FROM (VALUES (N'PRINCIPAL'), (N'ASISTENTE_1'), (N'ASISTENTE_2'), (N'CUARTO'), (N'VAR')) AS v(descripcion)
 WHERE NOT EXISTS (SELECT 1 FROM arbitraje.rol_arbitral r WHERE r.descripcion = v.descripcion);
+GO
+
+-- 5.b persona.categoria_arbitral, persona.rol_cuerpo_tecnico y persona.idioma
+--     (Entrega 6: los seeds 43 y 45 los requieren).
+INSERT INTO persona.categoria_arbitral (descripcion)
+SELECT v.descripcion
+FROM (VALUES (N'FIFA'), (N'CONFEDERACION'), (N'NACIONAL')) AS v(descripcion)
+WHERE NOT EXISTS (SELECT 1 FROM persona.categoria_arbitral c WHERE c.descripcion = v.descripcion);
+
+INSERT INTO persona.rol_cuerpo_tecnico (descripcion)
+SELECT v.descripcion
+FROM (VALUES (N'DIRECTOR_TECNICO'), (N'AYUDANTE_CAMPO'), (N'PREPARADOR_FISICO'), (N'ENTRENADOR_ARQUEROS'), (N'MEDICO')) AS v(descripcion)
+WHERE NOT EXISTS (SELECT 1 FROM persona.rol_cuerpo_tecnico r WHERE r.descripcion = v.descripcion);
+
+INSERT INTO persona.idioma (cod_iso639, nombre)
+SELECT v.cod, v.nombre
+FROM (VALUES ('spa', N'Espa√±ol'), ('eng', N'Ingl√©s'), ('fra', N'Franc√©s'), ('por', N'Portugu√©s'),
+             ('deu', N'Alem√°n'), ('ita', N'Italiano'), ('ara', N'√Årabe'), ('jpn', N'Japon√©s')) AS v(cod, nombre)
+WHERE NOT EXISTS (SELECT 1 FROM persona.idioma i WHERE i.cod_iso639 = v.cod);
 GO
 
 -- 6. torneo.fase: las siete fases del enunciado.
@@ -95,9 +114,9 @@ GO
 INSERT INTO torneo.parametro_reglamento (clave, vigente_desde, valor, descripcion)
 SELECT v.clave, v.vigente_desde, v.valor, v.descripcion
 FROM (VALUES
-    ('MIN_CONVOCADOS',            CAST('2026-01-01' AS DATE), 23 , N'mÌnimo para registrar una convocatoria'),
-    ('MAX_CONVOCADOS',            CAST('2026-01-01' AS DATE), 26 , N'm·ximo de convocados por selecciÛn'),
-    ('TITULARES',                 CAST('2026-01-01' AS DATE), 11 , N'jugadores en la alineaciÛn titular'),
+    ('MIN_CONVOCADOS',            CAST('2026-01-01' AS DATE), 23 , N'm√≠nimo para registrar una convocatoria'),
+    ('MAX_CONVOCADOS',            CAST('2026-01-01' AS DATE), 26 , N'm√°ximo de convocados por selecci√≥n'),
+    ('TITULARES',                 CAST('2026-01-01' AS DATE), 11 , N'jugadores en la alineaci√≥n titular'),
     ('MAX_SUPLENTES',             CAST('2026-01-01' AS DATE), 15 , N'tope de banco por partido'),
     ('MAX_SUSTITUCIONES',         CAST('2026-01-01' AS DATE), 5 , N'cambios en tiempo reglamentario'),
     ('MAX_SUSTITUCIONES_ALARGUE', CAST('2026-01-01' AS DATE), 1 , N'cambio adicional en alargue'),
@@ -112,11 +131,11 @@ GO
 -- 10. publicidad.moneda: USD, la moneda de referencia de las cotizaciones.
 INSERT INTO publicidad.moneda (cod_iso4217, nombre)
 SELECT v.cod_iso4217, v.nombre
-FROM (VALUES (N'USD', N'DÛlar Estadounidense')) AS v(cod_iso4217, nombre)
+FROM (VALUES (N'USD', N'D√≥lar Estadounidense')) AS v(cod_iso4217, nombre)
 WHERE NOT EXISTS (SELECT 1 FROM publicidad.moneda m WHERE m.cod_iso4217 = v.cod_iso4217);
 GO
 
--- 11. publicidad.tipo_cambio: cotizaciÛn del USD contra sÌ mismo.
+-- 11. publicidad.tipo_cambio: cotizaci√≥n del USD contra s√≠ mismo.
 INSERT INTO publicidad.tipo_cambio (id_moneda, fecha, cotizacion_usd)
 SELECT m.id_moneda, CAST('2026-01-01' AS DATE), 1.000000
 FROM publicidad.moneda m
@@ -125,6 +144,6 @@ WHERE m.cod_iso4217 = N'USD'
                   WHERE t.id_moneda = m.id_moneda AND t.fecha = CAST('2026-01-01' AS DATE));
 GO
 
--- ComprobaciÛn manual (va en los scripts de testing, no ac·). Filas esperadas por tabla:
+-- Comprobaci√≥n manual (va en los scripts de testing, no ac√°). Filas esperadas por tabla:
 --   confederacion 6, posicion 4, tipo_tarjeta 3, criterio_suspension 3, rol_arbitral 5, fase 7,
 --   grupo 12, franja_horaria 3, parametro_reglamento 9, moneda 1, tipo_cambio 1.
