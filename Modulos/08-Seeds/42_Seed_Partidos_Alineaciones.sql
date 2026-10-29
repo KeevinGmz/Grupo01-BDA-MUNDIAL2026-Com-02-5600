@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
 Comisión: 02-5600
@@ -338,6 +338,9 @@ BEGIN TRY
 
         DECLARE @v_alineacion_local juego.tt_Alineacion;
 
+        -- DECLARE dentro del WHILE no reinicia la variable: se vacía en cada vuelta.
+        DELETE FROM @v_alineacion_local;
+
         ;WITH jugadores AS
         (
             SELECT
@@ -379,6 +382,8 @@ BEGIN TRY
         -----------------------------------------------------------------------
 
         DECLARE @v_alineacion_visitante juego.tt_Alineacion;
+
+        DELETE FROM @v_alineacion_visitante;
 
         ;WITH jugadores AS
         (
