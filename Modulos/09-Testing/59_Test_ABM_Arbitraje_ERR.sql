@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
 Comisión: 02-5600
@@ -172,6 +172,7 @@ BEGIN TRY
            @v_error_mensaje LIKE N'%arbitro%ya%design%'
            OR @v_error_mensaje LIKE N'%arbitro%partido%registrado%'
            OR @v_error_mensaje LIKE N'%designacion%arbitro%exist%'
+           OR @v_error_mensaje LIKE N'%arbitro%ya%asignado%partido%'
        )
     BEGIN
         PRINT N'PASS Test 1: se rechazo la segunda designacion del mismo arbitro.';
