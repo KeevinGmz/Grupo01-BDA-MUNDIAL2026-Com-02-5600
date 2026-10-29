@@ -164,6 +164,16 @@ END;
 BEGIN TRY
     BEGIN TRANSACTION;
 
+    -- Entrega 6: el fixture importado ya tiene los cruces reales de la fase de
+    -- grupos. Dentro de esta transacción de prueba se suspenden los partidos de
+    -- las selecciones elegidas, para que no interfieran; el ROLLBACK los restaura.
+    UPDATE p
+    SET p.estado = 'SUSPENDIDO'
+    FROM torneo.partido AS p
+    WHERE p.nro_fase = 1
+      AND EXISTS (SELECT 1 FROM torneo.equipo_en_partido AS e
+                  WHERE e.id_partido = p.id_partido AND e.id_seleccion IN (@v_id_local, @v_id_visitante));
+
     SELECT @v_partidos_antes = COUNT(*) FROM torneo.partido;
     SELECT @v_equipos_antes = COUNT(*) FROM torneo.equipo_en_partido;
 
