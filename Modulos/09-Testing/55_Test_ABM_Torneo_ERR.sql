@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada 
 Comisión: 02-5600
@@ -32,6 +32,7 @@ DECLARE @v_cantidad_grupo INT;
 DECLARE @v_grupos_antes INT;
 DECLARE @v_paises_antes INT;
 DECLARE @v_selecciones_antes INT;
+DECLARE @v_grupo_existente BIT = 0;
 
 -------------------------------------------------------------------------------
 -- 1. Validaciones previas
@@ -72,9 +73,22 @@ WHERE NOT EXISTS
       )
 ORDER BY letras.id_letra DESC;
 
+-- Si todas las letras ya existen (03_Catalogos_Base carga A a L), se usa un
+-- grupo que ya tenga cuatro selecciones (por ejemplo, luego de la carga inicial).
 IF @v_letra_prueba IS NULL
 BEGIN
-    ;THROW 50001,N'55_Test_ABM_Torneo_ERR: no hay una letra de grupo libre entre A y L',1;
+    SELECT TOP (1) @v_letra_prueba = s.id_letra
+    FROM torneo.seleccion AS s
+    GROUP BY s.id_letra
+    HAVING COUNT(*) = 4
+    ORDER BY s.id_letra DESC;
+
+    SET @v_grupo_existente = 1;
+END;
+
+IF @v_letra_prueba IS NULL
+BEGIN
+    ;THROW 50001,N'55_Test_ABM_Torneo_ERR: no hay una letra de grupo libre ni un grupo completo entre A y L',1;
 END;
 
 -- Los codigos reservados no deben existir antes de la prueba.
@@ -100,8 +114,9 @@ BEGIN TRY
     -- 2. Crear grupo reservado para la prueba
     ---------------------------------------------------------------------------
 
-    EXEC torneo.usp_Grupo_Insertar
-        @id_letra = @v_letra_prueba;
+    IF @v_grupo_existente = 0
+        EXEC torneo.usp_Grupo_Insertar
+            @id_letra = @v_letra_prueba;
 
     ---------------------------------------------------------------------------
     -- 3. Crear cinco paises de prueba mediante el ABM de Geo
@@ -144,7 +159,7 @@ BEGIN TRY
 
     SET @v_orden = 1;
 
-    WHILE @v_orden <= 4
+    WHILE @v_orden <= 4 AND @v_grupo_existente = 0
     BEGIN
         DECLARE @v_id_seleccion_valida INT;
 
