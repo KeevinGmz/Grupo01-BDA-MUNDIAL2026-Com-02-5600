@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
 Comisión: 02-5600
@@ -142,7 +142,8 @@ BEGIN TRY
 
     PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
 
-    IF @v_error_numero IN (50001, 50003)
+    -- 50002: el partido ya tiene datos (exhibiciones) que impiden la operación.
+    IF @v_error_numero IN (50001, 50002, 50003)
        AND
        (
            @v_error_mensaje LIKE N'%exhibicion%previa%'
