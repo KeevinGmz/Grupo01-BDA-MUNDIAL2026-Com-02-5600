@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
 Comisión: 02-5600
@@ -141,19 +141,19 @@ BEGIN CATCH
 END CATCH;
 
 -------------------------------------------------------------------------------
--- 4. torneo.vw_Posiciones
+-- 4. torneo.vw_PosicionesGrupo
 -------------------------------------------------------------------------------
 PRINT N'';
-PRINT N'--- 4/5: torneo.vw_Posiciones ---';
+PRINT N'--- 4/5: torneo.vw_PosicionesGrupo ---';
 
 BEGIN TRY
-    IF OBJECT_ID(N'torneo.vw_Posiciones', N'V') IS NULL
-        THROW 50001, N'No existe torneo.vw_Posiciones', 1;
+    IF OBJECT_ID(N'torneo.vw_PosicionesGrupo', N'V') IS NULL
+        THROW 50001, N'No existe torneo.vw_PosicionesGrupo', 1;
 
     SELECT TOP (32) *
     FROM torneo.vw_PosicionesGrupo;
 
-    PRINT N'PASS 4/5: torneo.vw_Posiciones se consulto correctamente.';
+    PRINT N'PASS 4/5: torneo.vw_PosicionesGrupo se consulto correctamente.';
 END TRY
 BEGIN CATCH
     PRINT CONCAT(N'FAIL 4/5: ', ERROR_NUMBER(), N' - ', ERROR_MESSAGE());
