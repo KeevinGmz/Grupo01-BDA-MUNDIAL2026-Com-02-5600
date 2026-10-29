@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
 Comisión: 02-5600
@@ -163,6 +163,16 @@ END;
 
 BEGIN TRANSACTION;
 BEGIN TRY
+    -- Entrega 6: el fixture importado ya tiene los cruces reales de la fase de
+    -- grupos. Dentro de esta transacción de prueba se suspenden los partidos de
+    -- las selecciones elegidas, para que no interfieran; el ROLLBACK los restaura.
+    UPDATE p
+    SET p.estado = 'SUSPENDIDO'
+    FROM torneo.partido AS p
+    WHERE p.nro_fase = 1
+      AND EXISTS (SELECT 1 FROM torneo.equipo_en_partido AS e
+                  WHERE e.id_partido = p.id_partido AND e.id_seleccion IN (@v_sel_1, @v_sel_2, @v_sel_3, @v_sel_4));
+
     EXEC torneo.usp_Negocio_RegistrarPartido
         @fecha_hora_utc = @v_fecha,
         @id_sede = @v_id_sede,
@@ -207,7 +217,8 @@ END CATCH;
 PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
 
 IF @v_error_numero IN (50001, 50003)
-   AND (@v_error_mensaje LIKE N'%sede%ocupad%' OR @v_error_mensaje LIKE N'%sede%horario%' OR @v_error_mensaje LIKE N'%solap%')
+   AND (@v_error_mensaje LIKE N'%sede%ocupad%' OR @v_error_mensaje LIKE N'%sede%horario%' OR @v_error_mensaje LIKE N'%solap%'
+        OR @v_error_mensaje LIKE N'%sede no esta libre%')
    AND @v_cantidad_slot = 1
     PRINT N'PASS Test 2: se rechazo el solapamiento de sede y horario.';
 ELSE
@@ -300,6 +311,16 @@ END;
 
 BEGIN TRANSACTION;
 BEGIN TRY
+    -- Entrega 6: el fixture importado ya tiene los cruces reales de la fase de
+    -- grupos. Dentro de esta transacción de prueba se suspenden los partidos de
+    -- las selecciones elegidas, para que no interfieran; el ROLLBACK los restaura.
+    UPDATE p
+    SET p.estado = 'SUSPENDIDO'
+    FROM torneo.partido AS p
+    WHERE p.nro_fase = 1
+      AND EXISTS (SELECT 1 FROM torneo.equipo_en_partido AS e
+                  WHERE e.id_partido = p.id_partido AND e.id_seleccion IN (@v_id_local, @v_id_visitante));
+
     EXEC torneo.usp_Negocio_RegistrarPartido
         @fecha_hora_utc = @v_fecha,
         @id_sede = @v_id_sede,
