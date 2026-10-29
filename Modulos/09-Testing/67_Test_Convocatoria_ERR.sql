@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
 Comisión: 02-5600
@@ -56,14 +56,11 @@ JOIN persona.persona AS p
  AND p.tipo_persona = 'J'
 JOIN persona.jugador AS j
   ON j.id_persona = p.id_persona
+-- Entrega 6: con las plantillas importadas todas las selecciones tienen
+-- convocatoria ACTIVA; se prioriza una sin convocatoria y, si no hay, se usa
+-- una con jugadores de reserva (seed 41). En ese caso el SP informa además
+-- que la convocatoria ya existe, sin dejar de rechazar el dorsal repetido.
 WHERE NOT EXISTS
-      (
-          SELECT 1
-          FROM torneo.convocatoria AS ca
-          WHERE ca.id_seleccion = s.id_seleccion
-            AND ca.estado = 'ACTIVO'
-      )
-  AND NOT EXISTS
       (
           SELECT 1
           FROM torneo.convocatoria AS cj
@@ -71,11 +68,14 @@ WHERE NOT EXISTS
       )
 GROUP BY s.id_seleccion
 HAVING COUNT(*) >= @v_cantidad_requerida
-ORDER BY s.id_seleccion;
+ORDER BY CASE WHEN EXISTS (SELECT 1 FROM torneo.convocatoria AS ca
+                           WHERE ca.id_seleccion = s.id_seleccion AND ca.estado = 'ACTIVO')
+              THEN 1 ELSE 0 END,
+         s.id_seleccion;
 
 IF @v_id_seleccion IS NULL
 BEGIN
-    ;THROW 50001,N'67_Test_ERR_Convocatoria: se requiere una seleccion sin convocatoria activa y con al menos 26 jugadores elegibles no convocados',1;
+    ;THROW 50001,N'67_Test_ERR_Convocatoria: se requiere una seleccion con al menos 26 jugadores elegibles no convocados (ejecute el seed 41)',1;
 END;
 
 -------------------------------------------------------------------------------
