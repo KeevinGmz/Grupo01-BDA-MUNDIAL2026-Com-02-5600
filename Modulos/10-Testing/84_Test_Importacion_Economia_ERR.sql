@@ -15,21 +15,21 @@ GO
 
 SET NOCOUNT ON;
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBAS DE ERROR: 84_Test_Importacion_Economia_ERR';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBAS DE ERROR: 84_Test_Importacion_Economia_ERR';
+PRINT '=====================================================================';
 GO
 
 -------------------------------------------------------------------------------
 -- Caso 1: XML mal formado (xml_invalido.xml)
 -- Resultado esperado: excepción 50002 y la importación queda CON_ERROR.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 1: XML mal formado';
-DECLARE @v_archivo NVARCHAR(260) = N'C:\Mundial2026\datos\pruebas\xml_invalido.xml';
-DECLARE @v_id INT, @v_nro INT, @v_msj NVARCHAR(2048);
+PRINT '-> Test 1: XML mal formado';
+DECLARE @v_archivo VARCHAR(260) = 'C:\Mundial2026\datos\pruebas\xml_invalido.xml';
+DECLARE @v_id INT, @v_nro INT, @v_msj VARCHAR(2048);
 BEGIN TRY
     EXEC soporte.usp_Importar_TipoCambioXml @archivo = @v_archivo, @id_importacion = @v_id OUTPUT;
-    SELECT @v_nro = 0, @v_msj = N'no se lanzo la excepcion esperada';
+    SELECT @v_nro = 0, @v_msj = 'no se lanzo la excepcion esperada';
 END TRY
 BEGIN CATCH
     SELECT @v_nro = ERROR_NUMBER(), @v_msj = ERROR_MESSAGE();
@@ -38,9 +38,9 @@ END CATCH;
 SELECT TOP (1) @v_id = id_importacion FROM soporte.importacion WHERE archivo = @v_archivo ORDER BY id_importacion DESC;
 
 SELECT @v_nro AS error_numero, @v_msj AS error_mensaje,
-       CASE WHEN @v_nro = 50002 AND @v_msj LIKE N'%XML%'
+       CASE WHEN @v_nro = 50002 AND @v_msj LIKE '%XML%'
              AND (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id) = 'CON_ERROR'
-            THEN N'PASS' ELSE N'FAIL' END AS resultado;
+            THEN 'PASS' ELSE 'FAIL' END AS resultado;
 GO
 
 -------------------------------------------------------------------------------
@@ -52,8 +52,8 @@ GO
 -- Resultado esperado: CON_ERROR, ninguna fila válida y ninguna cotización
 -- nueva en publicidad.tipo_cambio.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 2: cotizaciones invalidas en el XML';
-DECLARE @v_archivo NVARCHAR(260) = N'C:\Mundial2026\datos\pruebas\ecb_con_errores.xml';
+PRINT '-> Test 2: cotizaciones invalidas en el XML';
+DECLARE @v_archivo VARCHAR(260) = 'C:\Mundial2026\datos\pruebas\ecb_con_errores.xml';
 DECLARE @v_id INT;
 DECLARE @v_antes INT = (SELECT COUNT(*) FROM publicidad.tipo_cambio);
 
@@ -62,7 +62,7 @@ EXEC soporte.usp_Importar_TipoCambioXml @archivo = @v_archivo, @id_importacion =
 SELECT i.estado, i.filas_leidas, i.filas_ok, i.filas_error,
        CASE WHEN i.estado = 'CON_ERROR' AND i.filas_ok = 0 AND i.filas_error >= 5
              AND (SELECT COUNT(*) FROM publicidad.tipo_cambio) = @v_antes
-            THEN N'PASS' ELSE N'FAIL' END AS resultado
+            THEN 'PASS' ELSE 'FAIL' END AS resultado
 FROM soporte.importacion AS i
 WHERE i.id_importacion = @v_id;
 GO
@@ -72,40 +72,40 @@ GO
 -- Resultado esperado: excepción 50001 (período invertido y lista de monedas
 -- con caracteres no permitidos), sin registrar importación.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 3: parametros invalidos para la API de cotizaciones';
+PRINT '-> Test 3: parametros invalidos para la API de cotizaciones';
 DECLARE @v_antes INT = (SELECT COUNT(*) FROM soporte.importacion);
-DECLARE @v_nro INT, @v_msj NVARCHAR(2048);
+DECLARE @v_nro INT, @v_msj VARCHAR(2048);
 BEGIN TRY
-    EXEC soporte.usp_Importar_TipoCambioApi @fecha_desde = '2026-07-19', @fecha_hasta = '2026-06-11', @monedas = N'EUR;DROP';
-    SELECT @v_nro = 0, @v_msj = N'no se lanzo la excepcion esperada';
+    EXEC soporte.usp_Importar_TipoCambioApi @fecha_desde = '2026-07-19', @fecha_hasta = '2026-06-11', @monedas = 'EUR;DROP';
+    SELECT @v_nro = 0, @v_msj = 'no se lanzo la excepcion esperada';
 END TRY
 BEGIN CATCH
     SELECT @v_nro = ERROR_NUMBER(), @v_msj = ERROR_MESSAGE();
 END CATCH;
 
 SELECT @v_nro AS error_numero, @v_msj AS error_mensaje,
-       CASE WHEN @v_nro = 50001 AND @v_msj LIKE N'%fecha_desde%' AND @v_msj LIKE N'%monedas%'
+       CASE WHEN @v_nro = 50001 AND @v_msj LIKE '%fecha_desde%' AND @v_msj LIKE '%monedas%'
              AND (SELECT COUNT(*) FROM soporte.importacion) = @v_antes
-            THEN N'PASS' ELSE N'FAIL' END AS resultado;
+            THEN 'PASS' ELSE 'FAIL' END AS resultado;
 GO
 
 -------------------------------------------------------------------------------
 -- Caso 4: cotizaciones futuras
 -- Resultado esperado: excepción 50001 (no se pueden pedir cotizaciones futuras).
 -------------------------------------------------------------------------------
-PRINT N'-> Test 4: cotizaciones futuras';
+PRINT '-> Test 4: cotizaciones futuras';
 DECLARE @v_desde DATE = DATEADD(DAY, 10, CONVERT(DATE, SYSDATETIME()));
-DECLARE @v_nro INT, @v_msj NVARCHAR(2048);
+DECLARE @v_nro INT, @v_msj VARCHAR(2048);
 BEGIN TRY
     EXEC soporte.usp_Importar_TipoCambioApi @fecha_desde = @v_desde;
-    SELECT @v_nro = 0, @v_msj = N'no se lanzo la excepcion esperada';
+    SELECT @v_nro = 0, @v_msj = 'no se lanzo la excepcion esperada';
 END TRY
 BEGIN CATCH
     SELECT @v_nro = ERROR_NUMBER(), @v_msj = ERROR_MESSAGE();
 END CATCH;
 
 SELECT @v_nro AS error_numero, @v_msj AS error_mensaje,
-       CASE WHEN @v_nro = 50001 AND @v_msj LIKE N'%futuras%' THEN N'PASS' ELSE N'FAIL' END AS resultado;
+       CASE WHEN @v_nro = 50001 AND @v_msj LIKE '%futuras%' THEN 'PASS' ELSE 'FAIL' END AS resultado;
 GO
 
 -------------------------------------------------------------------------------
@@ -113,24 +113,24 @@ GO
 -- Resultado esperado: la API responde con un mensaje de error; el SP lanza
 -- la excepción 50002 y deja la importación CON_ERROR con ese mensaje.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 5: indicador inexistente en el Banco Mundial';
-DECLARE @v_id INT, @v_nro INT, @v_msj NVARCHAR(2048);
+PRINT '-> Test 5: indicador inexistente en el Banco Mundial';
+DECLARE @v_id INT, @v_nro INT, @v_msj VARCHAR(2048);
 BEGIN TRY
     EXEC soporte.usp_Importar_IndicadorApi @anio_desde = 2023, @indicador = 'XX.NO.EXISTE', @id_importacion = @v_id OUTPUT;
-    SELECT @v_nro = 0, @v_msj = N'no se lanzo la excepcion esperada';
+    SELECT @v_nro = 0, @v_msj = 'no se lanzo la excepcion esperada';
 END TRY
 BEGIN CATCH
     SELECT @v_nro = ERROR_NUMBER(), @v_msj = ERROR_MESSAGE();
 END CATCH;
 
-SELECT TOP (1) @v_id = id_importacion FROM soporte.importacion WHERE archivo LIKE N'%XX.NO.EXISTE%' ORDER BY id_importacion DESC;
+SELECT TOP (1) @v_id = id_importacion FROM soporte.importacion WHERE archivo LIKE '%XX.NO.EXISTE%' ORDER BY id_importacion DESC;
 
 SELECT @v_nro AS error_numero, @v_msj AS error_mensaje,
        CASE WHEN @v_nro = 50002 AND (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id) = 'CON_ERROR'
-            THEN N'PASS' ELSE N'FAIL' END AS resultado;
+            THEN 'PASS' ELSE 'FAIL' END AS resultado;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBAS DE ERROR: 84_Test_Importacion_Economia_ERR';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBAS DE ERROR: 84_Test_Importacion_Economia_ERR';
+PRINT '=====================================================================';
 GO

@@ -39,22 +39,22 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
 
     IF @formato IS NULL OR @formato NOT IN ('TABLA', 'XML')
-        SET @v_errores += N'formato invalido (debe ser TABLA o XML); ';
+        SET @v_errores += 'formato invalido (debe ser TABLA o XML); ';
 
     IF @id_seleccion IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion)
-        SET @v_errores += N'seleccion inexistente; ';
+        SET @v_errores += 'seleccion inexistente; ';
 
     IF @nro_fase IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM torneo.fase WHERE nro_fase = @nro_fase)
-        SET @v_errores += N'fase inexistente; ';
+        SET @v_errores += 'fase inexistente; ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_errores = LEFT(CONCAT(N'reporte.usp_Goleadores: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT('reporte.usp_Goleadores: ', @v_errores), 2048);
         THROW 50001, @v_errores, 1;
     END
 
@@ -78,7 +78,7 @@ BEGIN
     SELECT
         DENSE_RANK() OVER (ORDER BY COUNT(*) DESC) AS posicion,
         x.id_jugador,
-        CONCAT(pe.apellido, N', ', pe.nombre) AS jugador,
+        CONCAT(pe.apellido, ', ', pe.nombre) AS jugador,
         pa.nombre AS seleccion,
         COUNT(*) AS goles,
         COUNT(DISTINCT x.id_partido) AS partidos_con_gol,
@@ -165,27 +165,27 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
 
     IF @id_seleccion IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion)
-        SET @v_errores += N'seleccion inexistente; ';
+        SET @v_errores += 'seleccion inexistente; ';
 
     IF @solo_activas IS NULL
-        SET @v_errores += N'solo_activas obligatorio (0 o 1); ';
+        SET @v_errores += 'solo_activas obligatorio (0 o 1); ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_errores = LEFT(CONCAT(N'reporte.usp_Tarjetas: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT('reporte.usp_Tarjetas: ', @v_errores), 2048);
         THROW 50001, @v_errores, 1;
     END
 
     -- 1) Por seleccion
     SELECT
         pa.nombre AS seleccion,
-        SUM(CASE WHEN tt.descripcion = N'AMARILLA' THEN 1 ELSE 0 END) AS amarillas,
-        SUM(CASE WHEN tt.descripcion = N'ROJA_DOBLE_AMARILLA' THEN 1 ELSE 0 END) AS rojas_doble_amarilla,
-        SUM(CASE WHEN tt.descripcion = N'ROJA_DIRECTA' THEN 1 ELSE 0 END) AS rojas_directas,
+        SUM(CASE WHEN tt.descripcion = 'AMARILLA' THEN 1 ELSE 0 END) AS amarillas,
+        SUM(CASE WHEN tt.descripcion = 'ROJA_DOBLE_AMARILLA' THEN 1 ELSE 0 END) AS rojas_doble_amarilla,
+        SUM(CASE WHEN tt.descripcion = 'ROJA_DIRECTA' THEN 1 ELSE 0 END) AS rojas_directas,
         COUNT(*) AS total_tarjetas
     FROM juego.tarjeta AS t
     JOIN juego.tipo_tarjeta AS tt ON tt.id_tipo = t.id_tipo
@@ -198,16 +198,16 @@ BEGIN
     -- 2) Por jugador
     SELECT
         pa.nombre AS seleccion,
-        CONCAT(pe.apellido, N', ', pe.nombre) AS jugador,
+        CONCAT(pe.apellido, ', ', pe.nombre) AS jugador,
         c.dorsal,
-        SUM(CASE WHEN tt.descripcion = N'AMARILLA' THEN 1 ELSE 0 END) AS amarillas,
-        SUM(CASE WHEN tt.descripcion <> N'AMARILLA' THEN 1 ELSE 0 END) AS rojas,
+        SUM(CASE WHEN tt.descripcion = 'AMARILLA' THEN 1 ELSE 0 END) AS amarillas,
+        SUM(CASE WHEN tt.descripcion <> 'AMARILLA' THEN 1 ELSE 0 END) AS rojas,
         CASE WHEN EXISTS
              (
                  SELECT 1 FROM juego.suspension AS su
                  WHERE su.id_jugador = t.id_jugador AND su.estado = 'PENDIENTE'
              )
-             THEN N'SI' ELSE N'NO' END AS suspension_activa
+             THEN 'SI' ELSE 'NO' END AS suspension_activa
     FROM juego.tarjeta AS t
     JOIN juego.tipo_tarjeta AS tt ON tt.id_tipo = t.id_tipo
     JOIN persona.persona AS pe ON pe.id_persona = t.id_jugador
@@ -222,10 +222,10 @@ BEGIN
     -- 3) Suspensiones (activas por defecto)
     SELECT
         su.id_suspension,
-        CONCAT(pe.apellido, N', ', pe.nombre) AS jugador,
+        CONCAT(pe.apellido, ', ', pe.nombre) AS jugador,
         pa.nombre AS seleccion,
-        CASE WHEN tt.descripcion = N'AMARILLA'
-             THEN N'ACUMULACION' ELSE N'EXPULSION' END AS origen,
+        CASE WHEN tt.descripcion = 'AMARILLA'
+             THEN 'ACUMULACION' ELSE 'EXPULSION' END AS origen,
         tt.descripcion AS tipo_tarjeta_criterio,
         cs.cant_tarjetas_requeridas AS tarjetas_requeridas,
         su.cant_partidos AS partidos_suspension,
@@ -265,21 +265,21 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
 
     IF @id_arbitro IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM persona.arbitro WHERE id_persona = @id_arbitro)
-        SET @v_errores += N'arbitro inexistente; ';
+        SET @v_errores += 'arbitro inexistente; ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_errores = LEFT(CONCAT(N'reporte.usp_DesignacionesArbitrales: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT('reporte.usp_DesignacionesArbitrales: ', @v_errores), 2048);
         THROW 50001, @v_errores, 1;
     END
 
     -- 1) Resumen por arbitro
     SELECT
-        CONCAT(pe.apellido, N', ', pe.nombre) AS arbitro,
+        CONCAT(pe.apellido, ', ', pe.nombre) AS arbitro,
         pa.nombre AS pais,
         ca.descripcion AS categoria,
         ISNULL(d.designaciones, 0) AS designaciones,
@@ -293,15 +293,15 @@ BEGIN
     OUTER APPLY
     (
         SELECT COUNT(*) AS designaciones,
-               SUM(CASE WHEN ra.descripcion = N'PRINCIPAL' THEN 1 ELSE 0 END) AS como_principal
+               SUM(CASE WHEN ra.descripcion = 'PRINCIPAL' THEN 1 ELSE 0 END) AS como_principal
         FROM arbitraje.designacion_arbitral AS da
         JOIN arbitraje.rol_arbitral AS ra ON ra.id_rol = da.id_rol
         WHERE da.id_arbitro = ar.id_persona AND da.estado = 'DESIGNADA'
     ) AS d
     OUTER APPLY
     (
-        SELECT SUM(CASE WHEN tt.descripcion = N'AMARILLA' THEN 1 ELSE 0 END) AS amarillas,
-               SUM(CASE WHEN tt.descripcion <> N'AMARILLA' THEN 1 ELSE 0 END) AS rojas
+        SELECT SUM(CASE WHEN tt.descripcion = 'AMARILLA' THEN 1 ELSE 0 END) AS amarillas,
+               SUM(CASE WHEN tt.descripcion <> 'AMARILLA' THEN 1 ELSE 0 END) AS rojas
         FROM juego.tarjeta AS t
         JOIN juego.tipo_tarjeta AS tt ON tt.id_tipo = t.id_tipo
         WHERE t.id_arbitro = ar.id_persona
@@ -311,13 +311,13 @@ BEGIN
 
     -- 2) Partidos dirigidos (una fila por designacion)
     SELECT
-        CONCAT(pe.apellido, N', ', pe.nombre) AS arbitro,
+        CONCAT(pe.apellido, ', ', pe.nombre) AS arbitro,
         ra.descripcion AS rol,
         da.id_partido,
         p.fecha_hora_utc,
         f.nombre AS fase,
         se.nombre_estadio AS sede,
-        CONCAT(pl.nombre, N' vs ', pv.nombre) AS encuentro,
+        CONCAT(pl.nombre, ' vs ', pv.nombre) AS encuentro,
         da.estado AS estado_designacion,
         ISNULL(tj.amarillas, 0) AS amarillas_en_el_partido,
         ISNULL(tj.rojas, 0) AS rojas_en_el_partido
@@ -335,8 +335,8 @@ BEGIN
     LEFT JOIN geo.pais AS pv ON pv.id_pais = sv.id_pais
     OUTER APPLY
     (
-        SELECT SUM(CASE WHEN tt.descripcion = N'AMARILLA' THEN 1 ELSE 0 END) AS amarillas,
-               SUM(CASE WHEN tt.descripcion <> N'AMARILLA' THEN 1 ELSE 0 END) AS rojas
+        SELECT SUM(CASE WHEN tt.descripcion = 'AMARILLA' THEN 1 ELSE 0 END) AS amarillas,
+               SUM(CASE WHEN tt.descripcion <> 'AMARILLA' THEN 1 ELSE 0 END) AS rojas
         FROM juego.tarjeta AS t
         JOIN juego.tipo_tarjeta AS tt ON tt.id_tipo = t.id_tipo
         WHERE t.id_partido = da.id_partido AND t.id_arbitro = da.id_arbitro
@@ -346,11 +346,11 @@ BEGIN
 
     -- 3) Detalle de amonestaciones y expulsiones senaladas por el arbitro
     SELECT
-        CONCAT(pa_.apellido, N', ', pa_.nombre) AS arbitro,
+        CONCAT(pa_.apellido, ', ', pa_.nombre) AS arbitro,
         t.id_partido,
         t.minuto,
         tt.descripcion AS tarjeta,
-        CONCAT(pj.apellido, N', ', pj.nombre) AS jugador,
+        CONCAT(pj.apellido, ', ', pj.nombre) AS jugador,
         pais.nombre AS seleccion,
         t.motivo
     FROM juego.tarjeta AS t
@@ -376,19 +376,19 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
 
     IF @id_sede IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM torneo.sede WHERE id_sede = @id_sede)
-        SET @v_errores += N'sede inexistente; ';
+        SET @v_errores += 'sede inexistente; ';
 
     IF @id_partido IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido)
-        SET @v_errores += N'partido inexistente; ';
+        SET @v_errores += 'partido inexistente; ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_errores = LEFT(CONCAT(N'reporte.usp_OcupacionPublicitaria: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT('reporte.usp_OcupacionPublicitaria: ', @v_errores), 2048);
         THROW 50001, @v_errores, 1;
     END
 
@@ -469,20 +469,20 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @v_errores NVARCHAR(2000) = N'';
-    DECLARE @v_cols NVARCHAR(MAX);
-    DECLARE @v_sql NVARCHAR(MAX);
+    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_cols VARCHAR(MAX);
+    DECLARE @v_sql VARCHAR(MAX);
 
     IF @id_partido IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido)
-        SET @v_errores += N'partido inexistente; ';
+        SET @v_errores += 'partido inexistente; ';
 
     IF @fecha_desde IS NOT NULL AND @fecha_hasta IS NOT NULL AND @fecha_desde > @fecha_hasta
-        SET @v_errores += N'fecha_desde no puede ser posterior a fecha_hasta; ';
+        SET @v_errores += 'fecha_desde no puede ser posterior a fecha_hasta; ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_errores = LEFT(CONCAT(N'reporte.usp_MatrizPrimeTime: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT('reporte.usp_MatrizPrimeTime: ', @v_errores), 2048);
         THROW 50001, @v_errores, 1;
     END
 
@@ -492,7 +492,7 @@ BEGIN
     JOIN geo.pais AS pa ON pa.id_pais = pz.id_pais_mercado;
 
     IF NOT EXISTS (SELECT 1 FROM #mercados)
-        THROW 50003, N'reporte.usp_MatrizPrimeTime: no hay mercados cargados (piezas con pais de mercado)', 1;
+        THROW 50003, 'reporte.usp_MatrizPrimeTime: no hay mercados cargados (piezas con pais de mercado)', 1;
 
     SELECT
         p.id_partido,
@@ -506,19 +506,19 @@ BEGIN
       AND (@fecha_desde IS NULL OR CONVERT(DATE, p.fecha_hora_utc) >= @fecha_desde)
       AND (@fecha_hasta IS NULL OR CONVERT(DATE, p.fecha_hora_utc) <= @fecha_hasta);
 
-    SELECT @v_cols = STRING_AGG(CONVERT(NVARCHAR(MAX), QUOTENAME(mercado)), N',')
+    SELECT @v_cols = STRING_AGG(CONVERT(VARCHAR(MAX), QUOTENAME(mercado)), ',')
                      WITHIN GROUP (ORDER BY mercado)
     FROM #mercados;
 
-    SET @v_sql = N'
+    SET @v_sql = '
     SELECT
         pv.id_partido,
         pv.fecha_hora_utc,
         pt.cant_prime AS mercados_en_prime_time,
-        CASE WHEN pt.cant_prime > 4 THEN N''SI'' ELSE N''NO'' END AS requiere_priorizacion,
-        ' + @v_cols + N'
+        CASE WHEN pt.cant_prime > 4 THEN ''SI'' ELSE ''NO'' END AS requiere_priorizacion,
+        ' + @v_cols + '
     FROM (SELECT id_partido, fecha_hora_utc, mercado, es_prime FROM #matriz) AS src
-    PIVOT (MAX(es_prime) FOR mercado IN (' + @v_cols + N')) AS pv
+    PIVOT (MAX(es_prime) FOR mercado IN (' + @v_cols + ')) AS pv
     JOIN (SELECT id_partido, SUM(es_prime) AS cant_prime
           FROM #matriz GROUP BY id_partido) AS pt
       ON pt.id_partido = pv.id_partido
@@ -538,18 +538,18 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
 
     IF @id_seleccion IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion)
-        SET @v_errores += N'seleccion inexistente; ';
+        SET @v_errores += 'seleccion inexistente; ';
 
     IF @incluir_bajas IS NULL
-        SET @v_errores += N'incluir_bajas obligatorio (0 o 1); ';
+        SET @v_errores += 'incluir_bajas obligatorio (0 o 1); ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_errores = LEFT(CONCAT(N'reporte.usp_SeleccionesPlantillas: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT('reporte.usp_SeleccionesPlantillas: ', @v_errores), 2048);
         THROW 50001, @v_errores, 1;
     END
 
@@ -567,7 +567,7 @@ BEGIN
         (
             SELECT
                 c.dorsal AS '@dorsal',
-                CONCAT(pe.apellido, N', ', pe.nombre) AS '@nombre',
+                CONCAT(pe.apellido, ', ', pe.nombre) AS '@nombre',
                 po.descripcion AS '@posicion',
                 cl.nombre AS '@club',
                 c.estado AS '@estado'
@@ -601,22 +601,22 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
 
     IF @formato IS NULL OR @formato NOT IN ('TABLA', 'XML')
-        SET @v_errores += N'formato invalido (debe ser TABLA o XML); ';
+        SET @v_errores += 'formato invalido (debe ser TABLA o XML); ';
 
     IF @nro_fase IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM torneo.fase WHERE nro_fase = @nro_fase)
-        SET @v_errores += N'fase inexistente; ';
+        SET @v_errores += 'fase inexistente; ';
 
     IF @id_seleccion IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM torneo.seleccion WHERE id_seleccion = @id_seleccion)
-        SET @v_errores += N'seleccion inexistente; ';
+        SET @v_errores += 'seleccion inexistente; ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_errores = LEFT(CONCAT(N'reporte.usp_Resultados: ', @v_errores), 2048);
+        SET @v_errores = LEFT(CONCAT('reporte.usp_Resultados: ', @v_errores), 2048);
         THROW 50001, @v_errores, 1;
     END
 
@@ -629,16 +629,16 @@ BEGIN
         ci.nombre AS ciudad,
         pl.nombre AS local,
         pv.nombre AS visitante,
-        CONCAT(mp.goles_local, N' - ', mp.goles_visitante) AS marcador,
+        CONCAT(mp.goles_local, ' - ', mp.goles_visitante) AS marcador,
         CASE WHEN p.definido_por_penales = 1
-             THEN CONCAT(mp.penales_local, N' - ', mp.penales_visitante) END AS penales,
+             THEN CONCAT(mp.penales_local, ' - ', mp.penales_visitante) END AS penales,
         CASE
-            WHEN p.estado <> 'FINALIZADO' THEN N'-'
+            WHEN p.estado <> 'FINALIZADO' THEN '-'
             WHEN mp.goles_local > mp.goles_visitante THEN pl.nombre
             WHEN mp.goles_local < mp.goles_visitante THEN pv.nombre
             WHEN mp.penales_local > mp.penales_visitante THEN pl.nombre
             WHEN mp.penales_local < mp.penales_visitante THEN pv.nombre
-            ELSE N'Empate'
+            ELSE 'Empate'
         END AS ganador,
         p.estado,
         p.asistencia_publico

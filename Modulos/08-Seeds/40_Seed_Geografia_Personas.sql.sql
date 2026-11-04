@@ -29,7 +29,7 @@ BEGIN
     EXEC torneo.usp_Sede_Insertar 
         @nombre_estadio = @aux,
         @capacidad = s,
-        @direccion = N'xxx 1234',
+        @direccion = 'xxx 1234',
         @id_ciudad = 1, -- Asumiendo ciudad pre-cargada
         @id_sede = @id_sede_out OUTPUT;
     SET @s = @s + 1;

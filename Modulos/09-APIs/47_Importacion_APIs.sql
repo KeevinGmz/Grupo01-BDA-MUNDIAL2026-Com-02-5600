@@ -18,22 +18,22 @@ GO
 SET NOCOUNT ON;
 GO
 
-PRINT N'=== 1/2 PBI per capita (API del Banco Mundial, JSON) ===';
+PRINT '=== 1/2 PBI per capita (API del Banco Mundial, JSON) ===';
 BEGIN TRY
     EXEC soporte.usp_Importar_IndicadorApi @anio_desde = 2022, @anio_hasta = 2024;
 END TRY
 BEGIN CATCH
-    PRINT CONCAT(N'Aviso: no se pudo importar el PBI. ', ERROR_MESSAGE());
+    PRINT CONCAT('Aviso: no se pudo importar el PBI. ', ERROR_MESSAGE());
 END CATCH;
 GO
 
-PRINT N'=== 2/2 Tipo de cambio (API Frankfurter, JSON) ===';
+PRINT '=== 2/2 Tipo de cambio (API Frankfurter, JSON) ===';
 BEGIN TRY
     DECLARE @v_desde DATE = DATEADD(DAY, -30, CONVERT(DATE, GETDATE()));
     EXEC soporte.usp_Importar_TipoCambioApi @fecha_desde = @v_desde;
 END TRY
 BEGIN CATCH
-    PRINT CONCAT(N'Aviso: no se pudo importar el tipo de cambio. ', ERROR_MESSAGE());
+    PRINT CONCAT('Aviso: no se pudo importar el tipo de cambio. ', ERROR_MESSAGE());
 END CATCH;
 GO
 

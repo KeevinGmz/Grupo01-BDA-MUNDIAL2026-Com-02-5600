@@ -13,33 +13,33 @@ GO
 SET NOCOUNT ON;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBAS DE ERROR: 69_Test_ERR_Alineaciones';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBAS DE ERROR: 69_Test_ERR_Alineaciones';
+PRINT '=====================================================================';
 GO
 
 /* =====================================================================
    CASO 1:  alineacion con 12 titulares
 ===================================================================== */
-PRINT N'';
-PRINT N'-> Test 1: registrar una alineacion con 12 titulares';
+PRINT '';
+PRINT '-> Test 1: registrar una alineacion con 12 titulares';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_seleccion INT;
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
 DECLARE @v_filas_antes INT;
 DECLARE @v_filas_despues INT;
 DECLARE @v_alineacion juego.tt_Alineacion;
 
-IF OBJECT_ID(N'juego.usp_Negocio_RegistrarAlineacion', N'P') IS NULL
+IF OBJECT_ID('juego.usp_Negocio_RegistrarAlineacion', 'P') IS NULL
 BEGIN
-    ;THROW 50001, N'69_Test_ERR_Alineaciones: no existe juego.usp_Negocio_RegistrarAlineacion', 1;
+    ;THROW 50001, '69_Test_ERR_Alineaciones: no existe juego.usp_Negocio_RegistrarAlineacion', 1;
 END;
 
-IF TYPE_ID(N'juego.tt_Alineacion') IS NULL
+IF TYPE_ID('juego.tt_Alineacion') IS NULL
 BEGIN
-    ;THROW 50001, N'69_Test_ERR_Alineaciones: no existe juego.tt_Alineacion',1;
+    ;THROW 50001, '69_Test_ERR_Alineaciones: no existe juego.tt_Alineacion',1;
 END;
 
 -- Se busca un equipo sin alineacion previa y con al menos 12 convocados activos.
@@ -65,7 +65,7 @@ ORDER BY ep.id_partido, ep.id_seleccion;
 
 IF @v_id_partido IS NULL OR @v_id_seleccion IS NULL
 BEGIN
-    ;THROW 50001,N'69_Test_ERR_Alineaciones: se requiere un equipo sin alineacion y con al menos 12 convocados activos para el Test 1',1;
+    ;THROW 50001,'69_Test_ERR_Alineaciones: se requiere un equipo sin alineacion y con al menos 12 convocados activos para el Test 1',1;
 END;
 
 ;WITH convocados AS
@@ -93,7 +93,7 @@ FROM convocados AS c;
 
 IF (SELECT COUNT(*) FROM @v_alineacion WHERE es_titular = 1) <> 12
 BEGIN
-    ;THROW 50001,N'69_Test_ERR_Alineaciones: no se pudo preparar el TVP con 12 titulares', 1;
+    ;THROW 50001,'69_Test_ERR_Alineaciones: no se pudo preparar el TVP con 12 titulares', 1;
 END;
 
 SELECT @v_filas_antes = COUNT(*)
@@ -111,7 +111,7 @@ BEGIN TRY
         @alineacion = @v_alineacion;
 
     SET @v_error_numero = 0;
-    SET @v_error_mensaje = N'El SP permitio registrar 12 titulares';
+    SET @v_error_mensaje = 'El SP permitio registrar 12 titulares';
 END TRY
 BEGIN CATCH
     SET @v_error_numero = ERROR_NUMBER();
@@ -126,37 +126,37 @@ WHERE a.id_partido = @v_id_partido
 IF @@TRANCOUNT > 0
     ROLLBACK TRANSACTION;
 
-PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
+PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
 
 IF @v_error_numero IN (50001, 50003)
    AND
    (
-       @v_error_mensaje LIKE N'%11%titular%'
-       OR @v_error_mensaje LIKE N'%titular%exactamente%11%'
-       OR @v_error_mensaje LIKE N'%exceso%titular%'
+       @v_error_mensaje LIKE '%11%titular%'
+       OR @v_error_mensaje LIKE '%titular%exactamente%11%'
+       OR @v_error_mensaje LIKE '%exceso%titular%'
    )
    AND @v_filas_despues = @v_filas_antes
 BEGIN
-    PRINT N'PASS Test 1: se rechazo la alineacion con 12 titulares.';
+    PRINT 'PASS Test 1: se rechazo la alineacion con 12 titulares.';
 END
 ELSE
 BEGIN
-    PRINT N'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
+    PRINT 'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
 END;
 GO
 
 /* =====================================================================
    CASO 2: jugador no convocado
 ===================================================================== */
-PRINT N'';
-PRINT N'-> Test 2: registrar una alineacion con un jugador no convocado';
+PRINT '';
+PRINT '-> Test 2: registrar una alineacion con un jugador no convocado';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_seleccion INT;
 DECLARE @v_id_jugador_no_convocado INT;
 DECLARE @v_dorsal_reemplazado TINYINT;
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
 DECLARE @v_filas_antes INT;
 DECLARE @v_filas_despues INT;
 DECLARE @v_alineacion juego.tt_Alineacion;
@@ -205,7 +205,7 @@ IF @v_id_partido IS NULL
    OR @v_id_seleccion IS NULL
    OR @v_id_jugador_no_convocado IS NULL
 BEGIN
-    ;THROW 50001,N'69_Test_ERR_Alineaciones: faltan equipo, convocados o jugador no convocado para el Test 2',1;
+    ;THROW 50001,'69_Test_ERR_Alineaciones: faltan equipo, convocados o jugador no convocado para el Test 2',1;
 END;
 
 ;WITH convocados AS
@@ -256,7 +256,7 @@ WHERE j.id_persona = @v_id_jugador_no_convocado;
 
 IF (SELECT COUNT(*) FROM @v_alineacion WHERE es_titular = 1) <> 11
 BEGIN
-    ;THROW 50001, N'69_Test_ERR_Alineaciones: el TVP del Test 2 no conserva exactamente 11 titulares',1;
+    ;THROW 50001, '69_Test_ERR_Alineaciones: el TVP del Test 2 no conserva exactamente 11 titulares',1;
 END;
 
 IF NOT EXISTS
@@ -266,7 +266,7 @@ IF NOT EXISTS
        WHERE a.id_jugador = @v_id_jugador_no_convocado
    )
 BEGIN
-    ;THROW 50001, N'69_Test_ERR_Alineaciones: no se pudo incorporar al jugador no convocado en el TVP',1;
+    ;THROW 50001, '69_Test_ERR_Alineaciones: no se pudo incorporar al jugador no convocado en el TVP',1;
 END;
 
 SELECT @v_filas_antes = COUNT(*)
@@ -284,7 +284,7 @@ BEGIN TRY
         @alineacion = @v_alineacion;
 
     SET @v_error_numero = 0;
-    SET @v_error_mensaje = N'El SP permitio alinear a un jugador no convocado';
+    SET @v_error_mensaje = 'El SP permitio alinear a un jugador no convocado';
 END TRY
 BEGIN CATCH
     SET @v_error_numero = ERROR_NUMBER();
@@ -299,7 +299,7 @@ WHERE a.id_partido = @v_id_partido
 IF @@TRANCOUNT > 0
     ROLLBACK TRANSACTION;
 
-PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
+PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
 
 SELECT
     @v_id_partido AS id_partido_prueba,
@@ -311,23 +311,23 @@ SELECT
 IF @v_error_numero IN (50001, 50003)
    AND
    (
-       @v_error_mensaje LIKE N'%jugador%no%convocad%'
-       OR @v_error_mensaje LIKE N'%convocatoria%activa%'
-       OR @v_error_mensaje LIKE N'%alineacion%convocad%'
+       @v_error_mensaje LIKE '%jugador%no%convocad%'
+       OR @v_error_mensaje LIKE '%convocatoria%activa%'
+       OR @v_error_mensaje LIKE '%alineacion%convocad%'
    )
    AND @v_filas_despues = @v_filas_antes
 BEGIN
-    PRINT N'PASS Test 2: se rechazo al jugador no convocado.';
+    PRINT 'PASS Test 2: se rechazo al jugador no convocado.';
 END
 ELSE
 BEGIN
-    PRINT N'FAIL Test 2: numero, mensaje o persistencia distintos de lo esperado.';
+    PRINT 'FAIL Test 2: numero, mensaje o persistencia distintos de lo esperado.';
 END;
 GO
 
-PRINT N'';
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBAS DE ERROR: 69_Test_ERR_Alineaciones';
-PRINT N'CADA CASO EJECUTO SU PROPIO ROLLBACK';
-PRINT N'=====================================================================';
+PRINT '';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBAS DE ERROR: 69_Test_ERR_Alineaciones';
+PRINT 'CADA CASO EJECUTO SU PROPIO ROLLBACK';
+PRINT '=====================================================================';
 GO

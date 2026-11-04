@@ -28,55 +28,55 @@ GO
    siguiente. Volver a ejecutar el script no duplica datos.
 */
 
-PRINT N'=== 1/8 Paises y monedas (CSV) ===';
-DECLARE @v_ruta NVARCHAR(200) = N'C:\Mundial2026\datos\';
-DECLARE @v_archivo NVARCHAR(260) = @v_ruta + N'country-codes.csv';
+PRINT '=== 1/8 Paises y monedas (CSV) ===';
+DECLARE @v_ruta VARCHAR(200) = 'C:\Mundial2026\datos\';
+DECLARE @v_archivo VARCHAR(260) = @v_ruta + 'country-codes.csv';
 EXEC soporte.usp_Importar_PaisesCsv @archivo = @v_archivo;
 GO
 
-PRINT N'=== 2/8 Husos horarios (TXT) ===';
-DECLARE @v_ruta NVARCHAR(200) = N'C:\Mundial2026\datos\';
-DECLARE @v_archivo NVARCHAR(260) = @v_ruta + N'timeZones.txt';
+PRINT '=== 2/8 Husos horarios (TXT) ===';
+DECLARE @v_ruta VARCHAR(200) = 'C:\Mundial2026\datos\';
+DECLARE @v_archivo VARCHAR(260) = @v_ruta + 'timeZones.txt';
 EXEC soporte.usp_Importar_HusosTxt @archivo = @v_archivo;
 GO
 
-PRINT N'=== 3/8 Ciudades (TXT) ===';
-DECLARE @v_ruta NVARCHAR(200) = N'C:\Mundial2026\datos\';
-DECLARE @v_archivo NVARCHAR(260) = @v_ruta + N'cities15000.txt';
+PRINT '=== 3/8 Ciudades (TXT) ===';
+DECLARE @v_ruta VARCHAR(200) = 'C:\Mundial2026\datos\';
+DECLARE @v_archivo VARCHAR(260) = @v_ruta + 'cities15000.txt';
 EXEC soporte.usp_Importar_CiudadesTxt @archivo = @v_archivo, @poblacion_minima = 100000;
 GO
 
-PRINT N'=== 4/8 Sedes (JSON) ===';
-DECLARE @v_ruta NVARCHAR(200) = N'C:\Mundial2026\datos\';
-DECLARE @v_archivo NVARCHAR(260) = @v_ruta + N'worldcup.stadiums.json';
+PRINT '=== 4/8 Sedes (JSON) ===';
+DECLARE @v_ruta VARCHAR(200) = 'C:\Mundial2026\datos\';
+DECLARE @v_archivo VARCHAR(260) = @v_ruta + 'worldcup.stadiums.json';
 EXEC soporte.usp_Importar_SedesJson @archivo = @v_archivo;
 GO
 
-PRINT N'=== 5/8 Selecciones (JSON) ===';
-DECLARE @v_ruta NVARCHAR(200) = N'C:\Mundial2026\datos\';
-DECLARE @v_archivo NVARCHAR(260) = @v_ruta + N'worldcup.teams.json';
+PRINT '=== 5/8 Selecciones (JSON) ===';
+DECLARE @v_ruta VARCHAR(200) = 'C:\Mundial2026\datos\';
+DECLARE @v_archivo VARCHAR(260) = @v_ruta + 'worldcup.teams.json';
 EXEC soporte.usp_Importar_SeleccionesJson @archivo = @v_archivo;
 GO
 
-PRINT N'=== 6/8 Fixture del torneo (JSON) ===';
-DECLARE @v_ruta NVARCHAR(200) = N'C:\Mundial2026\datos\';
-DECLARE @v_archivo NVARCHAR(260) = @v_ruta + N'worldcup.json';
+PRINT '=== 6/8 Fixture del torneo (JSON) ===';
+DECLARE @v_ruta VARCHAR(200) = 'C:\Mundial2026\datos\';
+DECLARE @v_archivo VARCHAR(260) = @v_ruta + 'worldcup.json';
 EXEC soporte.usp_Negocio_ImportarFixture @archivo = @v_archivo;
 GO
 
-PRINT N'=== 7/8 Plantillas (scraping de Wikipedia) ===';
+PRINT '=== 7/8 Plantillas (scraping de Wikipedia) ===';
 BEGIN TRY
     EXEC soporte.usp_Importar_PlantillasWikipedia;
 END TRY
 BEGIN CATCH
     -- Sin conexión la carga sigue: el seed 41 genera convocatorias de prueba.
-    PRINT CONCAT(N'Aviso: no se pudieron importar las plantillas. ', ERROR_MESSAGE());
+    PRINT CONCAT('Aviso: no se pudieron importar las plantillas. ', ERROR_MESSAGE());
 END CATCH;
 GO
 
-PRINT N'=== 8/8 Cotizaciones del BCE (XML) ===';
-DECLARE @v_ruta NVARCHAR(200) = N'C:\Mundial2026\datos\';
-DECLARE @v_archivo NVARCHAR(260) = @v_ruta + N'eurofxref-hist-90d.xml';
+PRINT '=== 8/8 Cotizaciones del BCE (XML) ===';
+DECLARE @v_ruta VARCHAR(200) = 'C:\Mundial2026\datos\';
+DECLARE @v_archivo VARCHAR(260) = @v_ruta + 'eurofxref-hist-90d.xml';
 EXEC soporte.usp_Importar_TipoCambioXml @archivo = @v_archivo;
 GO
 

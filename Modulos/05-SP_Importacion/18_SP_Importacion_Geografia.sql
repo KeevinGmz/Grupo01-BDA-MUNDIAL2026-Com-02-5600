@@ -45,17 +45,17 @@ GO
 --    Clave natural de la moneda: código ISO 4217.
 -- ============================================================================
 CREATE OR ALTER PROCEDURE soporte.usp_Importar_PaisesCsv
-    @archivo NVARCHAR(260),
+    @archivo VARCHAR(260),
     @id_importacion INT = NULL OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @c_sp NVARCHAR(60) = N'soporte.usp_Importar_PaisesCsv';
-    DECLARE @c_fuente NVARCHAR(60) = N'datasets/country-codes (GitHub)';
-    DECLARE @v_errores NVARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, N'.csv');
-    DECLARE @v_mensaje NVARCHAR(2048);
+    DECLARE @c_sp VARCHAR(60) = 'soporte.usp_Importar_PaisesCsv';
+    DECLARE @c_fuente VARCHAR(60) = 'datasets/country-codes (GitHub)';
+    DECLARE @v_errores VARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, '.csv');
+    DECLARE @v_mensaje VARCHAR(2048);
     DECLARE @v_leidas INT = 0;
     DECLARE @v_insertadas INT = 0;
     DECLARE @v_actualizadas INT = 0;
@@ -64,11 +64,11 @@ BEGIN
     DECLARE @v_id_min INT;
 
     IF @@TRANCOUNT > 0
-        SET @v_errores += N'no puede ejecutarse dentro de una transaccion; ';
+        SET @v_errores += 'no puede ejecutarse dentro de una transaccion; ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_mensaje = CONCAT(@c_sp, N': ', @v_errores);
+        SET @v_mensaje = CONCAT(@c_sp, ': ', @v_errores);
         THROW 50001, @v_mensaje, 1;
     END
 
@@ -83,14 +83,14 @@ BEGIN
         DELETE FROM soporte.stg_pais_csv;
         EXEC soporte.usp_Archivo_CargarDelimitado
             @archivo = @archivo,
-            @vista_destino = N'soporte.vw_stg_pais_csv_carga',
+            @vista_destino = 'soporte.vw_stg_pais_csv_carga',
             @es_csv = 1,
             @primera_fila = 2,
             @filas_cargadas = @v_leidas OUTPUT;
     END TRY
     BEGIN CATCH
         SET @v_mensaje = ERROR_MESSAGE();
-        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, N'(archivo)', @archivo, @v_mensaje;
+        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, '(archivo)', @archivo, @v_mensaje;
         EXEC soporte.usp_Importacion_Finalizar @id_importacion, 0, 0, 0, @error_general = 1, @mostrar_resumen = 0;
         THROW;
     END CATCH
@@ -103,20 +103,20 @@ BEGIN
     CREATE TABLE #pais
     (
         nro_fila       INT           NOT NULL PRIMARY KEY,
-        cod_iso3       NVARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
-        cod_iso2       NVARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
-        cod_fifa       NVARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
-        nombre         NVARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
-        nombre_en      NVARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
-        nombre_cldr    NVARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
-        nombre_unterm  NVARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
-        continente     NVARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
-        sigla_confed   NVARCHAR(10) COLLATE DATABASE_DEFAULT  NULL,
+        cod_iso3       VARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
+        cod_iso2       VARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
+        cod_fifa       VARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
+        nombre         VARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
+        nombre_en      VARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
+        nombre_cldr    VARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
+        nombre_unterm  VARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
+        continente     VARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
+        sigla_confed   VARCHAR(10) COLLATE DATABASE_DEFAULT  NULL,
         id_confed      TINYINT       NULL,
-        monedas        NVARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
-        nombres_moneda NVARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
+        monedas        VARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
+        nombres_moneda VARCHAR(400) COLLATE DATABASE_DEFAULT NULL,
         omitida        BIT           NOT NULL DEFAULT 0,
-        error          NVARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
+        error          VARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
     );
 
     INSERT INTO #pais (nro_fila, cod_iso3, cod_iso2, cod_fifa, nombre, nombre_en, nombre_cldr,
@@ -125,15 +125,15 @@ BEGIN
         s.id_stg - @v_id_min + 2,                                   -- línea del archivo (la 1 es el encabezado)
         UPPER(soporte.fn_Limpiar(s.iso3166_1_alpha_3)),
         UPPER(soporte.fn_Limpiar(s.iso3166_1_alpha_2)),
-        CASE WHEN soporte.fn_Limpiar(s.fifa) LIKE N'[A-Za-z][A-Za-z][A-Za-z]'
+        CASE WHEN soporte.fn_Limpiar(s.fifa) LIKE '[A-Za-z][A-Za-z][A-Za-z]'
              THEN UPPER(soporte.fn_Limpiar(s.fifa)) END,              -- se descartan valores como "1" o "ROS3"
         COALESCE(soporte.fn_Limpiar(s.official_name_es),
                  soporte.fn_Limpiar(REPLACE(REPLACE(REPLACE(REPLACE(s.unterm_spanish_short,
-                     N' (el)', N''), N' (la)', N''), N' (los)', N''), N' (las)', N'')),
+                     ' (el)', ''), ' (la)', ''), ' (los)', ''), ' (las)', '')),
                  soporte.fn_Limpiar(s.cldr_display_name)),
         soporte.fn_Limpiar(s.official_name_en),
         soporte.fn_Limpiar(s.cldr_display_name),
-        soporte.fn_Limpiar(REPLACE(s.unterm_english_short, N' (the)', N'')),
+        soporte.fn_Limpiar(REPLACE(s.unterm_english_short, ' (the)', '')),
         UPPER(soporte.fn_Limpiar(s.continent)),
         UPPER(soporte.fn_Limpiar(s.iso4217_currency_alphabetic_code)),
         soporte.fn_Limpiar(s.iso4217_currency_name)
@@ -145,15 +145,15 @@ BEGIN
     UPDATE p
     SET sigla_confed =
         CASE
-            WHEN p.cod_iso3 = N'AUS' THEN N'AFC'
-            WHEN p.cod_iso3 IN (N'ISR', N'KAZ', N'TUR', N'CYP', N'ARM', N'AZE', N'GEO', N'RUS') THEN N'UEFA'
-            WHEN p.cod_iso3 IN (N'GUY', N'SUR', N'GUF') THEN N'CONCACAF'
-            WHEN p.continente = N'SA' THEN N'CONMEBOL'
-            WHEN p.continente = N'EU' THEN N'UEFA'
-            WHEN p.continente = N'AF' THEN N'CAF'
-            WHEN p.continente = N'AS' THEN N'AFC'
-            WHEN p.continente = N'OC' THEN N'OFC'
-            WHEN p.continente = N'NA' THEN N'CONCACAF'
+            WHEN p.cod_iso3 = 'AUS' THEN 'AFC'
+            WHEN p.cod_iso3 IN ('ISR', 'KAZ', 'TUR', 'CYP', 'ARM', 'AZE', 'GEO', 'RUS') THEN 'UEFA'
+            WHEN p.cod_iso3 IN ('GUY', 'SUR', 'GUF') THEN 'CONCACAF'
+            WHEN p.continente = 'SA' THEN 'CONMEBOL'
+            WHEN p.continente = 'EU' THEN 'UEFA'
+            WHEN p.continente = 'AF' THEN 'CAF'
+            WHEN p.continente = 'AS' THEN 'AFC'
+            WHEN p.continente = 'OC' THEN 'OFC'
+            WHEN p.continente = 'NA' THEN 'CONCACAF'
         END
     FROM #pais AS p;
 
@@ -163,21 +163,21 @@ BEGIN
     JOIN geo.confederacion AS c ON c.sigla = p.sigla_confed;
 
     -- Territorios sin confederación (Antártida y similares): se omiten.
-    UPDATE #pais SET omitida = 1 WHERE continente = N'AN' AND cod_iso3 IS NOT NULL;
+    UPDATE #pais SET omitida = 1 WHERE continente = 'A' AND cod_iso3 IS NOT NULL;
 
     UPDATE p
     SET error = NULLIF(CONCAT(
-            CASE WHEN p.cod_iso3 IS NULL OR p.cod_iso3 NOT LIKE N'[A-Z][A-Z][A-Z]'
-                 THEN CONCAT(N'ISO3166-1-Alpha-3 invalido (', ISNULL(p.cod_iso3, N'vacio'), N'); ') END,
-            CASE WHEN p.cod_iso2 IS NOT NULL AND p.cod_iso2 NOT LIKE N'[A-Z][A-Z]'
-                 THEN CONCAT(N'ISO3166-1-Alpha-2 invalido (', p.cod_iso2, N'); ') END,
-            CASE WHEN p.nombre IS NULL THEN N'el pais no tiene nombre; ' END,
-            CASE WHEN LEN(p.nombre) > 80 THEN N'nombre de mas de 80 caracteres; ' END,
+            CASE WHEN p.cod_iso3 IS NULL OR p.cod_iso3 NOT LIKE '[A-Z][A-Z][A-Z]'
+                 THEN CONCAT('ISO3166-1-Alpha-3 invalido (', ISNULL(p.cod_iso3, 'vacio'), '); ') END,
+            CASE WHEN p.cod_iso2 IS NOT NULL AND p.cod_iso2 NOT LIKE '[A-Z][A-Z]'
+                 THEN CONCAT('ISO3166-1-Alpha-2 invalido (', p.cod_iso2, '); ') END,
+            CASE WHEN p.nombre IS NULL THEN 'el pais no tiene nombre; ' END,
+            CASE WHEN LEN(p.nombre) > 80 THEN 'nombre de mas de 80 caracteres; ' END,
             CASE WHEN p.omitida = 0 AND p.id_confed IS NULL
-                 THEN CONCAT(N'continente invalido (', ISNULL(p.continente, N'vacio'), N'); ') END,
+                 THEN CONCAT('continente invalido (', ISNULL(p.continente, 'vacio'), '); ') END,
             CASE WHEN EXISTS (SELECT 1 FROM #pais AS d WHERE d.cod_iso3 = p.cod_iso3 AND d.nro_fila < p.nro_fila)
-                 THEN N'codigo ISO3 repetido en el archivo; ' END
-        ), N'')
+                 THEN 'codigo ISO3 repetido en el archivo; ' END
+        ), '')
     FROM #pais AS p
     WHERE p.omitida = 0 OR p.cod_iso3 IS NULL;
 
@@ -185,7 +185,7 @@ BEGIN
     -- Registro de las filas rechazadas
     ---------------------------------------------------------------------------
     DECLARE @v_fila INT = 0;
-    DECLARE @v_texto NVARCHAR(1000);
+    DECLARE @v_texto VARCHAR(1000);
 
     WHILE 1 = 1
     BEGIN
@@ -202,13 +202,13 @@ BEGIN
     ---------------------------------------------------------------------------
     -- Upsert fila por fila
     ---------------------------------------------------------------------------
-    DECLARE @v_iso3 CHAR(3), @v_iso2 NVARCHAR(10), @v_fifa CHAR(3), @v_nombre NVARCHAR(80);
-    DECLARE @v_nombre_en NVARCHAR(150), @v_nombre_cldr NVARCHAR(150), @v_nombre_unterm NVARCHAR(150);
-    DECLARE @v_id_confed TINYINT, @v_monedas NVARCHAR(400), @v_nombres_moneda NVARCHAR(400);
-    DECLARE @v_id_pais SMALLINT, @v_nombre_act NVARCHAR(80), @v_fifa_act CHAR(3);
-    DECLARE @v_gentilicio_act NVARCHAR(60), @v_confed_act TINYINT;
-    DECLARE @v_id_moneda TINYINT, @v_cod_moneda CHAR(3), @v_nom_moneda NVARCHAR(50);
-    DECLARE @v_monedas_fila TABLE (orden INT, codigo NVARCHAR(10), nombre NVARCHAR(100));
+    DECLARE @v_iso3 CHAR(3), @v_iso2 VARCHAR(10), @v_fifa CHAR(3), @v_nombre VARCHAR(80);
+    DECLARE @v_nombre_en VARCHAR(150), @v_nombre_cldr VARCHAR(150), @v_nombre_unterm VARCHAR(150);
+    DECLARE @v_id_confed TINYINT, @v_monedas VARCHAR(400), @v_nombres_moneda VARCHAR(400);
+    DECLARE @v_id_pais SMALLINT, @v_nombre_act VARCHAR(80), @v_fifa_act CHAR(3);
+    DECLARE @v_gentilicio_act VARCHAR(60), @v_confed_act TINYINT;
+    DECLARE @v_id_moneda TINYINT, @v_cod_moneda CHAR(3), @v_nom_moneda VARCHAR(50);
+    DECLARE @v_monedas_fila TABLE (orden INT, codigo VARCHAR(10), nombre VARCHAR(100));
     DECLARE @v_orden INT;
 
     SET @v_fila = 0;
@@ -287,21 +287,21 @@ BEGIN
             BEGIN
                 INSERT INTO @v_monedas_fila (orden, codigo, nombre)
                 SELECT CONVERT(INT, c.[key]), LTRIM(RTRIM(c.value)), LTRIM(RTRIM(n.value))
-                FROM OPENJSON(N'["' + REPLACE(STRING_ESCAPE(@v_monedas, 'json'), N',', N'","') + N'"]') AS c
-                LEFT JOIN OPENJSON(N'["' + REPLACE(STRING_ESCAPE(ISNULL(@v_nombres_moneda, N''), 'json'), N',', N'","') + N'"]') AS n
+                FROM OPENJSON('["' + REPLACE(STRING_ESCAPE(@v_monedas, 'json'), ',', '","') + '"]') AS c
+                LEFT JOIN OPENJSON('["' + REPLACE(STRING_ESCAPE(ISNULL(@v_nombres_moneda, ''), 'json'), ',', '","') + '"]') AS n
                        ON n.[key] = c.[key];
 
                 SET @v_orden = -1;
                 WHILE 1 = 1
                 BEGIN
                     SELECT TOP (1) @v_orden = m.orden, @v_cod_moneda = m.codigo,
-                                   @v_nom_moneda = LEFT(ISNULL(NULLIF(m.nombre, N''), m.codigo), 50)
+                                   @v_nom_moneda = LEFT(ISNULL(NULLIF(m.nombre, ''), m.codigo), 50)
                     FROM @v_monedas_fila AS m
                     WHERE m.orden > @v_orden
                     ORDER BY m.orden;
                     IF @@ROWCOUNT = 0 BREAK;
 
-                    IF @v_cod_moneda LIKE N'[A-Z][A-Z][A-Z]'
+                    IF @v_cod_moneda LIKE '[A-Z][A-Z][A-Z]'
                        AND NOT EXISTS (SELECT 1 FROM publicidad.moneda AS mo WHERE mo.cod_iso4217 = @v_cod_moneda)
                         EXEC publicidad.usp_Moneda_Insertar
                             @cod_iso4217 = @v_cod_moneda,
@@ -315,7 +315,7 @@ BEGIN
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SET @v_mensaje = ERROR_MESSAGE();
-            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, N'ISO3166-1-Alpha-3', @v_iso3, @v_mensaje;
+            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, 'ISO3166-1-Alpha-3', @v_iso3, @v_mensaje;
             SET @v_con_error += 1;
         END CATCH
     END
@@ -346,17 +346,17 @@ GO
 --    al 1 de julio (época del Mundial) la zona suma una hora.
 -- ============================================================================
 CREATE OR ALTER PROCEDURE soporte.usp_Importar_HusosTxt
-    @archivo NVARCHAR(260),
+    @archivo VARCHAR(260),
     @id_importacion INT = NULL OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @c_sp NVARCHAR(60) = N'soporte.usp_Importar_HusosTxt';
-    DECLARE @c_fuente NVARCHAR(60) = N'GeoNames timeZones.txt';
-    DECLARE @v_errores NVARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, N'.txt');
-    DECLARE @v_mensaje NVARCHAR(2048);
+    DECLARE @c_sp VARCHAR(60) = 'soporte.usp_Importar_HusosTxt';
+    DECLARE @c_fuente VARCHAR(60) = 'GeoNames timeZones.txt';
+    DECLARE @v_errores VARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, '.txt');
+    DECLARE @v_mensaje VARCHAR(2048);
     DECLARE @v_leidas INT = 0;
     DECLARE @v_insertadas INT = 0;
     DECLARE @v_actualizadas INT = 0;
@@ -365,11 +365,11 @@ BEGIN
     DECLARE @v_id_min INT;
 
     IF @@TRANCOUNT > 0
-        SET @v_errores += N'no puede ejecutarse dentro de una transaccion; ';
+        SET @v_errores += 'no puede ejecutarse dentro de una transaccion; ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_mensaje = CONCAT(@c_sp, N': ', @v_errores);
+        SET @v_mensaje = CONCAT(@c_sp, ': ', @v_errores);
         THROW 50001, @v_mensaje, 1;
     END
 
@@ -381,14 +381,14 @@ BEGIN
         DELETE FROM soporte.stg_huso_txt;
         EXEC soporte.usp_Archivo_CargarDelimitado
             @archivo = @archivo,
-            @vista_destino = N'soporte.vw_stg_huso_txt_carga',
+            @vista_destino = 'soporte.vw_stg_huso_txt_carga',
             @es_csv = 0,
             @primera_fila = 2,
             @filas_cargadas = @v_leidas OUTPUT;
     END TRY
     BEGIN CATCH
         SET @v_mensaje = ERROR_MESSAGE();
-        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, N'(archivo)', @archivo, @v_mensaje;
+        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, '(archivo)', @archivo, @v_mensaje;
         EXEC soporte.usp_Importacion_Finalizar @id_importacion, 0, 0, 0, @error_general = 1, @mostrar_resumen = 0;
         THROW;
     END CATCH
@@ -398,12 +398,12 @@ BEGIN
     CREATE TABLE #huso
     (
         nro_fila       INT            NOT NULL PRIMARY KEY,
-        zona_horaria   NVARCHAR(100) COLLATE DATABASE_DEFAULT  NULL,
+        zona_horaria   VARCHAR(100) COLLATE DATABASE_DEFAULT  NULL,
         offset_base    DECIMAL(6,2)   NULL,
         offset_julio   DECIMAL(6,2)   NULL,
-        texto_base     NVARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
-        texto_julio    NVARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
-        error          NVARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
+        texto_base     VARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
+        texto_julio    VARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
+        error          VARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
     );
 
     INSERT INTO #huso (nro_fila, zona_horaria, texto_base, texto_julio, offset_base, offset_julio)
@@ -418,18 +418,18 @@ BEGIN
 
     UPDATE h
     SET error = NULLIF(CONCAT(
-            CASE WHEN h.zona_horaria IS NULL THEN N'zona horaria vacia; ' END,
-            CASE WHEN LEN(h.zona_horaria) > 60 THEN N'zona horaria de mas de 60 caracteres; ' END,
-            CASE WHEN h.offset_base IS NULL THEN CONCAT(N'rawOffset no numerico (', ISNULL(h.texto_base, N'vacio'), N'); ')
-                 WHEN h.offset_base * 60 NOT BETWEEN -720 AND 840 THEN CONCAT(N'rawOffset fuera de rango (', h.texto_base, N'); ') END,
-            CASE WHEN h.offset_julio IS NULL THEN CONCAT(N'DST offset no numerico (', ISNULL(h.texto_julio, N'vacio'), N'); ') END,
+            CASE WHEN h.zona_horaria IS NULL THEN 'zona horaria vacia; ' END,
+            CASE WHEN LEN(h.zona_horaria) > 60 THEN 'zona horaria de mas de 60 caracteres; ' END,
+            CASE WHEN h.offset_base IS NULL THEN CONCAT('rawOffset no numerico (', ISNULL(h.texto_base, 'vacio'), '); ')
+                 WHEN h.offset_base * 60 NOT BETWEEN -720 AND 840 THEN CONCAT('rawOffset fuera de rango (', h.texto_base, '); ') END,
+            CASE WHEN h.offset_julio IS NULL THEN CONCAT('DST offset no numerico (', ISNULL(h.texto_julio, 'vacio'), '); ') END,
             CASE WHEN EXISTS (SELECT 1 FROM #huso AS d WHERE d.zona_horaria = h.zona_horaria AND d.nro_fila < h.nro_fila)
-                 THEN N'zona horaria repetida en el archivo; ' END
-        ), N'')
+                 THEN 'zona horaria repetida en el archivo; ' END
+        ), '')
     FROM #huso AS h;
 
     DECLARE @v_fila INT = 0;
-    DECLARE @v_texto NVARCHAR(1000);
+    DECLARE @v_texto VARCHAR(1000);
 
     WHILE 1 = 1
     BEGIN
@@ -443,7 +443,7 @@ BEGIN
         SET @v_con_error += 1;
     END
 
-    DECLARE @v_zona NVARCHAR(60), @v_offset SMALLINT, @v_verano BIT;
+    DECLARE @v_zona VARCHAR(60), @v_offset SMALLINT, @v_verano BIT;
     DECLARE @v_id_huso SMALLINT, @v_offset_act SMALLINT, @v_verano_act BIT;
 
     SET @v_fila = 0;
@@ -489,7 +489,7 @@ BEGIN
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SET @v_mensaje = ERROR_MESSAGE();
-            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, N'TimeZoneId', @v_zona, @v_mensaje;
+            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, 'TimeZoneId', @v_zona, @v_mensaje;
             SET @v_con_error += 1;
         END CATCH
     END
@@ -518,7 +518,7 @@ GO
 --    Si un mismo país tiene dos ciudades homónimas, se conserva la más poblada.
 -- ============================================================================
 CREATE OR ALTER PROCEDURE soporte.usp_Importar_CiudadesTxt
-    @archivo NVARCHAR(260),
+    @archivo VARCHAR(260),
     @poblacion_minima INT = 100000,
     @id_importacion INT = NULL OUTPUT
 AS
@@ -526,10 +526,10 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @c_sp NVARCHAR(60) = N'soporte.usp_Importar_CiudadesTxt';
-    DECLARE @c_fuente NVARCHAR(60) = N'GeoNames cities15000';
-    DECLARE @v_errores NVARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, N'.txt');
-    DECLARE @v_mensaje NVARCHAR(2048);
+    DECLARE @c_sp VARCHAR(60) = 'soporte.usp_Importar_CiudadesTxt';
+    DECLARE @c_fuente VARCHAR(60) = 'GeoNames cities15000';
+    DECLARE @v_errores VARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, '.txt');
+    DECLARE @v_mensaje VARCHAR(2048);
     DECLARE @v_leidas INT = 0;
     DECLARE @v_insertadas INT = 0;
     DECLARE @v_actualizadas INT = 0;
@@ -538,13 +538,13 @@ BEGIN
     DECLARE @v_id_min INT;
 
     IF @poblacion_minima IS NULL OR @poblacion_minima < 0
-        SET @v_errores += N'poblacion_minima debe ser mayor o igual a 0; ';
+        SET @v_errores += 'poblacion_minima debe ser mayor o igual a 0; ';
     IF @@TRANCOUNT > 0
-        SET @v_errores += N'no puede ejecutarse dentro de una transaccion; ';
+        SET @v_errores += 'no puede ejecutarse dentro de una transaccion; ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_mensaje = CONCAT(@c_sp, N': ', @v_errores);
+        SET @v_mensaje = CONCAT(@c_sp, ': ', @v_errores);
         THROW 50001, @v_mensaje, 1;
     END
 
@@ -556,14 +556,14 @@ BEGIN
         DELETE FROM soporte.stg_ciudad_txt;
         EXEC soporte.usp_Archivo_CargarDelimitado
             @archivo = @archivo,
-            @vista_destino = N'soporte.vw_stg_ciudad_txt_carga',
+            @vista_destino = 'soporte.vw_stg_ciudad_txt_carga',
             @es_csv = 0,
             @primera_fila = 1,
             @filas_cargadas = @v_leidas OUTPUT;
     END TRY
     BEGIN CATCH
         SET @v_mensaje = ERROR_MESSAGE();
-        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, N'(archivo)', @archivo, @v_mensaje;
+        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, '(archivo)', @archivo, @v_mensaje;
         EXEC soporte.usp_Importacion_Finalizar @id_importacion, 0, 0, 0, @error_general = 1, @mostrar_resumen = 0;
         THROW;
     END CATCH
@@ -573,16 +573,16 @@ BEGIN
     CREATE TABLE #ciudad
     (
         nro_fila      INT            NOT NULL PRIMARY KEY,
-        nombre        NVARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
-        cod_pais      NVARCHAR(10) COLLATE DATABASE_DEFAULT   NULL,
-        zona_horaria  NVARCHAR(100) COLLATE DATABASE_DEFAULT  NULL,
-        texto_pob     NVARCHAR(30) COLLATE DATABASE_DEFAULT   NULL,
+        nombre        VARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
+        cod_pais      VARCHAR(10) COLLATE DATABASE_DEFAULT   NULL,
+        zona_horaria  VARCHAR(100) COLLATE DATABASE_DEFAULT  NULL,
+        texto_pob     VARCHAR(30) COLLATE DATABASE_DEFAULT   NULL,
         poblacion     BIGINT         NULL,
         es_capital    BIT            NOT NULL,
         id_pais       SMALLINT       NULL,
         id_huso       SMALLINT       NULL,
         seleccionada  BIT            NOT NULL DEFAULT 0,
-        error         NVARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
+        error         VARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
     );
 
     INSERT INTO #ciudad (nro_fila, nombre, cod_pais, zona_horaria, texto_pob, poblacion, es_capital)
@@ -593,7 +593,7 @@ BEGIN
         soporte.fn_Limpiar(s.zona_horaria),
         soporte.fn_Limpiar(s.poblacion),
         TRY_CONVERT(BIGINT, soporte.fn_Limpiar(s.poblacion)),
-        CASE WHEN soporte.fn_Limpiar(s.codigo_tipo) = N'PPLC' THEN 1 ELSE 0 END
+        CASE WHEN soporte.fn_Limpiar(s.codigo_tipo) = 'PPLC' THEN 1 ELSE 0 END
     FROM soporte.stg_ciudad_txt AS s;
 
     -- Filas que interesan: capitales y ciudades grandes (las demás se omiten).
@@ -614,13 +614,13 @@ BEGIN
 
     UPDATE c
     SET error = NULLIF(CONCAT(
-            CASE WHEN c.nombre IS NULL THEN N'nombre vacio; ' END,
-            CASE WHEN LEN(c.nombre) > 100 THEN N'nombre de mas de 100 caracteres; ' END,
-            CASE WHEN c.poblacion IS NULL THEN CONCAT(N'poblacion no numerica (', ISNULL(c.texto_pob, N'vacia'), N'); ')
-                 WHEN c.poblacion < 0 OR c.poblacion > 2147483647 THEN N'poblacion fuera de rango; ' END,
-            CASE WHEN c.id_pais IS NULL THEN CONCAT(N'pais inexistente para el codigo ISO2 ', ISNULL(c.cod_pais, N'vacio'), N' (importe antes los paises); ') END,
-            CASE WHEN c.id_huso IS NULL THEN CONCAT(N'huso horario inexistente: ', ISNULL(c.zona_horaria, N'vacio'), N' (importe antes los husos); ') END
-        ), N'')
+            CASE WHEN c.nombre IS NULL THEN 'nombre vacio; ' END,
+            CASE WHEN LEN(c.nombre) > 100 THEN 'nombre de mas de 100 caracteres; ' END,
+            CASE WHEN c.poblacion IS NULL THEN CONCAT('poblacion no numerica (', ISNULL(c.texto_pob, 'vacia'), '); ')
+                 WHEN c.poblacion < 0 OR c.poblacion > 2147483647 THEN 'poblacion fuera de rango; ' END,
+            CASE WHEN c.id_pais IS NULL THEN CONCAT('pais inexistente para el codigo ISO2 ', ISNULL(c.cod_pais, 'vacio'), ' (importe antes los paises); ') END,
+            CASE WHEN c.id_huso IS NULL THEN CONCAT('huso horario inexistente: ', ISNULL(c.zona_horaria, 'vacio'), ' (importe antes los husos); ') END
+        ), '')
     FROM #ciudad AS c
     WHERE c.seleccionada = 1;
 
@@ -639,7 +639,7 @@ BEGIN
     WHERE o.rn > 1;
 
     DECLARE @v_fila INT = 0;
-    DECLARE @v_texto NVARCHAR(1000);
+    DECLARE @v_texto VARCHAR(1000);
 
     WHILE 1 = 1
     BEGIN
@@ -653,7 +653,7 @@ BEGIN
         SET @v_con_error += 1;
     END
 
-    DECLARE @v_nombre NVARCHAR(100), @v_poblacion INT, @v_id_pais SMALLINT, @v_id_huso SMALLINT;
+    DECLARE @v_nombre VARCHAR(100), @v_poblacion INT, @v_id_pais SMALLINT, @v_id_huso SMALLINT;
     DECLARE @v_id_ciudad INT, @v_poblacion_act INT, @v_huso_act SMALLINT;
 
     SET @v_fila = 0;
@@ -702,7 +702,7 @@ BEGIN
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SET @v_mensaje = ERROR_MESSAGE();
-            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, N'name', @v_nombre, @v_mensaje;
+            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, 'name', @v_nombre, @v_mensaje;
             SET @v_con_error += 1;
         END CATCH
     END
@@ -733,18 +733,18 @@ GO
 --    Las coordenadas se convierten de grados/minutos/segundos a decimales.
 -- ============================================================================
 CREATE OR ALTER PROCEDURE soporte.usp_Importar_SedesJson
-    @archivo NVARCHAR(260),
+    @archivo VARCHAR(260),
     @id_importacion INT = NULL OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @c_sp NVARCHAR(60) = N'soporte.usp_Importar_SedesJson';
-    DECLARE @c_fuente NVARCHAR(60) = N'openfootball worldcup.stadiums.json';
-    DECLARE @v_errores NVARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, N'.json');
-    DECLARE @v_mensaje NVARCHAR(2048);
-    DECLARE @v_json NVARCHAR(MAX);
+    DECLARE @c_sp VARCHAR(60) = 'soporte.usp_Importar_SedesJson';
+    DECLARE @c_fuente VARCHAR(60) = 'openfootball worldcup.stadiums.json';
+    DECLARE @v_errores VARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, '.json');
+    DECLARE @v_mensaje VARCHAR(2048);
+    DECLARE @v_json VARCHAR(MAX);
     DECLARE @v_leidas INT = 0;
     DECLARE @v_insertadas INT = 0;
     DECLARE @v_actualizadas INT = 0;
@@ -752,11 +752,11 @@ BEGIN
     DECLARE @v_con_error INT = 0;
 
     IF @@TRANCOUNT > 0
-        SET @v_errores += N'no puede ejecutarse dentro de una transaccion; ';
+        SET @v_errores += 'no puede ejecutarse dentro de una transaccion; ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_mensaje = CONCAT(@c_sp, N': ', @v_errores);
+        SET @v_mensaje = CONCAT(@c_sp, ': ', @v_errores);
         THROW 50001, @v_mensaje, 1;
     END
 
@@ -768,9 +768,9 @@ BEGIN
         EXEC soporte.usp_Archivo_Leer @archivo = @archivo, @contenido = @v_json OUTPUT;
 
         IF ISJSON(@v_json) <> 1
-            THROW 50002, N'el archivo no contiene un JSON valido', 1;
+            THROW 50002, 'el archivo no contiene un JSON valido', 1;
         IF JSON_QUERY(@v_json, '$.stadiums') IS NULL
-            THROW 50002, N'el JSON no tiene el arreglo "stadiums"', 1;
+            THROW 50002, 'el JSON no tiene el arreglo "stadiums"', 1;
 
         DELETE FROM soporte.stg_sede_json;
         INSERT INTO soporte.stg_sede_json (nro_fila, estadio, ciudad_texto, cod_pais, zona_texto, capacidad, coordenadas)
@@ -781,19 +781,19 @@ BEGIN
         CROSS APPLY OPENJSON(a.value)
         WITH
         (
-            estadio   NVARCHAR(200) '$.name',
-            ciudad    NVARCHAR(200) '$.city',
-            cc        NVARCHAR(10)  '$.cc',
-            zona      NVARCHAR(20)  '$.timezone',
-            capacidad NVARCHAR(30)  '$.capacity',
-            coords    NVARCHAR(100) '$.coords'
+            estadio   VARCHAR(200) '$.name',
+            ciudad    VARCHAR(200) '$.city',
+            cc        VARCHAR(10)  '$.cc',
+            zona      VARCHAR(20)  '$.timezone',
+            capacidad VARCHAR(30)  '$.capacity',
+            coords    VARCHAR(100) '$.coords'
         ) AS d;
 
         SET @v_leidas = @@ROWCOUNT;
     END TRY
     BEGIN CATCH
         SET @v_mensaje = ERROR_MESSAGE();
-        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, N'(archivo)', @archivo, @v_mensaje;
+        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, '(archivo)', @archivo, @v_mensaje;
         EXEC soporte.usp_Importacion_Finalizar @id_importacion, 0, 0, 0, @error_general = 1, @mostrar_resumen = 0;
         THROW;
     END CATCH
@@ -801,17 +801,17 @@ BEGIN
     CREATE TABLE #sede
     (
         nro_fila      INT            NOT NULL PRIMARY KEY,
-        estadio       NVARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
-        ciudad_texto  NVARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
-        ciudad        NVARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
-        cod_pais      NVARCHAR(10) COLLATE DATABASE_DEFAULT   NULL,
+        estadio       VARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
+        ciudad_texto  VARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
+        ciudad        VARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
+        cod_pais      VARCHAR(10) COLLATE DATABASE_DEFAULT   NULL,
         id_pais       SMALLINT       NULL,
         offset_julio  INT            NULL,
         capacidad     INT            NULL,
-        coordenadas   NVARCHAR(100) COLLATE DATABASE_DEFAULT  NULL,
+        coordenadas   VARCHAR(100) COLLATE DATABASE_DEFAULT  NULL,
         latitud       DECIMAL(9,6)   NULL,
         longitud      DECIMAL(9,6)   NULL,
-        error         NVARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
+        error         VARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
     );
 
     INSERT INTO #sede (nro_fila, estadio, ciudad_texto, cod_pais, capacidad, coordenadas, offset_julio)
@@ -822,43 +822,43 @@ BEGIN
         UPPER(soporte.fn_Limpiar(s.cod_pais)),
         TRY_CONVERT(INT, soporte.fn_Limpiar(s.capacidad)),
         soporte.fn_Limpiar(s.coordenadas),
-        CASE WHEN soporte.fn_Limpiar(s.zona_texto) = N'UTC' THEN 0
-             WHEN soporte.fn_Limpiar(s.zona_texto) LIKE N'UTC[+-]%'
+        CASE WHEN soporte.fn_Limpiar(s.zona_texto) = 'UTC' THEN 0
+             WHEN soporte.fn_Limpiar(s.zona_texto) LIKE 'UTC[+-]%'
              THEN TRY_CONVERT(INT, SUBSTRING(soporte.fn_Limpiar(s.zona_texto), 4, 10)) * 60 END
     FROM soporte.stg_sede_json AS s;
 
     -- Ciudad: texto entre paréntesis, o el texto completo si no hay paréntesis.
     UPDATE x
     SET ciudad = CASE
-                    WHEN CHARINDEX(N'(', x.ciudad_texto) > 0 AND CHARINDEX(N')', x.ciudad_texto) > CHARINDEX(N'(', x.ciudad_texto)
+                    WHEN CHARINDEX('(', x.ciudad_texto) > 0 AND CHARINDEX(')', x.ciudad_texto) > CHARINDEX('(', x.ciudad_texto)
                     THEN soporte.fn_Limpiar(SUBSTRING(x.ciudad_texto,
-                                                      CHARINDEX(N'(', x.ciudad_texto) + 1,
-                                                      CHARINDEX(N')', x.ciudad_texto) - CHARINDEX(N'(', x.ciudad_texto) - 1))
+                                                      CHARINDEX('(', x.ciudad_texto) + 1,
+                                                      CHARINDEX(')', x.ciudad_texto) - CHARINDEX('(', x.ciudad_texto) - 1))
                     ELSE x.ciudad_texto
                  END,
         id_pais = soporte.fn_BuscarPais('ISO2', x.cod_pais),
-        latitud = soporte.fn_CoordenadaADecimal(LEFT(x.coordenadas, CHARINDEX(N' ', x.coordenadas + N' ') - 1)),
-        longitud = soporte.fn_CoordenadaADecimal(LTRIM(SUBSTRING(x.coordenadas, CHARINDEX(N' ', x.coordenadas + N' ') + 1, 100)))
+        latitud = soporte.fn_CoordenadaADecimal(LEFT(x.coordenadas, CHARINDEX(' ', x.coordenadas + ' ') - 1)),
+        longitud = soporte.fn_CoordenadaADecimal(LTRIM(SUBSTRING(x.coordenadas, CHARINDEX(' ', x.coordenadas + ' ') + 1, 100)))
     FROM #sede AS x;
 
     UPDATE x
     SET error = NULLIF(CONCAT(
-            CASE WHEN x.estadio IS NULL THEN N'estadio sin nombre; ' END,
-            CASE WHEN LEN(x.estadio) > 100 THEN N'nombre de estadio de mas de 100 caracteres; ' END,
-            CASE WHEN x.ciudad IS NULL THEN N'ciudad vacia; ' END,
-            CASE WHEN x.id_pais IS NULL THEN CONCAT(N'pais inexistente para el codigo ', ISNULL(x.cod_pais, N'vacio'), N'; ') END,
-            CASE WHEN x.capacidad IS NULL OR x.capacidad <= 0 THEN N'capacidad invalida; ' END,
-            CASE WHEN x.offset_julio IS NULL THEN N'huso horario con formato invalido (se espera UTC-5); ' END,
+            CASE WHEN x.estadio IS NULL THEN 'estadio sin nombre; ' END,
+            CASE WHEN LEN(x.estadio) > 100 THEN 'nombre de estadio de mas de 100 caracteres; ' END,
+            CASE WHEN x.ciudad IS NULL THEN 'ciudad vacia; ' END,
+            CASE WHEN x.id_pais IS NULL THEN CONCAT('pais inexistente para el codigo ', ISNULL(x.cod_pais, 'vacio'), '; ') END,
+            CASE WHEN x.capacidad IS NULL OR x.capacidad <= 0 THEN 'capacidad invalida; ' END,
+            CASE WHEN x.offset_julio IS NULL THEN 'huso horario con formato invalido (se espera UTC-5); ' END,
             CASE WHEN x.coordenadas IS NOT NULL AND (x.latitud IS NULL OR x.longitud IS NULL)
-                 THEN CONCAT(N'coordenadas con formato invalido (', x.coordenadas, N'); ') END,
-            CASE WHEN x.latitud NOT BETWEEN -90 AND 90 THEN N'latitud fuera de rango; ' END,
+                 THEN CONCAT('coordenadas con formato invalido (', x.coordenadas, '); ') END,
+            CASE WHEN x.latitud NOT BETWEEN -90 AND 90 THEN 'latitud fuera de rango; ' END,
             CASE WHEN EXISTS (SELECT 1 FROM #sede AS d WHERE d.estadio = x.estadio AND d.nro_fila < x.nro_fila)
-                 THEN N'estadio repetido en el archivo; ' END
-        ), N'')
+                 THEN 'estadio repetido en el archivo; ' END
+        ), '')
     FROM #sede AS x;
 
     DECLARE @v_fila INT = 0;
-    DECLARE @v_texto NVARCHAR(1000);
+    DECLARE @v_texto VARCHAR(1000);
 
     WHILE 1 = 1
     BEGIN
@@ -872,10 +872,10 @@ BEGIN
         SET @v_con_error += 1;
     END
 
-    DECLARE @v_estadio NVARCHAR(100), @v_ciudad NVARCHAR(100), @v_id_pais SMALLINT, @v_offset INT;
+    DECLARE @v_estadio VARCHAR(100), @v_ciudad VARCHAR(100), @v_id_pais SMALLINT, @v_offset INT;
     DECLARE @v_capacidad INT, @v_latitud DECIMAL(9,6), @v_longitud DECIMAL(9,6);
     DECLARE @v_id_ciudad INT, @v_id_huso SMALLINT, @v_id_sede INT;
-    DECLARE @v_cap_act INT, @v_lat_act DECIMAL(9,6), @v_lon_act DECIMAL(9,6), @v_ciudad_act INT, @v_dir_act NVARCHAR(200);
+    DECLARE @v_cap_act INT, @v_lat_act DECIMAL(9,6), @v_lon_act DECIMAL(9,6), @v_ciudad_act INT, @v_dir_act VARCHAR(200);
 
     SET @v_fila = 0;
     WHILE 1 = 1
@@ -915,8 +915,8 @@ BEGIN
 
                 IF @v_id_huso IS NULL
                 BEGIN
-                    SET @v_mensaje = CONCAT(N'no existe la ciudad ', @v_ciudad,
-                                            N' y no hay otra ciudad del pais con el mismo huso para deducirlo (importe antes ciudades y husos)');
+                    SET @v_mensaje = CONCAT('no existe la ciudad ', @v_ciudad,
+                                            ' y no hay otra ciudad del pais con el mismo huso para deducirlo (importe antes ciudades y husos)');
                     THROW 50003, @v_mensaje, 1;
                 END
 
@@ -970,7 +970,7 @@ BEGIN
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SET @v_mensaje = ERROR_MESSAGE();
-            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, N'name', @v_estadio, @v_mensaje;
+            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, 'name', @v_estadio, @v_mensaje;
             SET @v_con_error += 1;
         END CATCH
     END
@@ -1000,19 +1000,19 @@ GO
 --    Se corrige la confederación del país con el dato oficial del torneo.
 -- ============================================================================
 CREATE OR ALTER PROCEDURE soporte.usp_Importar_SeleccionesJson
-    @archivo NVARCHAR(260),
-    @anfitriones NVARCHAR(100) = N'MEX,USA,CAN',     -- códigos FIFA de los países organizadores
+    @archivo VARCHAR(260),
+    @anfitriones VARCHAR(100) = 'MEX,USA,CAN',     -- códigos FIFA de los países organizadores
     @id_importacion INT = NULL OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @c_sp NVARCHAR(60) = N'soporte.usp_Importar_SeleccionesJson';
-    DECLARE @c_fuente NVARCHAR(60) = N'openfootball worldcup.teams.json';
-    DECLARE @v_errores NVARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, N'.json');
-    DECLARE @v_mensaje NVARCHAR(2048);
-    DECLARE @v_json NVARCHAR(MAX);
+    DECLARE @c_sp VARCHAR(60) = 'soporte.usp_Importar_SeleccionesJson';
+    DECLARE @c_fuente VARCHAR(60) = 'openfootball worldcup.teams.json';
+    DECLARE @v_errores VARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, '.json');
+    DECLARE @v_mensaje VARCHAR(2048);
+    DECLARE @v_json VARCHAR(MAX);
     DECLARE @v_leidas INT = 0;
     DECLARE @v_insertadas INT = 0;
     DECLARE @v_actualizadas INT = 0;
@@ -1020,11 +1020,11 @@ BEGIN
     DECLARE @v_con_error INT = 0;
 
     IF @@TRANCOUNT > 0
-        SET @v_errores += N'no puede ejecutarse dentro de una transaccion; ';
+        SET @v_errores += 'no puede ejecutarse dentro de una transaccion; ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_mensaje = CONCAT(@c_sp, N': ', @v_errores);
+        SET @v_mensaje = CONCAT(@c_sp, ': ', @v_errores);
         THROW 50001, @v_mensaje, 1;
     END
 
@@ -1036,9 +1036,9 @@ BEGIN
         EXEC soporte.usp_Archivo_Leer @archivo = @archivo, @contenido = @v_json OUTPUT;
 
         IF ISJSON(@v_json) <> 1
-            THROW 50002, N'el archivo no contiene un JSON valido', 1;
-        IF LEFT(LTRIM(@v_json), 1) <> N'['
-            THROW 50002, N'se esperaba un arreglo JSON de selecciones', 1;
+            THROW 50002, 'el archivo no contiene un JSON valido', 1;
+        IF LEFT(LTRIM(@v_json), 1) <> '['
+            THROW 50002, 'se esperaba un arreglo JSON de selecciones', 1;
 
         DELETE FROM soporte.stg_seleccion_json;
         INSERT INTO soporte.stg_seleccion_json (nro_fila, nombre, nombre_normalizado, cod_fifa, grupo, confederacion)
@@ -1049,18 +1049,18 @@ BEGIN
         CROSS APPLY OPENJSON(a.value)
         WITH
         (
-            nombre             NVARCHAR(150) '$.name',
-            nombre_normalizado NVARCHAR(150) '$.name_normalised',
-            cod_fifa           NVARCHAR(10)  '$.fifa_code',
-            grupo              NVARCHAR(10)  '$.group',
-            confederacion      NVARCHAR(20)  '$.confed'
+            nombre             VARCHAR(150) '$.name',
+            nombre_normalizado VARCHAR(150) '$.name_normalised',
+            cod_fifa           VARCHAR(10)  '$.fifa_code',
+            grupo              VARCHAR(10)  '$.group',
+            confederacion      VARCHAR(20)  '$.confed'
         ) AS d;
 
         SET @v_leidas = @@ROWCOUNT;
     END TRY
     BEGIN CATCH
         SET @v_mensaje = ERROR_MESSAGE();
-        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, N'(archivo)', @archivo, @v_mensaje;
+        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, '(archivo)', @archivo, @v_mensaje;
         EXEC soporte.usp_Importacion_Finalizar @id_importacion, 0, 0, 0, @error_general = 1, @mostrar_resumen = 0;
         THROW;
     END CATCH
@@ -1068,13 +1068,13 @@ BEGIN
     CREATE TABLE #sel
     (
         nro_fila           INT            NOT NULL PRIMARY KEY,
-        nombre             NVARCHAR(150) COLLATE DATABASE_DEFAULT  NULL,
-        nombre_normalizado NVARCHAR(150) COLLATE DATABASE_DEFAULT  NULL,
-        cod_fifa           NVARCHAR(10) COLLATE DATABASE_DEFAULT   NULL,
-        grupo              NVARCHAR(10) COLLATE DATABASE_DEFAULT   NULL,
-        sigla_confed       NVARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
+        nombre             VARCHAR(150) COLLATE DATABASE_DEFAULT  NULL,
+        nombre_normalizado VARCHAR(150) COLLATE DATABASE_DEFAULT  NULL,
+        cod_fifa           VARCHAR(10) COLLATE DATABASE_DEFAULT   NULL,
+        grupo              VARCHAR(10) COLLATE DATABASE_DEFAULT   NULL,
+        sigla_confed       VARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
         id_confed          TINYINT        NULL,
-        error              NVARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
+        error              VARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
     );
 
     INSERT INTO #sel (nro_fila, nombre, nombre_normalizado, cod_fifa, grupo, sigla_confed)
@@ -1093,19 +1093,19 @@ BEGIN
 
     UPDATE x
     SET error = NULLIF(CONCAT(
-            CASE WHEN x.nombre IS NULL THEN N'seleccion sin nombre; ' END,
-            CASE WHEN x.cod_fifa IS NULL OR x.cod_fifa NOT LIKE N'[A-Z][A-Z][A-Z]'
-                 THEN CONCAT(N'codigo FIFA invalido (', ISNULL(x.cod_fifa, N'vacio'), N'); ') END,
+            CASE WHEN x.nombre IS NULL THEN 'seleccion sin nombre; ' END,
+            CASE WHEN x.cod_fifa IS NULL OR x.cod_fifa NOT LIKE '[A-Z][A-Z][A-Z]'
+                 THEN CONCAT('codigo FIFA invalido (', ISNULL(x.cod_fifa, 'vacio'), '); ') END,
             CASE WHEN NOT EXISTS (SELECT 1 FROM torneo.grupo AS g WHERE g.id_letra = x.grupo)
-                 THEN CONCAT(N'grupo inexistente (', ISNULL(x.grupo, N'vacio'), N'); ') END,
-            CASE WHEN x.id_confed IS NULL THEN CONCAT(N'confederacion inexistente (', ISNULL(x.sigla_confed, N'vacia'), N'); ') END,
+                 THEN CONCAT('grupo inexistente (', ISNULL(x.grupo, 'vacio'), '); ') END,
+            CASE WHEN x.id_confed IS NULL THEN CONCAT('confederacion inexistente (', ISNULL(x.sigla_confed, 'vacia'), '); ') END,
             CASE WHEN EXISTS (SELECT 1 FROM #sel AS d WHERE d.cod_fifa = x.cod_fifa AND d.nro_fila < x.nro_fila)
-                 THEN N'codigo FIFA repetido en el archivo; ' END
-        ), N'')
+                 THEN 'codigo FIFA repetido en el archivo; ' END
+        ), '')
     FROM #sel AS x;
 
     DECLARE @v_fila INT = 0;
-    DECLARE @v_texto NVARCHAR(1000);
+    DECLARE @v_texto VARCHAR(1000);
 
     WHILE 1 = 1
     BEGIN
@@ -1119,9 +1119,9 @@ BEGIN
         SET @v_con_error += 1;
     END
 
-    DECLARE @v_nombre NVARCHAR(150), @v_nombre_norm NVARCHAR(150), @v_fifa CHAR(3), @v_grupo CHAR(1), @v_id_confed TINYINT;
-    DECLARE @v_id_pais SMALLINT, @v_nombre_pais NVARCHAR(80), @v_iso3 CHAR(3), @v_fifa_act CHAR(3);
-    DECLARE @v_gentilicio NVARCHAR(60), @v_confed_act TINYINT;
+    DECLARE @v_nombre VARCHAR(150), @v_nombre_norm VARCHAR(150), @v_fifa CHAR(3), @v_grupo CHAR(1), @v_id_confed TINYINT;
+    DECLARE @v_id_pais SMALLINT, @v_nombre_pais VARCHAR(80), @v_iso3 CHAR(3), @v_fifa_act CHAR(3);
+    DECLARE @v_gentilicio VARCHAR(60), @v_confed_act TINYINT;
     DECLARE @v_id_seleccion INT, @v_grupo_act CHAR(1), @v_anfitrion_act BIT, @v_fecha_conf DATE;
     DECLARE @v_anfitrion BIT, @v_cambio BIT;
 
@@ -1140,7 +1140,7 @@ BEGIN
         ORDER BY x.nro_fila;
         IF @@ROWCOUNT = 0 BREAK;
 
-        SET @v_anfitrion = CASE WHEN EXISTS (SELECT 1 FROM STRING_SPLIT(@anfitriones, N',') AS a
+        SET @v_anfitrion = CASE WHEN EXISTS (SELECT 1 FROM STRING_SPLIT(@anfitriones, ',') AS a
                                              WHERE UPPER(LTRIM(RTRIM(a.value))) = @v_fifa) THEN 1 ELSE 0 END;
         SET @v_cambio = 0;
 
@@ -1160,8 +1160,8 @@ BEGIN
                 -- Asociación sin país ISO propio (Inglaterra, Escocia, etc.).
                 IF EXISTS (SELECT 1 FROM geo.pais AS p WHERE p.cod_iso3 = @v_fifa)
                 BEGIN
-                    SET @v_mensaje = CONCAT(N'no se pudo identificar el pais de ', @v_nombre,
-                                            N' y el codigo ', @v_fifa, N' ya pertenece a otro pais');
+                    SET @v_mensaje = CONCAT('no se pudo identificar el pais de ', @v_nombre,
+                                            ' y el codigo ', @v_fifa, ' ya pertenece a otro pais');
                     THROW 50003, @v_mensaje, 1;
                 END
 
@@ -1234,7 +1234,7 @@ BEGIN
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SET @v_mensaje = ERROR_MESSAGE();
-            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, N'fifa_code', @v_fifa, @v_mensaje;
+            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, 'fifa_code', @v_fifa, @v_mensaje;
             SET @v_con_error += 1;
         END CATCH
     END

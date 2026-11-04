@@ -18,23 +18,23 @@ GO
 
 SET NOCOUNT ON;
 
-DECLARE @v_errores NVARCHAR(2000) = N'';
+DECLARE @v_errores VARCHAR(2000) = '';
 
-IF OBJECT_ID(N'juego.usp_Negocio_RegistrarGol', N'P') IS NULL
-    SET @v_errores += N'no existe juego.usp_Negocio_RegistrarGol; ';
+IF OBJECT_ID('juego.usp_Negocio_RegistrarGol', 'P') IS NULL
+    SET @v_errores += 'no existe juego.usp_Negocio_RegistrarGol; ';
 
-IF OBJECT_ID(N'torneo.usp_Negocio_CerrarPartido', N'P') IS NULL
-    SET @v_errores += N'no existe torneo.usp_Negocio_CerrarPartido; ';
+IF OBJECT_ID('torneo.usp_Negocio_CerrarPartido', 'P') IS NULL
+    SET @v_errores += 'no existe torneo.usp_Negocio_CerrarPartido; ';
 
-IF @v_errores <> N''
+IF @v_errores <> ''
 BEGIN
-    SET @v_errores = LEFT(CONCAT(N'46_Seed_Goles_Resultados: ', @v_errores), 2048);
+    SET @v_errores = LEFT(CONCAT('46_Seed_Goles_Resultados: ', @v_errores), 2048);
     THROW 50001, @v_errores, 1;
 END;
 
 IF EXISTS (SELECT 1 FROM juego.gol)
 BEGIN
-    PRINT N'Ya existen goles registrados: no se agregan datos (seed idempotente).';
+    PRINT 'Ya existen goles registrados: no se agregan datos (seed idempotente).';
     RETURN;
 END;
 
@@ -73,10 +73,10 @@ WHERE p.nro_fase = 1
           JOIN arbitraje.rol_arbitral AS ra ON ra.id_rol = da.id_rol
           WHERE da.id_partido = p.id_partido
             AND da.estado = 'DESIGNADA'
-            AND ra.descripcion = N'PRINCIPAL'
+            AND ra.descripcion = 'PRINCIPAL'
       );
 
-PRINT CONCAT(N'Partidos aptos para cargar resultado: ', @v_total);
+PRINT CONCAT('Partidos aptos para cargar resultado: ', @v_total);
 
 DECLARE c_partidos CURSOR LOCAL FAST_FORWARD FOR
     SELECT p.id_partido, s.capacidad
@@ -93,7 +93,7 @@ DECLARE c_partidos CURSOR LOCAL FAST_FORWARD FOR
               JOIN arbitraje.rol_arbitral AS ra ON ra.id_rol = da.id_rol
               WHERE da.id_partido = p.id_partido
                 AND da.estado = 'DESIGNADA'
-                AND ra.descripcion = N'PRINCIPAL'
+                AND ra.descripcion = 'PRINCIPAL'
           )
     ORDER BY p.fecha_hora_utc, p.id_partido;
 
@@ -143,7 +143,7 @@ BEGIN
                         WHERE a.id_partido = @v_id_partido
                           AND a.id_seleccion = @v_team
                           AND a.es_titular = 1
-                          AND po.descripcion <> N'Arquero'
+                          AND po.descripcion <> 'Arquero'
                           AND NOT EXISTS
                               (
                                   SELECT 1 FROM juego.sustitucion AS su
@@ -159,7 +159,7 @@ BEGIN
                                   WHERE t.id_partido = a.id_partido
                                     AND t.id_seleccion = a.id_seleccion
                                     AND t.id_jugador = a.id_jugador
-                                    AND tt.descripcion IN (N'ROJA_DIRECTA', N'ROJA_DOBLE_AMARILLA')
+                                    AND tt.descripcion IN ('ROJA_DIRECTA', 'ROJA_DOBLE_AMARILLA')
                               )
                     )
                     SELECT
@@ -208,7 +208,7 @@ BEGIN
         END TRY
         BEGIN CATCH
             SET @v_fallidos += 1;
-            PRINT CONCAT(N'Aviso: partido ', @v_id_partido, N' no se pudo completar. ',
+            PRINT CONCAT('Aviso: partido ', @v_id_partido, ' no se pudo completar. ',
                          ERROR_MESSAGE());
         END CATCH;
     END;
@@ -219,9 +219,9 @@ END;
 CLOSE c_partidos;
 DEALLOCATE c_partidos;
 
-PRINT CONCAT(N'Goles registrados: ', @v_goles_ok,
-             N' | Partidos cerrados: ', @v_cerrados,
-             N' | Partidos con error: ', @v_fallidos);
+PRINT CONCAT('Goles registrados: ', @v_goles_ok,
+             ' | Partidos cerrados: ', @v_cerrados,
+             ' | Partidos con error: ', @v_fallidos);
 
 SELECT
     (SELECT COUNT(*) FROM juego.gol) AS goles_en_base,

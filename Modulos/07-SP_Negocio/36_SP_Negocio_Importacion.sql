@@ -45,18 +45,18 @@ GO
    los goles registrados (juego.gol), que requieren las alineaciones.
 */
 CREATE OR ALTER PROCEDURE soporte.usp_Negocio_ImportarFixture
-    @archivo NVARCHAR(260),
+    @archivo VARCHAR(260),
     @id_importacion INT = NULL OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @c_sp NVARCHAR(60) = N'soporte.usp_Negocio_ImportarFixture';
-    DECLARE @c_fuente NVARCHAR(60) = N'openfootball worldcup.json';
-    DECLARE @v_errores NVARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, N'.json');
-    DECLARE @v_mensaje NVARCHAR(2048);
-    DECLARE @v_json NVARCHAR(MAX);
+    DECLARE @c_sp VARCHAR(60) = 'soporte.usp_Negocio_ImportarFixture';
+    DECLARE @c_fuente VARCHAR(60) = 'openfootball worldcup.json';
+    DECLARE @v_errores VARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, '.json');
+    DECLARE @v_mensaje VARCHAR(2048);
+    DECLARE @v_json VARCHAR(MAX);
     DECLARE @v_leidas INT = 0;
     DECLARE @v_insertadas INT = 0;
     DECLARE @v_actualizadas INT = 0;
@@ -66,11 +66,11 @@ BEGIN
     SET @id_importacion = NULL;
 
     IF @@TRANCOUNT > 0
-        SET @v_errores += N'no puede ejecutarse dentro de una transaccion; ';
+        SET @v_errores += 'no puede ejecutarse dentro de una transaccion; ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_mensaje = LEFT(CONCAT(@c_sp, N': ', @v_errores), 2048);
+        SET @v_mensaje = LEFT(CONCAT(@c_sp, ': ', @v_errores), 2048);
         THROW 50001, @v_mensaje, 1;
     END
 
@@ -85,9 +85,9 @@ BEGIN
         EXEC soporte.usp_Archivo_Leer @archivo = @archivo, @contenido = @v_json OUTPUT;
 
         IF ISJSON(@v_json) <> 1
-            THROW 50002, N'el archivo no contiene un JSON valido', 1;
+            THROW 50002, 'el archivo no contiene un JSON valido', 1;
         IF JSON_QUERY(@v_json, '$.matches') IS NULL
-            THROW 50002, N'el JSON no tiene el arreglo "matches"', 1;
+            THROW 50002, 'el JSON no tiene el arreglo "matches"', 1;
 
         DELETE FROM soporte.stg_partido_json;
         INSERT INTO soporte.stg_partido_json (nro_fila, ronda, numero, fecha, hora, equipo1, equipo2, grupo, sede_texto)
@@ -97,21 +97,21 @@ BEGIN
         CROSS APPLY OPENJSON(a.value)
         WITH
         (
-            ronda   NVARCHAR(60)  '$.round',
-            numero  NVARCHAR(10)  '$.num',
-            fecha   NVARCHAR(20)  '$.date',
-            hora    NVARCHAR(30)  '$.time',
-            equipo1 NVARCHAR(150) '$.team1',
-            equipo2 NVARCHAR(150) '$.team2',
-            grupo   NVARCHAR(30)  '$.group',
-            sede    NVARCHAR(200) '$.ground'
+            ronda   VARCHAR(60)  '$.round',
+            numero  VARCHAR(10)  '$.num',
+            fecha   VARCHAR(20)  '$.date',
+            hora    VARCHAR(30)  '$.time',
+            equipo1 VARCHAR(150) '$.team1',
+            equipo2 VARCHAR(150) '$.team2',
+            grupo   VARCHAR(30)  '$.group',
+            sede    VARCHAR(200) '$.ground'
         ) AS d;
 
         SET @v_leidas = @@ROWCOUNT;
     END TRY
     BEGIN CATCH
         SET @v_mensaje = ERROR_MESSAGE();
-        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, N'(archivo)', @archivo, @v_mensaje;
+        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, '(archivo)', @archivo, @v_mensaje;
         EXEC soporte.usp_Importacion_Finalizar @id_importacion, 0, 0, 0, @error_general = 1, @mostrar_resumen = 0;
         THROW;
     END CATCH
@@ -122,25 +122,25 @@ BEGIN
     CREATE TABLE #partido
     (
         nro_fila      INT            NOT NULL PRIMARY KEY,
-        ronda         NVARCHAR(60) COLLATE DATABASE_DEFAULT   NULL,
+        ronda         VARCHAR(60) COLLATE DATABASE_DEFAULT   NULL,
         nro_fase      TINYINT        NULL,
-        fecha_texto   NVARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
-        hora_texto    NVARCHAR(30) COLLATE DATABASE_DEFAULT   NULL,
+        fecha_texto   VARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
+        hora_texto    VARCHAR(30) COLLATE DATABASE_DEFAULT   NULL,
         fecha_local   DATETIME2(0)   NULL,
         offset_min    INT            NULL,
         fecha_utc     DATETIME2(0)   NULL,
-        equipo1       NVARCHAR(150) COLLATE DATABASE_DEFAULT  NULL,
-        equipo2       NVARCHAR(150) COLLATE DATABASE_DEFAULT  NULL,
+        equipo1       VARCHAR(150) COLLATE DATABASE_DEFAULT  NULL,
+        equipo2       VARCHAR(150) COLLATE DATABASE_DEFAULT  NULL,
         grupo         CHAR(1) COLLATE DATABASE_DEFAULT        NULL,
-        sede_texto    NVARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
-        ciudad        NVARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
+        sede_texto    VARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
+        ciudad        VARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
         id_sede       INT            NULL,
         cant_sedes    INT            NULL,
         id_sel1       INT            NULL,
         id_sel2       INT            NULL,
         grupo_sel1    CHAR(1) COLLATE DATABASE_DEFAULT        NULL,
         grupo_sel2    CHAR(1) COLLATE DATABASE_DEFAULT        NULL,
-        error         NVARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
+        error         VARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
     );
 
     INSERT INTO #partido (nro_fila, ronda, fecha_texto, hora_texto, equipo1, equipo2, grupo, sede_texto)
@@ -150,32 +150,32 @@ BEGIN
            soporte.fn_Limpiar(s.hora),
            soporte.fn_Limpiar(s.equipo1),
            soporte.fn_Limpiar(s.equipo2),
-           CASE WHEN soporte.fn_Limpiar(s.grupo) LIKE N'Group [A-Z]' THEN RIGHT(soporte.fn_Limpiar(s.grupo), 1) END,
+           CASE WHEN soporte.fn_Limpiar(s.grupo) LIKE 'Group [A-Z]' THEN RIGHT(soporte.fn_Limpiar(s.grupo), 1) END,
            soporte.fn_Limpiar(s.sede_texto)
     FROM soporte.stg_partido_json AS s;
 
     UPDATE p
     SET nro_fase = CASE
-                       WHEN p.ronda LIKE N'Matchday%' THEN 1
-                       WHEN p.ronda = N'Round of 32' THEN 2
-                       WHEN p.ronda = N'Round of 16' THEN 3
-                       WHEN p.ronda = N'Quarter-final' THEN 4
-                       WHEN p.ronda = N'Semi-final' THEN 5
-                       WHEN p.ronda = N'Match for third place' THEN 6
-                       WHEN p.ronda = N'Final' THEN 7
+                       WHEN p.ronda LIKE 'Matchday%' THEN 1
+                       WHEN p.ronda = 'Round of 32' THEN 2
+                       WHEN p.ronda = 'Round of 16' THEN 3
+                       WHEN p.ronda = 'Quarter-final' THEN 4
+                       WHEN p.ronda = 'Semi-final' THEN 5
+                       WHEN p.ronda = 'Match for third place' THEN 6
+                       WHEN p.ronda = 'Final' THEN 7
                    END,
         -- "13:00 UTC-6": hora local y desplazamiento respecto de UTC
-        fecha_local = TRY_CONVERT(DATETIME2(0), CONCAT(p.fecha_texto, N'T', LEFT(p.hora_texto, CHARINDEX(N' ', p.hora_texto + N' ') - 1), N':00'), 126),
+        fecha_local = TRY_CONVERT(DATETIME2(0), CONCAT(p.fecha_texto, 'T', LEFT(p.hora_texto, CHARINDEX(' ', p.hora_texto + ' ') - 1), ':00'), 126),
         offset_min = CASE
-                         WHEN SUBSTRING(p.hora_texto, CHARINDEX(N' ', p.hora_texto + N' ') + 1, 30) = N'UTC' THEN 0
-                         WHEN SUBSTRING(p.hora_texto, CHARINDEX(N' ', p.hora_texto + N' ') + 1, 30) LIKE N'UTC[+-]%'
-                         THEN TRY_CONVERT(INT, SUBSTRING(p.hora_texto, CHARINDEX(N' ', p.hora_texto + N' ') + 4, 10)) * 60
+                         WHEN SUBSTRING(p.hora_texto, CHARINDEX(' ', p.hora_texto + ' ') + 1, 30) = 'UTC' THEN 0
+                         WHEN SUBSTRING(p.hora_texto, CHARINDEX(' ', p.hora_texto + ' ') + 1, 30) LIKE 'UTC[+-]%'
+                         THEN TRY_CONVERT(INT, SUBSTRING(p.hora_texto, CHARINDEX(' ', p.hora_texto + ' ') + 4, 10)) * 60
                      END,
         ciudad = CASE
-                     WHEN CHARINDEX(N'(', p.sede_texto) > 0 AND CHARINDEX(N')', p.sede_texto) > CHARINDEX(N'(', p.sede_texto)
+                     WHEN CHARINDEX('(', p.sede_texto) > 0 AND CHARINDEX(')', p.sede_texto) > CHARINDEX('(', p.sede_texto)
                      THEN soporte.fn_Limpiar(SUBSTRING(p.sede_texto,
-                                                       CHARINDEX(N'(', p.sede_texto) + 1,
-                                                       CHARINDEX(N')', p.sede_texto) - CHARINDEX(N'(', p.sede_texto) - 1))
+                                                       CHARINDEX('(', p.sede_texto) + 1,
+                                                       CHARINDEX(')', p.sede_texto) - CHARINDEX('(', p.sede_texto) - 1))
                      ELSE p.sede_texto
                  END
     FROM #partido AS p;
@@ -207,26 +207,26 @@ BEGIN
 
     UPDATE p
     SET error = NULLIF(CONCAT(
-            CASE WHEN p.nro_fase IS NULL THEN CONCAT(N'ronda desconocida (', ISNULL(p.ronda, N'vacia'), N'); ') END,
-            CASE WHEN p.fecha_local IS NULL THEN CONCAT(N'fecha u hora invalidas (', ISNULL(p.fecha_texto, N'?'), N' ', ISNULL(p.hora_texto, N'?'), N'); ') END,
+            CASE WHEN p.nro_fase IS NULL THEN CONCAT('ronda desconocida (', ISNULL(p.ronda, 'vacia'), '); ') END,
+            CASE WHEN p.fecha_local IS NULL THEN CONCAT('fecha u hora invalidas (', ISNULL(p.fecha_texto, '?'), ' ', ISNULL(p.hora_texto, '?'), '); ') END,
             CASE WHEN p.fecha_local IS NOT NULL AND p.offset_min IS NULL
-                 THEN CONCAT(N'desplazamiento horario invalido (', p.hora_texto, N'); ') END,
-            CASE WHEN p.id_sel1 IS NULL THEN CONCAT(N'seleccion inexistente: ', ISNULL(p.equipo1, N'vacia'), N'; ') END,
-            CASE WHEN p.id_sel2 IS NULL THEN CONCAT(N'seleccion inexistente: ', ISNULL(p.equipo2, N'vacia'), N'; ') END,
-            CASE WHEN p.cant_sedes = 0 OR p.id_sede IS NULL THEN CONCAT(N'no hay sede registrada en la ciudad ', ISNULL(p.ciudad, N'vacia'), N'; ')
-                 WHEN p.cant_sedes > 1 THEN CONCAT(N'hay mas de una sede en la ciudad ', p.ciudad, N'; ') END,
+                 THEN CONCAT('desplazamiento horario invalido (', p.hora_texto, '); ') END,
+            CASE WHEN p.id_sel1 IS NULL THEN CONCAT('seleccion inexistente: ', ISNULL(p.equipo1, 'vacia'), '; ') END,
+            CASE WHEN p.id_sel2 IS NULL THEN CONCAT('seleccion inexistente: ', ISNULL(p.equipo2, 'vacia'), '; ') END,
+            CASE WHEN p.cant_sedes = 0 OR p.id_sede IS NULL THEN CONCAT('no hay sede registrada en la ciudad ', ISNULL(p.ciudad, 'vacia'), '; ')
+                 WHEN p.cant_sedes > 1 THEN CONCAT('hay mas de una sede en la ciudad ', p.ciudad, '; ') END,
             CASE WHEN p.nro_fase = 1 AND p.grupo IS NOT NULL
                   AND (p.grupo_sel1 <> p.grupo OR p.grupo_sel2 <> p.grupo)
-                 THEN CONCAT(N'las selecciones no pertenecen al grupo ', p.grupo, N'; ') END,
+                 THEN CONCAT('las selecciones no pertenecen al grupo ', p.grupo, '; ') END,
             CASE WHEN EXISTS (SELECT 1 FROM #partido AS d
                               WHERE d.nro_fila < p.nro_fila AND d.nro_fase = p.nro_fase
                                 AND ((d.id_sel1 = p.id_sel1 AND d.id_sel2 = p.id_sel2) OR (d.id_sel1 = p.id_sel2 AND d.id_sel2 = p.id_sel1)))
-                 THEN N'partido repetido en el archivo; ' END
-        ), N'')
+                 THEN 'partido repetido en el archivo; ' END
+        ), '')
     FROM #partido AS p;
 
     DECLARE @v_fila INT = 0;
-    DECLARE @v_texto NVARCHAR(1000);
+    DECLARE @v_texto VARCHAR(1000);
 
     WHILE 1 = 1
     BEGIN
@@ -243,7 +243,7 @@ BEGIN
     ---------------------------------------------------------------------------
     -- 3. Upsert fila por fila
     ---------------------------------------------------------------------------
-    DECLARE @v_fase TINYINT, @v_fecha DATETIME2(0), @v_id_sede INT, @v_sel1 INT, @v_sel2 INT, @v_clave NVARCHAR(400);
+    DECLARE @v_fase TINYINT, @v_fecha DATETIME2(0), @v_id_sede INT, @v_sel1 INT, @v_sel2 INT, @v_clave VARCHAR(400);
     DECLARE @v_id_partido INT, @v_fecha_act DATETIME2(0), @v_sede_act INT, @v_estado_act VARCHAR(12);
     DECLARE @v_asistencia_act INT, @v_penales_act BIT;
 
@@ -257,7 +257,7 @@ BEGIN
             @v_id_sede = p.id_sede,
             @v_sel1 = p.id_sel1,
             @v_sel2 = p.id_sel2,
-            @v_clave = CONCAT(p.equipo1, N' vs ', p.equipo2, N' (', p.fecha_texto, N')')
+            @v_clave = CONCAT(p.equipo1, ' vs ', p.equipo2, ' (', p.fecha_texto, ')')
         FROM #partido AS p
         WHERE p.error IS NULL AND p.nro_fila > @v_fila
         ORDER BY p.nro_fila;
@@ -311,7 +311,7 @@ BEGIN
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SET @v_mensaje = ERROR_MESSAGE();
-            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, N'partido', @v_clave, @v_mensaje;
+            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, 'partido', @v_clave, @v_mensaje;
             SET @v_con_error += 1;
         END CATCH
     END

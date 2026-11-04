@@ -16,9 +16,9 @@ GO
 
 SET NOCOUNT ON;
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBAS EXITOSAS: 83_Test_Importacion_Economia_OK';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBAS EXITOSAS: 83_Test_Importacion_Economia_OK';
+PRINT '=====================================================================';
 GO
 
 -------------------------------------------------------------------------------
@@ -27,8 +27,8 @@ GO
 -- fecha, cotizacion_usd(EUR) es el valor del USD en el archivo y
 -- cotizacion_usd(X) = valor del USD / valor de X.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 1: cotizaciones del BCE (XML)';
-DECLARE @v_archivo NVARCHAR(260) = N'C:\Mundial2026\datos\eurofxref-hist-90d.xml';
+PRINT '-> Test 1: cotizaciones del BCE (XML)';
+DECLARE @v_archivo VARCHAR(260) = 'C:\Mundial2026\datos\eurofxref-hist-90d.xml';
 DECLARE @v_id INT;
 DECLARE @v_antes INT = (SELECT COUNT(*) FROM publicidad.tipo_cambio);
 
@@ -37,9 +37,9 @@ EXEC soporte.usp_Importar_TipoCambioXml @archivo = @v_archivo, @id_importacion =
 SELECT @v_antes AS cotizaciones_antes, (SELECT COUNT(*) FROM publicidad.tipo_cambio) AS cotizaciones_despues,
        CASE WHEN (SELECT COUNT(*) FROM publicidad.tipo_cambio) = @v_antes
              AND (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id) = 'OK'
-            THEN N'PASS sin duplicados' ELSE N'FAIL' END AS resultado;
+            THEN 'PASS sin duplicados' ELSE 'FAIL' END AS resultado;
 
-PRINT N'--- Evidencia: ultima fecha importada, EUR y otras monedas expresadas en USD ---';
+PRINT '--- Evidencia: ultima fecha importada, EUR y otras monedas expresadas en USD ---';
 SELECT TOP (8) m.cod_iso4217, m.nombre, tc.fecha, tc.cotizacion_usd,
        CONVERT(DECIMAL(18,4), 1 / tc.cotizacion_usd) AS unidades_por_usd
 FROM publicidad.tipo_cambio AS tc
@@ -54,17 +54,17 @@ GO
 -- Resultado esperado: estado OK; cotizacion_usd(X) = 1 / (X por USD).
 -- Al repetir la llamada no se agregan filas.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 2: API Frankfurter';
+PRINT '-> Test 2: API Frankfurter';
 DECLARE @v_id1 INT, @v_id2 INT;
 DECLARE @v_despues1 INT;
 
 EXEC soporte.usp_Importar_TipoCambioApi
-    @fecha_desde = '2026-06-11', @fecha_hasta = '2026-07-19', @monedas = N'EUR,MXN,CAD,GBP,BRL,JPY',
+    @fecha_desde = '2026-06-11', @fecha_hasta = '2026-07-19', @monedas = 'EUR,MXN,CAD,GBP,BRL,JPY',
     @id_importacion = @v_id1 OUTPUT;
 SET @v_despues1 = (SELECT COUNT(*) FROM publicidad.tipo_cambio);
 
 EXEC soporte.usp_Importar_TipoCambioApi
-    @fecha_desde = '2026-06-11', @fecha_hasta = '2026-07-19', @monedas = N'EUR,MXN,CAD,GBP,BRL,JPY',
+    @fecha_desde = '2026-06-11', @fecha_hasta = '2026-07-19', @monedas = 'EUR,MXN,CAD,GBP,BRL,JPY',
     @id_importacion = @v_id2 OUTPUT;
 
 SELECT (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id1) AS estado_primera,
@@ -73,9 +73,9 @@ SELECT (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id1) AS
        (SELECT COUNT(*) FROM publicidad.tipo_cambio) AS cotizaciones_tras_segunda,
        CASE WHEN (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id1) = 'OK'
              AND (SELECT COUNT(*) FROM publicidad.tipo_cambio) = @v_despues1
-            THEN N'PASS' ELSE N'FAIL' END AS resultado;
+            THEN 'PASS' ELSE 'FAIL' END AS resultado;
 
-PRINT N'--- Evidencia: tarifa de 1000 MXN el dia de la final convertida a USD ---';
+PRINT '--- Evidencia: tarifa de 1000 MXN el dia de la final convertida a USD ---';
 SELECT m.cod_iso4217, tc.fecha, tc.cotizacion_usd,
        publicidad.fn_ImporteEnUSD(1000, m.id_moneda, '2026-07-19') AS mil_unidades_en_usd
 FROM publicidad.moneda AS m
@@ -89,7 +89,7 @@ GO
 -- Resultado esperado: estado OK; los agregados regionales se omiten; al
 -- repetir la llamada no se agregan filas (un registro por país y año).
 -------------------------------------------------------------------------------
-PRINT N'-> Test 3: API del Banco Mundial';
+PRINT '-> Test 3: API del Banco Mundial';
 DECLARE @v_id1 INT, @v_id2 INT, @v_despues1 INT;
 
 EXEC soporte.usp_Importar_IndicadorApi @anio_desde = 2022, @anio_hasta = 2024, @id_importacion = @v_id1 OUTPUT;
@@ -103,9 +103,9 @@ SELECT (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id1) AS
        CASE WHEN (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id1) = 'OK'
              AND (SELECT COUNT(*) FROM geo.indicador_pais) = @v_despues1
              AND @v_despues1 > 0
-            THEN N'PASS' ELSE N'FAIL' END AS resultado;
+            THEN 'PASS' ELSE 'FAIL' END AS resultado;
 
-PRINT N'--- Evidencia: mercados de mayor PBI per capita en 2024 entre las selecciones ---';
+PRINT '--- Evidencia: mercados de mayor PBI per capita en 2024 entre las selecciones ---';
 SELECT TOP (10) p.nombre, i.anio, i.valor AS pbi_per_capita_usd
 FROM geo.indicador_pais AS i
 JOIN geo.pais AS p ON p.id_pais = i.id_pais
@@ -114,7 +114,7 @@ WHERE i.codigo_indicador = 'NY.GDP.PCAP.CD' AND i.anio = 2024
 ORDER BY i.valor DESC;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBAS EXITOSAS: 83_Test_Importacion_Economia_OK';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBAS EXITOSAS: 83_Test_Importacion_Economia_OK';
+PRINT '=====================================================================';
 GO

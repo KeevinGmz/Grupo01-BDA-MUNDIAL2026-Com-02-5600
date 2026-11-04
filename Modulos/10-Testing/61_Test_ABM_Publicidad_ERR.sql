@@ -13,28 +13,28 @@ GO
 SET NOCOUNT ON;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBAS DE ERROR: 61_Test_ABM_Publicidad_ERR';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBAS DE ERROR: 61_Test_ABM_Publicidad_ERR';
+PRINT '=====================================================================';
 GO
 
 /* =====================================================================
    CASO 1: tarifa con importe igual a cero
 ===================================================================== */
-PRINT N'';
-PRINT N'-> Test 1: insertar tarifa con importe igual a cero';
+PRINT '';
+PRINT '-> Test 1: insertar tarifa con importe igual a cero';
 
 DECLARE @v_id_franja TINYINT;
 DECLARE @v_id_moneda TINYINT;
 DECLARE @v_id_tarifa INT;
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
 DECLARE @v_filas_antes INT;
 DECLARE @v_filas_despues INT;
 
-IF OBJECT_ID(N'publicidad.usp_Tarifa_Insertar', N'P') IS NULL
+IF OBJECT_ID('publicidad.usp_Tarifa_Insertar', 'P') IS NULL
 BEGIN
-    ;THROW 50001,N'61_Test_ABM_Publicidad_ERR: no existe publicidad.usp_Tarifa_Insertar', 1;
+    ;THROW 50001,'61_Test_ABM_Publicidad_ERR: no existe publicidad.usp_Tarifa_Insertar', 1;
 END;
 
 SELECT TOP (1)
@@ -53,7 +53,7 @@ ORDER BY f.id_franja, m.id_moneda;
 
 IF @v_id_franja IS NULL OR @v_id_moneda IS NULL
 BEGIN
-    ;THROW 50001,N'61_Test_ABM_Publicidad_ERR: se requiere una combinacion franja-moneda libre para el Test 1',1;
+    ;THROW 50001,'61_Test_ABM_Publicidad_ERR: se requiere una combinacion franja-moneda libre para el Test 1',1;
 END;
 
 SELECT @v_filas_antes = COUNT(*)
@@ -71,7 +71,7 @@ BEGIN TRY
         @id_tarifa = @v_id_tarifa OUTPUT;
 
     SET @v_error_numero = 0;
-    SET @v_error_mensaje = N'El SP no lanzo la excepcion esperada';
+    SET @v_error_mensaje = 'El SP no lanzo la excepcion esperada';
 END TRY
 BEGIN CATCH
     SET @v_error_numero = ERROR_NUMBER();
@@ -86,26 +86,26 @@ WHERE t.id_franja = @v_id_franja
 IF @@TRANCOUNT > 0
     ROLLBACK TRANSACTION;
 
-PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
+PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
 
 IF @v_error_numero = 50001
-   AND @v_error_mensaje LIKE N'%importe%debe ser mayor a 0%'
+   AND @v_error_mensaje LIKE '%importe%debe ser mayor a 0%'
    AND @v_filas_antes = 0
    AND @v_filas_despues = 0
 BEGIN
-    PRINT N'PASS Test 1: se rechazo la tarifa con importe cero.';
+    PRINT 'PASS Test 1: se rechazo la tarifa con importe cero.';
 END
 ELSE
 BEGIN
-    PRINT N'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
+    PRINT 'FAIL Test 1: numero, mensaje o persistencia distintos de lo esperado.';
 END;
 GO
 
 /* =====================================================================
    CASO 2: V-12, orden de prioridad fuera del rango 1 a 4
 ===================================================================== */
-PRINT N'';
-PRINT N'-> Test 2: insertar exhibicion con orden_prioridad igual a 5';
+PRINT '';
+PRINT '-> Test 2: insertar exhibicion con orden_prioridad igual a 5';
 
 DECLARE @v_id_partido INT;
 DECLARE @v_id_sede INT;
@@ -114,15 +114,15 @@ DECLARE @v_id_pieza INT;
 DECLARE @v_id_tarifa INT;
 DECLARE @v_id_exhibicion INT;
 DECLARE @v_error_numero INT = NULL;
-DECLARE @v_error_mensaje NVARCHAR(2048) = NULL;
+DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
 DECLARE @v_filas_antes INT;
 DECLARE @v_filas_despues INT;
 DECLARE @v_fecha_hora_emision DATETIME2(0) = SYSUTCDATETIME();
 
-IF OBJECT_ID(N'publicidad.usp_Exhibicion_Insertar', N'P') IS NULL
+IF OBJECT_ID('publicidad.usp_Exhibicion_Insertar', 'P') IS NULL
 BEGIN
     ;THROW 50001,
-           N'61_Test_ABM_Publicidad_ERR: no existe publicidad.usp_Exhibicion_Insertar',
+           '61_Test_ABM_Publicidad_ERR: no existe publicidad.usp_Exhibicion_Insertar',
            1;
 END;
 
@@ -163,7 +163,7 @@ IF @v_id_partido IS NULL
    OR @v_id_tarifa IS NULL
 BEGIN
     ;THROW 50001,
-           N'61_Test_ABM_Publicidad_ERR: faltan referencias validas para preparar el Test 2',
+           '61_Test_ABM_Publicidad_ERR: faltan referencias validas para preparar el Test 2',
            1;
 END;
 
@@ -189,7 +189,7 @@ BEGIN TRY
         @id_exhibicion = @v_id_exhibicion OUTPUT;
 
     SET @v_error_numero = 0;
-    SET @v_error_mensaje = N'El SP no lanzo la excepcion esperada';
+    SET @v_error_mensaje = 'El SP no lanzo la excepcion esperada';
 END TRY
 BEGIN CATCH
     SET @v_error_numero = ERROR_NUMBER();
@@ -205,7 +205,7 @@ WHERE x.id_partido = @v_id_partido
 IF @@TRANCOUNT > 0
     ROLLBACK TRANSACTION;
 
-PRINT CONCAT(N'Error capturado ', @v_error_numero, N': ', @v_error_mensaje);
+PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
 
 SELECT
     @v_id_partido AS id_partido_prueba,
@@ -218,21 +218,21 @@ SELECT
     @v_filas_despues AS filas_despues;
 
 IF @v_error_numero = 50001
-   AND @v_error_mensaje LIKE N'%orden_prioridad%entre 1 y 4%'
+   AND @v_error_mensaje LIKE '%orden_prioridad%entre 1 y 4%'
    AND @v_filas_antes = 0
    AND @v_filas_despues = 0
 BEGIN
-    PRINT N'PASS Test 2: se rechazo la quinta prioridad y no se inserto la exhibicion.';
+    PRINT 'PASS Test 2: se rechazo la quinta prioridad y no se inserto la exhibicion.';
 END
 ELSE
 BEGIN
-    PRINT N'FAIL Test 2: numero, mensaje o persistencia distintos de lo esperado.';
+    PRINT 'FAIL Test 2: numero, mensaje o persistencia distintos de lo esperado.';
 END;
 GO
 
-PRINT N'';
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBAS DE ERROR: 61_Test_ABM_Publicidad_ERR';
-PRINT N'Cada caso ejecuto su propio ROLLBACK.';
-PRINT N'=====================================================================';
+PRINT '';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBAS DE ERROR: 61_Test_ABM_Publicidad_ERR';
+PRINT 'Cada caso ejecuto su propio ROLLBACK.';
+PRINT '=====================================================================';
 GO

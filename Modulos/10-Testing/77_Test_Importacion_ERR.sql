@@ -15,9 +15,9 @@ GO
 
 SET NOCOUNT ON;
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBAS DE ERROR: 77_Test_Importacion_ERR';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBAS DE ERROR: 77_Test_Importacion_ERR';
+PRINT '=====================================================================';
 GO
 
 -------------------------------------------------------------------------------
@@ -25,12 +25,12 @@ GO
 -- Resultado esperado: excepción 50002; la importación queda registrada
 -- CON_ERROR con el motivo en soporte.importacion_error.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 1: archivo de fixture inexistente';
-DECLARE @v_archivo NVARCHAR(260) = N'C:\Ruta_Inexistente_Mundial2026\fixture_que_no_existe_77.json';
-DECLARE @v_id INT, @v_nro INT, @v_msj NVARCHAR(2048);
+PRINT '-> Test 1: archivo de fixture inexistente';
+DECLARE @v_archivo VARCHAR(260) = 'C:\Ruta_Inexistente_Mundial2026\fixture_que_no_existe_77.json';
+DECLARE @v_id INT, @v_nro INT, @v_msj VARCHAR(2048);
 BEGIN TRY
     EXEC soporte.usp_Negocio_ImportarFixture @archivo = @v_archivo, @id_importacion = @v_id OUTPUT;
-    SELECT @v_nro = 0, @v_msj = N'no se lanzo la excepcion esperada';
+    SELECT @v_nro = 0, @v_msj = 'no se lanzo la excepcion esperada';
 END TRY
 BEGIN CATCH
     SELECT @v_nro = ERROR_NUMBER(), @v_msj = ERROR_MESSAGE();
@@ -40,7 +40,7 @@ SELECT TOP (1) @v_id = id_importacion FROM soporte.importacion WHERE archivo = @
 
 SELECT @v_nro AS error_numero, @v_msj AS error_mensaje,
        CASE WHEN @v_nro = 50002 AND (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id) = 'CON_ERROR'
-            THEN N'PASS' ELSE N'FAIL' END AS resultado;
+            THEN 'PASS' ELSE 'FAIL' END AS resultado;
 
 SELECT e.nro_fila, e.columna, e.mensaje FROM soporte.importacion_error AS e WHERE e.id_importacion = @v_id;
 GO
@@ -49,33 +49,33 @@ GO
 -- Caso 2: extensión no admitida y ruta con comilla
 -- Resultado esperado: excepción 50001 antes de registrar la importación.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 2: ruta invalida';
+PRINT '-> Test 2: ruta invalida';
 DECLARE @v_antes INT = (SELECT COUNT(*) FROM soporte.importacion);
-DECLARE @v_nro INT, @v_msj NVARCHAR(2048);
+DECLARE @v_nro INT, @v_msj VARCHAR(2048);
 BEGIN TRY
-    EXEC soporte.usp_Negocio_ImportarFixture @archivo = N'C:\Mundial2026\datos\fixture''2026.csv';
-    SELECT @v_nro = 0, @v_msj = N'no se lanzo la excepcion esperada';
+    EXEC soporte.usp_Negocio_ImportarFixture @archivo = 'C:\Mundial2026\datos\fixture''2026.csv';
+    SELECT @v_nro = 0, @v_msj = 'no se lanzo la excepcion esperada';
 END TRY
 BEGIN CATCH
     SELECT @v_nro = ERROR_NUMBER(), @v_msj = ERROR_MESSAGE();
 END CATCH;
 
 SELECT @v_nro AS error_numero, @v_msj AS error_mensaje,
-       CASE WHEN @v_nro = 50001 AND @v_msj LIKE N'%comillas%' AND @v_msj LIKE N'%extension%'
+       CASE WHEN @v_nro = 50001 AND @v_msj LIKE '%comillas%' AND @v_msj LIKE '%extension%'
              AND (SELECT COUNT(*) FROM soporte.importacion) = @v_antes
-            THEN N'PASS' ELSE N'FAIL' END AS resultado;
+            THEN 'PASS' ELSE 'FAIL' END AS resultado;
 GO
 
 -------------------------------------------------------------------------------
 -- Caso 3: ejecución dentro de una transacción
 -- Resultado esperado: excepción 50001 (la importación confirma fila a fila).
 -------------------------------------------------------------------------------
-PRINT N'-> Test 3: importacion dentro de una transaccion';
-DECLARE @v_nro INT, @v_msj NVARCHAR(2048);
+PRINT '-> Test 3: importacion dentro de una transaccio';
+DECLARE @v_nro INT, @v_msj VARCHAR(2048);
 BEGIN TRANSACTION;
 BEGIN TRY
-    EXEC soporte.usp_Negocio_ImportarFixture @archivo = N'C:\Mundial2026\datos\worldcup.json';
-    SELECT @v_nro = 0, @v_msj = N'no se lanzo la excepcion esperada';
+    EXEC soporte.usp_Negocio_ImportarFixture @archivo = 'C:\Mundial2026\datos\worldcup.json';
+    SELECT @v_nro = 0, @v_msj = 'no se lanzo la excepcion esperada';
 END TRY
 BEGIN CATCH
     SELECT @v_nro = ERROR_NUMBER(), @v_msj = ERROR_MESSAGE();
@@ -83,7 +83,7 @@ END CATCH;
 IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
 SELECT @v_nro AS error_numero, @v_msj AS error_mensaje,
-       CASE WHEN @v_nro = 50001 AND @v_msj LIKE N'%transaccion%' THEN N'PASS' ELSE N'FAIL' END AS resultado;
+       CASE WHEN @v_nro = 50001 AND @v_msj LIKE '%transaccion%' THEN 'PASS' ELSE 'FAIL' END AS resultado;
 GO
 
 -------------------------------------------------------------------------------
@@ -95,8 +95,8 @@ GO
 -- Resultado esperado: estado CON_ERROR, 1 fila ok y 6 errores (uno por fila
 -- rechazada, con todos sus motivos), sin partidos nuevos.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 4: fixture con errores parciales';
-DECLARE @v_archivo NVARCHAR(260) = N'C:\Mundial2026\datos\pruebas\fixture_con_errores.json';
+PRINT '-> Test 4: fixture con errores parciales';
+DECLARE @v_archivo VARCHAR(260) = 'C:\Mundial2026\datos\pruebas\fixture_con_errores.json';
 DECLARE @v_id INT;
 DECLARE @v_antes INT = (SELECT COUNT(*) FROM torneo.partido);
 
@@ -105,12 +105,12 @@ EXEC soporte.usp_Negocio_ImportarFixture @archivo = @v_archivo, @id_importacion 
 SELECT i.estado, i.filas_leidas, i.filas_ok, i.filas_error,
        CASE WHEN i.estado = 'CON_ERROR' AND i.filas_ok = 1 AND i.filas_error = 6
              AND (SELECT COUNT(*) FROM torneo.partido) = @v_antes
-            THEN N'PASS' ELSE N'FAIL' END AS resultado
+            THEN 'PASS' ELSE 'FAIL' END AS resultado
 FROM soporte.importacion AS i
 WHERE i.id_importacion = @v_id;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBAS DE ERROR: 77_Test_Importacion_ERR';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBAS DE ERROR: 77_Test_Importacion_ERR';
+PRINT '=====================================================================';
 GO

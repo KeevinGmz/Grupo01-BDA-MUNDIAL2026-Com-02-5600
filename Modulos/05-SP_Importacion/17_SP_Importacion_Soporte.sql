@@ -35,7 +35,7 @@ BEGIN
     END
 END
 ELSE
-    PRINT N'Aviso: no se pudo habilitar Ole Automation Procedures (se requiere sysadmin). Las importaciones por HTTP no van a funcionar.';
+    PRINT 'Aviso: no se pudo habilitar Ole Automation Procedures (se requiere sysadmin). Las importaciones por HTTP no van a funcionar.';
 GO
 
 -- ============================================================================
@@ -46,23 +46,23 @@ GO
 -- Devuelve NULL si el resultado queda vacío.
 CREATE OR ALTER FUNCTION soporte.fn_Limpiar
 (
-    @texto NVARCHAR(MAX)
+    @texto VARCHAR(MAX)
 )
-RETURNS NVARCHAR(MAX)
+RETURNS VARCHAR(MAX)
 AS
 BEGIN
-    DECLARE @v_texto NVARCHAR(MAX) = @texto;
+    DECLARE @v_texto VARCHAR(MAX) = @texto;
 
-    SET @v_texto = REPLACE(@v_texto, NCHAR(65279), N'');   -- BOM
-    SET @v_texto = REPLACE(@v_texto, NCHAR(160), N' ');    -- espacio duro
-    SET @v_texto = REPLACE(@v_texto, NCHAR(9), N' ');
-    SET @v_texto = REPLACE(@v_texto, NCHAR(13), N' ');
-    SET @v_texto = REPLACE(@v_texto, NCHAR(10), N' ');
+    SET @v_texto = REPLACE(@v_texto, NCHAR(65279), '');   -- BOM
+    SET @v_texto = REPLACE(@v_texto, NCHAR(160), ' ');    -- espacio duro
+    SET @v_texto = REPLACE(@v_texto, NCHAR(9), ' ');
+    SET @v_texto = REPLACE(@v_texto, NCHAR(13), ' ');
+    SET @v_texto = REPLACE(@v_texto, NCHAR(10), ' ');
 
-    WHILE CHARINDEX(N'  ', @v_texto) > 0
-        SET @v_texto = REPLACE(@v_texto, N'  ', N' ');
+    WHILE CHARINDEX('  ', @v_texto) > 0
+        SET @v_texto = REPLACE(@v_texto, '  ', ' ');
 
-    RETURN NULLIF(LTRIM(RTRIM(@v_texto)), N'');
+    RETURN NULLIF(LTRIM(RTRIM(@v_texto)), '');
 END;
 GO
 
@@ -71,15 +71,15 @@ GO
 -- etiquetas y las referencias [n], y decodifica las entidades más comunes.
 CREATE OR ALTER FUNCTION soporte.fn_HtmlATexto
 (
-    @html NVARCHAR(MAX)
+    @html VARCHAR(MAX)
 )
-RETURNS NVARCHAR(MAX)
+RETURNS VARCHAR(MAX)
 AS
 BEGIN
-    DECLARE @v_texto NVARCHAR(MAX) = @html;
+    DECLARE @v_texto VARCHAR(MAX) = @html;
     DECLARE @v_ini INT;
     DECLARE @v_fin INT;
-    DECLARE @v_oculto NVARCHAR(40) = N'<span style="display:none">';
+    DECLARE @v_oculto VARCHAR(40) = '<span style="display:none">';
 
     IF @v_texto IS NULL
         RETURN NULL;
@@ -88,45 +88,45 @@ BEGIN
     SET @v_ini = CHARINDEX(@v_oculto, @v_texto);
     WHILE @v_ini > 0
     BEGIN
-        SET @v_fin = CHARINDEX(N'</span>', @v_texto, @v_ini);
+        SET @v_fin = CHARINDEX('</span>', @v_texto, @v_ini);
         IF @v_fin = 0
             BREAK;
-        SET @v_texto = STUFF(@v_texto, @v_ini, @v_fin + 7 - @v_ini, N'');
+        SET @v_texto = STUFF(@v_texto, @v_ini, @v_fin + 7 - @v_ini, '');
         SET @v_ini = CHARINDEX(@v_oculto, @v_texto);
     END
 
     -- 2) Referencias al pie: <sup ...>...</sup>
-    SET @v_ini = CHARINDEX(N'<sup', @v_texto);
+    SET @v_ini = CHARINDEX('<sup', @v_texto);
     WHILE @v_ini > 0
     BEGIN
-        SET @v_fin = CHARINDEX(N'</sup>', @v_texto, @v_ini);
+        SET @v_fin = CHARINDEX('</sup>', @v_texto, @v_ini);
         IF @v_fin = 0
             BREAK;
-        SET @v_texto = STUFF(@v_texto, @v_ini, @v_fin + 6 - @v_ini, N'');
-        SET @v_ini = CHARINDEX(N'<sup', @v_texto);
+        SET @v_texto = STUFF(@v_texto, @v_ini, @v_fin + 6 - @v_ini, '');
+        SET @v_ini = CHARINDEX('<sup', @v_texto);
     END
 
     -- 3) Resto de las etiquetas
-    SET @v_ini = CHARINDEX(N'<', @v_texto);
+    SET @v_ini = CHARINDEX('<', @v_texto);
     WHILE @v_ini > 0
     BEGIN
-        SET @v_fin = CHARINDEX(N'>', @v_texto, @v_ini);
+        SET @v_fin = CHARINDEX('>', @v_texto, @v_ini);
         IF @v_fin = 0
             BREAK;
-        SET @v_texto = STUFF(@v_texto, @v_ini, @v_fin - @v_ini + 1, N' ');
-        SET @v_ini = CHARINDEX(N'<', @v_texto, @v_ini);
+        SET @v_texto = STUFF(@v_texto, @v_ini, @v_fin - @v_ini + 1, ' ');
+        SET @v_ini = CHARINDEX('<', @v_texto, @v_ini);
     END
 
     -- 4) Entidades HTML frecuentes (&amp; al final para no generar otras)
-    SET @v_texto = REPLACE(@v_texto, N'&nbsp;', N' ');
-    SET @v_texto = REPLACE(@v_texto, N'&#160;', N' ');
-    SET @v_texto = REPLACE(@v_texto, N'&quot;', N'"');
-    SET @v_texto = REPLACE(@v_texto, N'&#39;', N'''');
-    SET @v_texto = REPLACE(@v_texto, N'&#039;', N'''');
-    SET @v_texto = REPLACE(@v_texto, N'&lt;', N'<');
-    SET @v_texto = REPLACE(@v_texto, N'&gt;', N'>');
-    SET @v_texto = REPLACE(@v_texto, N'&ndash;', NCHAR(8211));
-    SET @v_texto = REPLACE(@v_texto, N'&amp;', N'&');
+    SET @v_texto = REPLACE(@v_texto, '&nbsp;', ' ');
+    SET @v_texto = REPLACE(@v_texto, '&#160;', ' ');
+    SET @v_texto = REPLACE(@v_texto, '&quot;', '"');
+    SET @v_texto = REPLACE(@v_texto, '&#39;', '''');
+    SET @v_texto = REPLACE(@v_texto, '&#039;', '''');
+    SET @v_texto = REPLACE(@v_texto, '&lt;', '<');
+    SET @v_texto = REPLACE(@v_texto, '&gt;', '>');
+    SET @v_texto = REPLACE(@v_texto, '&ndash;', NCHAR(8211));
+    SET @v_texto = REPLACE(@v_texto, '&amp;', '&');
 
     RETURN soporte.fn_Limpiar(@v_texto);
 END;
@@ -137,12 +137,12 @@ GO
 -- Devuelve NULL si el texto no tiene un formato reconocible.
 CREATE OR ALTER FUNCTION soporte.fn_CoordenadaADecimal
 (
-    @texto NVARCHAR(60)
+    @texto VARCHAR(60)
 )
 RETURNS DECIMAL(9,6)
 AS
 BEGIN
-    DECLARE @v_texto NVARCHAR(60) = LTRIM(RTRIM(@texto));
+    DECLARE @v_texto VARCHAR(60) = LTRIM(RTRIM(@texto));
     DECLARE @v_hemisferio NCHAR(1);
     DECLARE @v_grados DECIMAL(12,6);
     DECLARE @v_minutos DECIMAL(12,6) = 0;
@@ -156,12 +156,12 @@ BEGIN
         RETURN NULL;
 
     SET @v_hemisferio = UPPER(RIGHT(@v_texto, 1));
-    IF @v_hemisferio NOT IN (N'N', N'S', N'E', N'W')
+    IF @v_hemisferio NOT IN ('', 'S', 'E', 'W')
         RETURN NULL;
 
     SET @v_texto = LEFT(@v_texto, LEN(@v_texto) - 1);
     -- Variantes tipográficas: primo (′) y doble primo (″).
-    SET @v_texto = REPLACE(REPLACE(@v_texto, NCHAR(8242), N''''), NCHAR(8243), N'"');
+    SET @v_texto = REPLACE(REPLACE(@v_texto, NCHAR(8242), ''''), NCHAR(8243), '"');
 
     SET @v_pos_grado = CHARINDEX(NCHAR(176), @v_texto);   -- símbolo de grado
     IF @v_pos_grado = 0
@@ -169,11 +169,11 @@ BEGIN
 
     SET @v_grados = TRY_CONVERT(DECIMAL(12,6), LEFT(@v_texto, @v_pos_grado - 1));
 
-    SET @v_pos_min = CHARINDEX(N'''', @v_texto, @v_pos_grado);
+    SET @v_pos_min = CHARINDEX('''', @v_texto, @v_pos_grado);
     IF @v_pos_min > 0
     BEGIN
         SET @v_minutos = TRY_CONVERT(DECIMAL(12,6), SUBSTRING(@v_texto, @v_pos_grado + 1, @v_pos_min - @v_pos_grado - 1));
-        SET @v_pos_seg = CHARINDEX(N'"', @v_texto, @v_pos_min);
+        SET @v_pos_seg = CHARINDEX('"', @v_texto, @v_pos_min);
         IF @v_pos_seg > 0
             SET @v_segundos = TRY_CONVERT(DECIMAL(12,6), SUBSTRING(@v_texto, @v_pos_min + 1, @v_pos_seg - @v_pos_min - 1));
     END
@@ -184,7 +184,7 @@ BEGIN
 
     SET @v_resultado = @v_grados + @v_minutos / 60 + @v_segundos / 3600;
 
-    IF @v_hemisferio IN (N'S', N'W')
+    IF @v_hemisferio IN ('S', 'W')
         SET @v_resultado = -@v_resultado;
 
     IF ABS(@v_resultado) > 180
@@ -198,31 +198,31 @@ GO
 -- encontrados (vacío si la ruta es aceptable).
 CREATE OR ALTER FUNCTION soporte.fn_ValidarRutaArchivo
 (
-    @archivo     NVARCHAR(260),
-    @extensiones NVARCHAR(100)    -- lista separada por comas, por ejemplo '.csv,.txt'
+    @archivo     VARCHAR(260),
+    @extensiones VARCHAR(100)    -- lista separada por comas, por ejemplo '.csv,.txt'
 )
-RETURNS NVARCHAR(400)
+RETURNS VARCHAR(400)
 AS
 BEGIN
-    DECLARE @v_errores NVARCHAR(400) = N'';
-    DECLARE @v_archivo NVARCHAR(260) = LTRIM(RTRIM(@archivo));
+    DECLARE @v_errores VARCHAR(400) = '';
+    DECLARE @v_archivo VARCHAR(260) = LTRIM(RTRIM(@archivo));
 
-    IF NULLIF(@v_archivo, N'') IS NULL
-        RETURN N'archivo obligatorio; ';
+    IF NULLIF(@v_archivo, '') IS NULL
+        RETURN 'archivo obligatorio; ';
 
-    IF CHARINDEX(N'''', @v_archivo) > 0
-        SET @v_errores += N'la ruta no puede contener comillas simples; ';
+    IF CHARINDEX('''', @v_archivo) > 0
+        SET @v_errores += 'la ruta no puede contener comillas simples; ';
 
-    IF @v_archivo NOT LIKE N'[A-Za-z]:\%' AND @v_archivo NOT LIKE N'\\%'
-        SET @v_errores += N'la ruta debe ser absoluta (C:\... o \\servidor\...); ';
+    IF @v_archivo NOT LIKE '[A-Za-z]:\%' AND @v_archivo NOT LIKE '\\%'
+        SET @v_errores += 'la ruta debe ser absoluta (C:\... o \\servidor\...); ';
 
     IF NOT EXISTS
     (
         SELECT 1
-        FROM STRING_SPLIT(@extensiones, N',') AS e
-        WHERE LOWER(@v_archivo) LIKE N'%' + LOWER(LTRIM(RTRIM(e.value)))
+        FROM STRING_SPLIT(@extensiones, ',') AS e
+        WHERE LOWER(@v_archivo) LIKE '%' + LOWER(LTRIM(RTRIM(e.value)))
     )
-        SET @v_errores += CONCAT(N'extension no admitida (se espera ', @extensiones, N'); ');
+        SET @v_errores += CONCAT('extension no admitida (se espera ', @extensiones, '); ');
 
     RETURN @v_errores;
 END;
@@ -234,13 +234,13 @@ GO
 CREATE OR ALTER FUNCTION soporte.fn_BuscarPais
 (
     @tipo  VARCHAR(10),       -- 'ISO2' o 'NOMBRE'
-    @valor NVARCHAR(150)
+    @valor VARCHAR(150)
 )
 RETURNS SMALLINT
 AS
 BEGIN
     DECLARE @v_id_pais SMALLINT;
-    DECLARE @v_valor NVARCHAR(150) = soporte.fn_Limpiar(@valor);
+    DECLARE @v_valor VARCHAR(150) = soporte.fn_Limpiar(@valor);
 
     IF @v_valor IS NULL
         RETURN NULL;
@@ -268,8 +268,8 @@ GO
 -- parcialmente los registros válidos), por eso no pueden ejecutarse dentro de
 -- una transacción abierta por el llamador.
 CREATE OR ALTER PROCEDURE soporte.usp_Importacion_Iniciar
-    @fuente NVARCHAR(100),
-    @archivo NVARCHAR(260),
+    @fuente VARCHAR(100),
+    @archivo VARCHAR(260),
     @formato VARCHAR(10),
     @id_importacion INT OUTPUT
 AS
@@ -280,7 +280,7 @@ BEGIN
     DECLARE @v_ahora DATETIME2(0) = SYSDATETIME();
 
     IF @@TRANCOUNT > 0
-        THROW 50003, N'soporte.usp_Importacion_Iniciar: la importacion debe ejecutarse fuera de una transaccion, porque confirma cada registro valido por separado', 1;
+        THROW 50003, 'soporte.usp_Importacion_Iniciar: la importacion debe ejecutarse fuera de una transaccion, porque confirma cada registro valido por separado', 1;
 
     EXEC soporte.usp_Importacion_Insertar
         @fuente = @fuente,
@@ -301,17 +301,17 @@ GO
 CREATE OR ALTER PROCEDURE soporte.usp_Importacion_RegistrarError
     @id_importacion INT,
     @nro_fila INT,
-    @columna NVARCHAR(60) = NULL,
-    @valor NVARCHAR(MAX) = NULL,
-    @mensaje NVARCHAR(MAX)
+    @columna VARCHAR(60) = NULL,
+    @valor VARCHAR(MAX) = NULL,
+    @mensaje VARCHAR(MAX)
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
     DECLARE @v_nro_error INT;
-    DECLARE @v_valor NVARCHAR(500) = LEFT(@valor, 500);
-    DECLARE @v_mensaje NVARCHAR(500) = LEFT(ISNULL(NULLIF(LTRIM(RTRIM(@mensaje)), N''), N'error sin descripcion'), 500);
+    DECLARE @v_valor VARCHAR(500) = LEFT(@valor, 500);
+    DECLARE @v_mensaje VARCHAR(500) = LEFT(ISNULL(NULLIF(LTRIM(RTRIM(@mensaje)), ''), 'error sin descripcion'), 500);
     DECLARE @v_fila INT = CASE WHEN @nro_fila IS NULL OR @nro_fila < 1 THEN 1 ELSE @nro_fila END;
 
     SELECT @v_nro_error = ISNULL(MAX(e.nro_error), 0) + 1
@@ -342,8 +342,8 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @v_fuente NVARCHAR(100);
-    DECLARE @v_archivo NVARCHAR(260);
+    DECLARE @v_fuente VARCHAR(100);
+    DECLARE @v_archivo VARCHAR(260);
     DECLARE @v_formato VARCHAR(10);
     DECLARE @v_inicio DATETIME2(0);
     DECLARE @v_fin DATETIME2(0) = SYSDATETIME();
@@ -361,7 +361,7 @@ BEGIN
     WHERE i.id_importacion = @id_importacion;
 
     IF @v_fuente IS NULL
-        THROW 50001, N'soporte.usp_Importacion_Finalizar: importacion inexistente', 1;
+        THROW 50001, 'soporte.usp_Importacion_Finalizar: importacion inexistente', 1;
 
     -- Los contadores deben ser coherentes (ok + error <= leidas).
     IF @v_ok + @v_error > @v_leidas
@@ -422,40 +422,40 @@ GO
 -- El archivo se lee con la cuenta del servicio de SQL Server, que debe tener
 -- permiso de lectura sobre la carpeta.
 CREATE OR ALTER PROCEDURE soporte.usp_Archivo_Leer
-    @archivo NVARCHAR(260),
-    @contenido NVARCHAR(MAX) = NULL OUTPUT,
+    @archivo VARCHAR(260),
+    @contenido VARCHAR(MAX) = NULL OUTPUT,
     @binario VARBINARY(MAX) = NULL OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @v_errores NVARCHAR(400) = soporte.fn_ValidarRutaArchivo(@archivo, N'.csv,.txt,.json,.xml,.html,.htm');
-    DECLARE @v_sql NVARCHAR(MAX);
-    DECLARE @v_mensaje NVARCHAR(2048);
-    CREATE TABLE #archivo_texto (contenido NVARCHAR(MAX) COLLATE DATABASE_DEFAULT);
+    DECLARE @v_errores VARCHAR(400) = soporte.fn_ValidarRutaArchivo(@archivo, '.csv,.txt,.json,.xml,.html,.htm');
+    DECLARE @v_sql VARCHAR(MAX);
+    DECLARE @v_mensaje VARCHAR(2048);
+    CREATE TABLE #archivo_texto (contenido VARCHAR(MAX) COLLATE DATABASE_DEFAULT);
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_mensaje = CONCAT(N'soporte.usp_Archivo_Leer: ', @v_errores);
+        SET @v_mensaje = CONCAT('soporte.usp_Archivo_Leer: ', @v_errores);
         THROW 50001, @v_mensaje, 1;
     END
 
-    SET @v_sql = N'SELECT @p_binario = a.BulkColumn FROM OPENROWSET(BULK N'''
-               + REPLACE(LTRIM(RTRIM(@archivo)), N'''', N'''''')
-               + N''', SINGLE_BLOB) AS a;';
+    SET @v_sql = 'SELECT @p_binario = a.BulkColumn FROM OPENROWSET(BULK '''
+               + REPLACE(LTRIM(RTRIM(@archivo)), '''', '''''')
+               + ''', SINGLE_BLOB) AS a;';
 
     BEGIN TRY
-        EXEC sys.sp_executesql @v_sql, N'@p_binario VARBINARY(MAX) OUTPUT', @p_binario = @binario OUTPUT;
+        EXEC sys.sp_executesql @v_sql, '@p_binario VARBINARY(MAX) OUTPUT', @p_binario = @binario OUTPUT;
     END TRY
     BEGIN CATCH
-        SET @v_mensaje = LEFT(CONCAT(N'soporte.usp_Archivo_Leer: no se pudo leer el archivo ', @archivo,
-                                     N' (verifique que exista y que la cuenta del servicio SQL Server tenga permiso de lectura). Detalle: ',
+        SET @v_mensaje = LEFT(CONCAT('soporte.usp_Archivo_Leer: no se pudo leer el archivo ', @archivo,
+                                     ' (verifique que exista y que la cuenta del servicio SQL Server tenga permiso de lectura). Detalle: ',
                                      ERROR_MESSAGE()), 2048);
         THROW 50002, @v_mensaje, 1;
     END CATCH
 
     IF @binario IS NULL OR DATALENGTH(@binario) = 0
-        THROW 50002, N'soporte.usp_Archivo_Leer: el archivo esta vacio', 1;
+        THROW 50002, 'soporte.usp_Archivo_Leer: el archivo esta vacio', 1;
 
     -- Se quita la marca BOM de UTF-8 si existe.
     IF SUBSTRING(@binario, 1, 3) = 0xEFBBBF
@@ -464,17 +464,17 @@ BEGIN
     -- Decodificación UTF-8 -> Unicode: BULK INSERT con CODEPAGE 65001 carga el
     -- archivo completo en una sola fila (los terminadores elegidos no aparecen
     -- en los archivos de datos).
-    SET @v_sql = N'BULK INSERT #archivo_texto FROM N'''
-               + REPLACE(LTRIM(RTRIM(@archivo)), N'''', N'''''')
-               + N''' WITH (CODEPAGE = ''65001'', DATAFILETYPE = ''char'', '
-               + N'FIELDTERMINATOR = ''<|~fin_campo~|>'', ROWTERMINATOR = ''<|~fin_fila~|>'');';
+    SET @v_sql = 'BULK INSERT #archivo_texto FROM '''
+               + REPLACE(LTRIM(RTRIM(@archivo)), '''', '''''')
+               + ''' WITH (CODEPAGE = ''65001'', DATAFILETYPE = ''char'', '
+               + 'FIELDTERMINATOR = ''<|~fin_campo~|>'', ROWTERMINATOR = ''<|~fin_fila~|>'');';
 
     BEGIN TRY
         EXEC sys.sp_executesql @v_sql;
     END TRY
     BEGIN CATCH
-        SET @v_mensaje = LEFT(CONCAT(N'soporte.usp_Archivo_Leer: no se pudo decodificar el archivo ', @archivo,
-                                     N' como UTF-8. Detalle: ', ERROR_MESSAGE()), 2048);
+        SET @v_mensaje = LEFT(CONCAT('soporte.usp_Archivo_Leer: no se pudo decodificar el archivo ', @archivo,
+                                     ' como UTF-8. Detalle: ', ERROR_MESSAGE()), 2048);
         THROW 50002, @v_mensaje, 1;
     END CATCH
 
@@ -482,14 +482,14 @@ BEGIN
 
     -- Si quedó la marca BOM como carácter U+FEFF, se quita.
     IF LEFT(@contenido, 1) = NCHAR(65279)
-        SET @contenido = STUFF(@contenido, 1, 1, N'');
+        SET @contenido = STUFF(@contenido, 1, 1, '');
 END;
 GO
 
 -- Carga un archivo delimitado en una tabla de paso con BULK INSERT.
 -- Solo se admiten las vistas de carga definidas en 04_Tablas_Importacion.sql.
 CREATE OR ALTER PROCEDURE soporte.usp_Archivo_CargarDelimitado
-    @archivo NVARCHAR(260),
+    @archivo VARCHAR(260),
     @vista_destino SYSNAME,
     @es_csv BIT,                  -- 1: CSV con comillas (FORMAT = 'CSV'); 0: tabulaciones
     @primera_fila INT = 1,
@@ -498,39 +498,39 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @v_errores NVARCHAR(400) = soporte.fn_ValidarRutaArchivo(@archivo, CASE WHEN @es_csv = 1 THEN N'.csv' ELSE N'.txt,.tsv' END);
-    DECLARE @v_sql NVARCHAR(MAX);
-    DECLARE @v_mensaje NVARCHAR(2048);
+    DECLARE @v_errores VARCHAR(400) = soporte.fn_ValidarRutaArchivo(@archivo, CASE WHEN @es_csv = 1 THEN '.csv' ELSE '.txt,.tsv' END);
+    DECLARE @v_sql VARCHAR(MAX);
+    DECLARE @v_mensaje VARCHAR(2048);
 
-    IF @vista_destino NOT IN (N'soporte.vw_stg_pais_csv_carga', N'soporte.vw_stg_huso_txt_carga', N'soporte.vw_stg_ciudad_txt_carga')
-        SET @v_errores += N'vista de carga no admitida; ';
+    IF @vista_destino NOT IN ('soporte.vw_stg_pais_csv_carga', 'soporte.vw_stg_huso_txt_carga', 'soporte.vw_stg_ciudad_txt_carga')
+        SET @v_errores += 'vista de carga no admitida; ';
 
     IF @primera_fila IS NULL OR @primera_fila < 1
-        SET @v_errores += N'primera_fila debe ser mayor o igual a 1; ';
+        SET @v_errores += 'primera_fila debe ser mayor o igual a 1; ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_mensaje = CONCAT(N'soporte.usp_Archivo_CargarDelimitado: ', @v_errores);
+        SET @v_mensaje = CONCAT('soporte.usp_Archivo_CargarDelimitado: ', @v_errores);
         THROW 50001, @v_mensaje, 1;
     END
 
     -- BULK INSERT no acepta la ruta ni las opciones como variables.
-    SET @v_sql = N'BULK INSERT ' + @vista_destino
-               + N' FROM N''' + REPLACE(LTRIM(RTRIM(@archivo)), N'''', N'''''') + N''''
-               + N' WITH (CODEPAGE = ''65001'', FIRSTROW = ' + CONVERT(NVARCHAR(10), @primera_fila)
+    SET @v_sql = 'BULK INSERT ' + @vista_destino
+               + ' FROM ''' + REPLACE(LTRIM(RTRIM(@archivo)), '''', '''''') + ''''
+               + ' WITH (CODEPAGE = ''65001'', FIRSTROW = ' + CONVERT(VARCHAR(10), @primera_fila)
                + CASE WHEN @es_csv = 1
-                      THEN N', FORMAT = ''CSV'', FIELDQUOTE = ''"'', FIELDTERMINATOR = '','', ROWTERMINATOR = ''0x0a'''
-                      ELSE N', FIELDTERMINATOR = ''\t'', ROWTERMINATOR = ''0x0a'''
+                      THEN ', FORMAT = ''CSV'', FIELDQUOTE = ''"'', FIELDTERMINATOR = '','', ROWTERMINATOR = ''0x0a'''
+                      ELSE ', FIELDTERMINATOR = ''\t'', ROWTERMINATOR = ''0x0a'''
                  END
-               + N', TABLOCK);'
-               + N' SET @p_filas = @@ROWCOUNT;';
+               + ', TABLOCK);'
+               + ' SET @p_filas = @@ROWCOUNT;';
 
     BEGIN TRY
-        EXEC sys.sp_executesql @v_sql, N'@p_filas INT OUTPUT', @p_filas = @filas_cargadas OUTPUT;
+        EXEC sys.sp_executesql @v_sql, '@p_filas INT OUTPUT', @p_filas = @filas_cargadas OUTPUT;
     END TRY
     BEGIN CATCH
-        SET @v_mensaje = LEFT(CONCAT(N'soporte.usp_Archivo_CargarDelimitado: no se pudo cargar el archivo ', @archivo,
-                                     N'. Detalle: ', ERROR_MESSAGE()), 2048);
+        SET @v_mensaje = LEFT(CONCAT('soporte.usp_Archivo_CargarDelimitado: no se pudo cargar el archivo ', @archivo,
+                                     '. Detalle: ', ERROR_MESSAGE()), 2048);
         THROW 50002, @v_mensaje, 1;
     END CATCH
 END;
@@ -544,70 +544,70 @@ GO
 -- La propiedad responseText se recupera con INSERT ... EXEC para no quedar
 -- limitada a 4000 caracteres (las páginas de Wikipedia superan los 3 MB).
 CREATE OR ALTER PROCEDURE soporte.usp_Http_Obtener
-    @url NVARCHAR(2000),
-    @contenido NVARCHAR(MAX) OUTPUT,
+    @url VARCHAR(2000),
+    @contenido VARCHAR(MAX) OUTPUT,
     @estado_http INT = NULL OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_objeto INT;
     DECLARE @v_hr INT;
-    DECLARE @v_paso NVARCHAR(40);
-    DECLARE @v_origen NVARCHAR(255);
-    DECLARE @v_descripcion NVARCHAR(255);
-    DECLARE @v_mensaje NVARCHAR(2048);
-    DECLARE @v_respuesta TABLE (texto NVARCHAR(MAX));
+    DECLARE @v_paso VARCHAR(40);
+    DECLARE @v_origen VARCHAR(255);
+    DECLARE @v_descripcion VARCHAR(255);
+    DECLARE @v_mensaje VARCHAR(2048);
+    DECLARE @v_respuesta TABLE (texto VARCHAR(MAX));
 
     SET @contenido = NULL;
     SET @estado_http = NULL;
 
-    IF NULLIF(LTRIM(RTRIM(@url)), N'') IS NULL
-        SET @v_errores += N'url obligatoria; ';
-    ELSE IF @url NOT LIKE N'https://%' AND @url NOT LIKE N'http://%'
-        SET @v_errores += N'la url debe comenzar con http:// o https://; ';
+    IF NULLIF(LTRIM(RTRIM(@url)), '') IS NULL
+        SET @v_errores += 'url obligatoria; ';
+    ELSE IF @url NOT LIKE 'https://%' AND @url NOT LIKE 'http://%'
+        SET @v_errores += 'la url debe comenzar con http:// o https://; ';
 
     IF NOT EXISTS (SELECT 1 FROM sys.configurations WHERE name = 'Ole Automation Procedures' AND value_in_use = 1)
-        SET @v_errores += N'la instancia no tiene habilitada la opcion Ole Automation Procedures (ver 17_SP_Importacion_Soporte.sql); ';
+        SET @v_errores += 'la instancia no tiene habilitada la opcion Ole Automation Procedures (ver 17_SP_Importacion_Soporte.sql); ';
 
-    IF @v_errores <> N''
+    IF @v_errores <> ''
     BEGIN
-        SET @v_mensaje = LEFT(CONCAT(N'soporte.usp_Http_Obtener: ', @v_errores), 2048);
+        SET @v_mensaje = LEFT(CONCAT('soporte.usp_Http_Obtener: ', @v_errores), 2048);
         THROW 50001, @v_mensaje, 1;
     END
 
-    SET @v_paso = N'crear objeto';
+    SET @v_paso = 'crear objeto';
     EXEC @v_hr = sys.sp_OACreate 'MSXML2.ServerXMLHTTP.6.0', @v_objeto OUTPUT;
 
     IF @v_hr = 0
     BEGIN
-        SET @v_paso = N'configurar tiempos de espera';
+        SET @v_paso = 'configurar tiempos de espera';
         EXEC @v_hr = sys.sp_OAMethod @v_objeto, 'setTimeouts', NULL, 15000, 15000, 30000, 120000;
     END
     IF @v_hr = 0
     BEGIN
-        SET @v_paso = N'abrir conexion';
+        SET @v_paso = 'abrir conexion';
         EXEC @v_hr = sys.sp_OAMethod @v_objeto, 'open', NULL, 'GET', @url, 'false';
     END
     IF @v_hr = 0
     BEGIN
-        SET @v_paso = N'definir User-Agent';
+        SET @v_paso = 'definir User-Agent';
         EXEC @v_hr = sys.sp_OAMethod @v_objeto, 'setRequestHeader', NULL, 'User-Agent', 'Mundial2026-TP-BDA-UNLaM/1.0 (Grupo 01; uso academico)';
     END
     IF @v_hr = 0
     BEGIN
-        SET @v_paso = N'enviar solicitud';
+        SET @v_paso = 'enviar solicitud';
         EXEC @v_hr = sys.sp_OAMethod @v_objeto, 'send';
     END
     IF @v_hr = 0
     BEGIN
-        SET @v_paso = N'leer estado';
+        SET @v_paso = 'leer estado';
         EXEC @v_hr = sys.sp_OAGetProperty @v_objeto, 'status', @estado_http OUTPUT;
     END
     IF @v_hr = 0
     BEGIN
-        SET @v_paso = N'leer respuesta';
+        SET @v_paso = 'leer respuesta';
         INSERT INTO @v_respuesta (texto)
         EXEC @v_hr = sys.sp_OAGetProperty @v_objeto, 'responseText';
     END
@@ -617,8 +617,8 @@ BEGIN
         EXEC sys.sp_OAGetErrorInfo @v_objeto, @v_origen OUTPUT, @v_descripcion OUTPUT;
         IF @v_objeto IS NOT NULL
             EXEC sys.sp_OADestroy @v_objeto;
-        SET @v_mensaje = LEFT(CONCAT(N'soporte.usp_Http_Obtener: fallo al ', @v_paso, N' (', @url, N'). ',
-                                     ISNULL(@v_descripcion, N'sin detalle')), 2048);
+        SET @v_mensaje = LEFT(CONCAT('soporte.usp_Http_Obtener: fallo al ', @v_paso, ' (', @url, '). ',
+                                     ISNULL(@v_descripcion, 'sin detalle')), 2048);
         THROW 50002, @v_mensaje, 1;
     END
 
@@ -628,14 +628,14 @@ BEGIN
 
     IF @estado_http IS NULL OR @estado_http NOT BETWEEN 200 AND 299
     BEGIN
-        SET @v_mensaje = LEFT(CONCAT(N'soporte.usp_Http_Obtener: la solicitud a ', @url,
-                                     N' respondio con estado HTTP ', ISNULL(CONVERT(NVARCHAR(10), @estado_http), N'desconocido')), 2048);
+        SET @v_mensaje = LEFT(CONCAT('soporte.usp_Http_Obtener: la solicitud a ', @url,
+                                     ' respondio con estado HTTP ', ISNULL(CONVERT(VARCHAR(10), @estado_http), 'desconocido')), 2048);
         THROW 50002, @v_mensaje, 1;
     END
 
     IF @contenido IS NULL OR LEN(@contenido) = 0
     BEGIN
-        SET @v_mensaje = LEFT(CONCAT(N'soporte.usp_Http_Obtener: la respuesta de ', @url, N' llego vacia'), 2048);
+        SET @v_mensaje = LEFT(CONCAT('soporte.usp_Http_Obtener: la respuesta de ', @url, ' llego vacia'), 2048);
         THROW 50002, @v_mensaje, 1;
     END
 END;
@@ -649,16 +649,16 @@ GO
 -- apunta a otro país, no lo cambia y lo informa en @conflicto.
 CREATE OR ALTER PROCEDURE soporte.usp_EquivalenciaPais_Asegurar
     @tipo VARCHAR(10),
-    @valor NVARCHAR(150),
+    @valor VARCHAR(150),
     @id_pais SMALLINT,
-    @fuente NVARCHAR(60),
+    @fuente VARCHAR(60),
     @conflicto BIT = 0 OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @v_valor NVARCHAR(150) = soporte.fn_Limpiar(@valor);
+    DECLARE @v_valor VARCHAR(150) = soporte.fn_Limpiar(@valor);
     DECLARE @v_id_actual SMALLINT;
 
     SET @conflicto = 0;

@@ -13,11 +13,11 @@ GO
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-PRINT N'=== 54_Test_ABM_Torneo_OK: sede, camino feliz ===';
+PRINT '=== 54_Test_ABM_Torneo_OK: sede, camino feliz ===';
 
 DECLARE @v_id_ciudad INT;
 DECLARE @v_id_sede INT;
-DECLARE @v_nombre_prueba NVARCHAR(100) = N'Estadio Test ABM Torneo';
+DECLARE @v_nombre_prueba VARCHAR(100) = 'Estadio Test ABM Torneo';
 DECLARE @v_sedes_antes INT;
 DECLARE @v_sedes_despues INT;
 
@@ -25,11 +25,11 @@ DECLARE @v_sedes_despues INT;
 -- 1. Validaciones previas
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID(N'torneo.usp_Sede_Insertar', N'P') IS NULL
-   OR OBJECT_ID(N'torneo.usp_Sede_Modificar', N'P') IS NULL
-   OR OBJECT_ID(N'torneo.usp_Sede_Eliminar', N'P') IS NULL
+IF OBJECT_ID('torneo.usp_Sede_Insertar', 'P') IS NULL
+   OR OBJECT_ID('torneo.usp_Sede_Modificar', 'P') IS NULL
+   OR OBJECT_ID('torneo.usp_Sede_Eliminar', 'P') IS NULL
 BEGIN
-    ;THROW 50001,N'54_Test_ABM_Torneo_OK: faltan uno o mas procedimientos ABM de sede',1;
+    ;THROW 50001,'54_Test_ABM_Torneo_OK: faltan uno o mas procedimientos ABM de sede',1;
 END;
 
 SELECT TOP (1)@v_id_ciudad = c.id_ciudad
@@ -38,7 +38,7 @@ ORDER BY c.id_ciudad;
 
 IF @v_id_ciudad IS NULL
 BEGIN
-    ;THROW 50001,N'54_Test_ABM_Torneo_OK: debe existir al menos una ciudad para ejecutar la prueba', 1;
+    ;THROW 50001,'54_Test_ABM_Torneo_OK: debe existir al menos una ciudad para ejecutar la prueba', 1;
 END;
 
 IF EXISTS
@@ -48,7 +48,7 @@ IF EXISTS
     WHERE s.nombre_estadio = @v_nombre_prueba
 )
 BEGIN
-    ;THROW 50001, N'54_Test_ABM_Torneo_OK: ya existe la sede reservada para esta prueba', 1;
+    ;THROW 50001, '54_Test_ABM_Torneo_OK: ya existe la sede reservada para esta prueba', 1;
 END;
 
 BEGIN TRY
@@ -61,7 +61,7 @@ BEGIN TRY
     SELECT @v_sedes_antes = COUNT(*)
     FROM torneo.sede;
 
-    PRINT N'--- EVIDENCIA ANTES DE INSERTAR SEDE ---';
+    PRINT '--- EVIDENCIA ANTES DE INSERTAR SEDE ---';
 
     SELECT
         @v_sedes_antes AS sedes_antes;
@@ -77,7 +77,7 @@ BEGIN TRY
     EXEC torneo.usp_Sede_Insertar
         @nombre_estadio = @v_nombre_prueba,
         @capacidad = 50000,
-        @direccion = N'Av. Siempre Viva 123',
+        @direccion = 'Av. Siempre Viva 123',
         @latitud = -34.640000,
         @longitud = -58.565000,
         @id_ciudad = @v_id_ciudad,
@@ -95,20 +95,20 @@ BEGIN TRY
                  WHERE s.id_sede = @v_id_sede
                    AND s.nombre_estadio = @v_nombre_prueba
                    AND s.capacidad = 50000
-                   AND s.direccion = N'Av. Siempre Viva 123'
+                   AND s.direccion = 'Av. Siempre Viva 123'
                    AND s.latitud = -34.640000
                    AND s.longitud = -58.565000
                    AND s.id_ciudad = @v_id_ciudad
              )
-            THEN N'PASS sede insertar'
-        ELSE N'FAIL sede insertar'
+            THEN 'PASS sede insertar'
+        ELSE 'FAIL sede insertar'
     END AS resultado;
 
     PRINT CONCAT
     (
-        N'--- EVIDENCIA DESPUES DE INSERTAR SEDE. ID: ',
+        '--- EVIDENCIA DESPUES DE INSERTAR SEDE. ID: ',
         @v_id_sede,
-        N' ---'
+        ' ---'
     );
 
     SELECT s.*
@@ -121,9 +121,9 @@ BEGIN TRY
 
     EXEC torneo.usp_Sede_Modificar
         @id_sede = @v_id_sede,
-        @nombre_estadio = N'Estadio Test ABM Torneo Modificado',
+        @nombre_estadio = 'Estadio Test ABM Torneo Modificado',
         @capacidad = 55000,
-        @direccion = N'Av. Siempre Viva 123 Modificada',
+        @direccion = 'Av. Siempre Viva 123 Modificada',
         @latitud = -34.641000,
         @longitud = -58.566000,
         @id_ciudad = @v_id_ciudad;
@@ -134,18 +134,18 @@ BEGIN TRY
                  SELECT 1
                  FROM torneo.sede AS s
                  WHERE s.id_sede = @v_id_sede
-                   AND s.nombre_estadio = N'Estadio Test ABM Torneo Modificado'
+                   AND s.nombre_estadio = 'Estadio Test ABM Torneo Modificado'
                    AND s.capacidad = 55000
-                   AND s.direccion = N'Av. Siempre Viva 123 Modificada'
+                   AND s.direccion = 'Av. Siempre Viva 123 Modificada'
                    AND s.latitud = -34.641000
                    AND s.longitud = -58.566000
                    AND s.id_ciudad = @v_id_ciudad
              )
-            THEN N'PASS sede modificar'
-        ELSE N'FAIL sede modificar'
+            THEN 'PASS sede modificar'
+        ELSE 'FAIL sede modificar'
     END AS resultado;
 
-    PRINT N'--- EVIDENCIA DESPUES DE MODIFICAR SEDE ---';
+    PRINT '--- EVIDENCIA DESPUES DE MODIFICAR SEDE ---';
 
     SELECT s.*
     FROM torneo.sede AS s
@@ -166,11 +166,11 @@ BEGIN TRY
                  WHERE s.id_sede = @v_id_sede
              )
          AND (SELECT COUNT(*) FROM torneo.sede) = @v_sedes_antes
-            THEN N'PASS sede eliminar'
-        ELSE N'FAIL sede eliminar'
+            THEN 'PASS sede eliminar'
+        ELSE 'FAIL sede eliminar'
     END AS resultado;
 
-    PRINT N'--- EVIDENCIA DESPUES DE ELIMINAR SEDE ---';
+    PRINT '--- EVIDENCIA DESPUES DE ELIMINAR SEDE ---';
 
     SELECT s.*
     FROM torneo.sede AS s
@@ -182,7 +182,7 @@ BEGIN TRY
 
     ROLLBACK TRANSACTION;
 
-    PRINT N'PASS general: prueba finalizada y transaccion revertida.';
+    PRINT 'PASS general: prueba finalizada y transaccion revertida.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
@@ -190,9 +190,9 @@ BEGIN CATCH
 
     PRINT CONCAT
     (
-        N'FAIL general. Error ',
+        'FAIL general. Error ',
         ERROR_NUMBER(),
-        N': ',
+        ': ',
         ERROR_MESSAGE()
     );
 
@@ -211,11 +211,11 @@ SELECT CASE
              FROM torneo.sede AS s
              WHERE s.nombre_estadio IN
                    (
-                       N'Estadio Test ABM Torneo',
-                       N'Estadio Test ABM Torneo Modificado'
+                       'Estadio Test ABM Torneo',
+                       'Estadio Test ABM Torneo Modificado'
                    )
          )
-        THEN N'PASS rollback: no quedaron residuos'
-    ELSE N'FAIL rollback: quedaron residuos'
+        THEN 'PASS rollback: no quedaron residuos'
+    ELSE 'FAIL rollback: quedaron residuos'
 END AS resultado_final;
 GO

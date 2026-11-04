@@ -13,7 +13,7 @@ GO
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-DECLARE @v_errores NVARCHAR(2000) = N'';
+DECLARE @v_errores VARCHAR(2000) = '';
 DECLARE @v_propia BIT = 0;
 DECLARE @v_sp BIT = 0;
 DECLARE @v_id_partido INT;
@@ -25,11 +25,11 @@ DECLARE @v_id_idioma SMALLINT;
 -- 1. Validaciones y partido del caso 
 -------------------------------------------------------------------------------
 
-IF OBJECT_ID(N'publicidad.usp_Negocio_AsignarPublicidad', N'P') IS NULL
-    SET @v_errores += N'no existe publicidad.usp_Negocio_AsignarPublicidad; ';
+IF OBJECT_ID('publicidad.usp_Negocio_AsignarPublicidad', 'P') IS NULL
+    SET @v_errores += 'no existe publicidad.usp_Negocio_AsignarPublicidad; ';
 
-IF OBJECT_ID(N'publicidad.usp_Negocio_SimularPrimeTime', N'P') IS NULL
-    SET @v_errores += N'no existe publicidad.usp_Negocio_SimularPrimeTime; ';
+IF OBJECT_ID('publicidad.usp_Negocio_SimularPrimeTime', 'P') IS NULL
+    SET @v_errores += 'no existe publicidad.usp_Negocio_SimularPrimeTime; ';
 
 -- El caso requiere un partido a la 01:00 UTC.
 SELECT TOP (1)
@@ -42,36 +42,36 @@ WHERE DATEPART(HOUR, p.fecha_hora_utc) = 1
 ORDER BY p.fecha_hora_utc, p.id_partido;
 
 IF @v_id_partido IS NULL
-    SET @v_errores += N'no existe un partido programado a las 01:00 UTC para demostrar el caso 4; ';
+    SET @v_errores += 'no existe un partido programado a las 01:00 UTC para demostrar el caso 4; ';
 
 SELECT TOP (1) @v_id_idioma = i.id_idioma
 FROM persona.idioma AS i
 ORDER BY CASE WHEN i.cod_iso639 = 'spa' THEN 0 ELSE 1 END, i.id_idioma;
 
 IF @v_id_idioma IS NULL
-    SET @v_errores += N'debe existir al menos un idioma; ';
+    SET @v_errores += 'debe existir al menos un idioma; ';
 
 IF (SELECT COUNT(*) FROM geo.pais AS p WHERE EXISTS
     (SELECT 1 FROM geo.ciudad AS c WHERE c.id_pais = p.id_pais)) < 6
-    SET @v_errores += N'deben existir al menos seis paises con ciudades cargadas; ';
+    SET @v_errores += 'deben existir al menos seis paises con ciudades cargadas; ';
 
 IF NOT EXISTS
 (
     SELECT 1 FROM torneo.parametro_reglamento
     WHERE clave = 'PRIME_DESDE_HORA'
 )
-    SET @v_errores += N'falta el parametro PRIME_DESDE_HORA; ';
+    SET @v_errores += 'falta el parametro PRIME_DESDE_HORA; ';
 
 IF NOT EXISTS
 (
     SELECT 1 FROM torneo.parametro_reglamento
     WHERE clave = 'PRIME_HASTA_HORA'
 )
-    SET @v_errores += N'falta el parametro PRIME_HASTA_HORA; ';
+    SET @v_errores += 'falta el parametro PRIME_HASTA_HORA; ';
 
-IF @v_errores <> N''
+IF @v_errores <> ''
 BEGIN
-    SET @v_errores = LEFT(CONCAT(N'45_Seed_Publicidad: ', @v_errores), 2048);
+    SET @v_errores = LEFT(CONCAT('45_Seed_Publicidad: ', @v_errores), 2048);
     ;THROW 50001, @v_errores, 1;
 END;
 
@@ -132,7 +132,7 @@ BEGIN TRY
     BEGIN
         EXEC publicidad.usp_Moneda_Insertar
             @cod_iso4217 = 'USD',
-            @nombre = N'Dolar estadounidense',
+            @nombre = 'Dolar estadounidense',
             @id_moneda = @v_id_moneda_usd OUTPUT;
     END;
 
@@ -190,7 +190,7 @@ BEGIN TRY
     ---------------------------------------------------------------------------
 
     DECLARE @v_espacio TINYINT = 1;
-    DECLARE @v_descripcion_espacio NVARCHAR(100);
+    DECLARE @v_descripcion_espacio VARCHAR(100);
 
     WHILE @v_espacio <= 4
     BEGIN
@@ -202,7 +202,7 @@ BEGIN TRY
               AND e.nro_espacio = @v_espacio
         )
         BEGIN
-            SET @v_descripcion_espacio = CONCAT(N'Espacio seed ', @v_espacio);
+            SET @v_descripcion_espacio = CONCAT('Espacio seed ', @v_espacio);
 
             EXEC publicidad.usp_EspacioPublicitario_Insertar
                 @id_sede = @v_id_sede,
@@ -223,10 +223,10 @@ BEGIN TRY
     DECLARE @v_id_anunciante INT;
     DECLARE @v_id_campania INT;
     DECLARE @v_id_pieza INT;
-    DECLARE @v_identificacion NVARCHAR(30);
-    DECLARE @v_razon_social NVARCHAR(150);
-    DECLARE @v_nombre_campania NVARCHAR(100);
-    DECLARE @v_descripcion_pieza NVARCHAR(200);
+    DECLARE @v_identificacion VARCHAR(30);
+    DECLARE @v_razon_social VARCHAR(150);
+    DECLARE @v_nombre_campania VARCHAR(100);
+    DECLARE @v_descripcion_pieza VARCHAR(200);
     DECLARE @v_prioridad TINYINT;
     DECLARE @v_fecha_desde DATE;
     DECLARE @v_fecha_hasta DATE;
@@ -240,10 +240,10 @@ BEGIN TRY
         FROM @v_mercados AS m
         WHERE m.orden = @v_orden;
 
-        SET @v_identificacion = CONCAT(N'PUB-SEED-', RIGHT(CONCAT(N'000', @v_orden), 3));
-        SET @v_razon_social = CONCAT(N'Anunciante Seed ', RIGHT(CONCAT(N'00', @v_orden), 2));
-        SET @v_nombre_campania = CONCAT(N'Campania Seed ', RIGHT(CONCAT(N'00', @v_orden), 2));
-        SET @v_descripcion_pieza = CONCAT(N'Pieza Seed Mercado ', RIGHT(CONCAT(N'00', @v_orden), 2));
+        SET @v_identificacion = CONCAT('PUB-SEED-', RIGHT(CONCAT('000', @v_orden), 3));
+        SET @v_razon_social = CONCAT('Anunciante Seed ', RIGHT(CONCAT('00', @v_orden), 2));
+        SET @v_nombre_campania = CONCAT('Campania Seed ', RIGHT(CONCAT('00', @v_orden), 2));
+        SET @v_descripcion_pieza = CONCAT('Pieza Seed Mercado ', RIGHT(CONCAT('00', @v_orden), 2));
         SET @v_prioridad = CONVERT(TINYINT, ((@v_orden - 1) % 3) + 1);
         SET @v_id_anunciante = NULL;
         SET @v_id_campania = NULL;
@@ -258,7 +258,7 @@ BEGIN TRY
             EXEC publicidad.usp_Anunciante_Insertar
                 @razon_social = @v_razon_social,
                 @identificacion_fiscal = @v_identificacion,
-                @contacto = N'Contacto Seed',
+                @contacto = 'Contacto Seed',
                 @id_pais = @v_id_pais,
                 @id_anunciante = @v_id_anunciante OUTPUT;
         END;
@@ -319,12 +319,12 @@ BEGIN TRY
         FROM publicidad.pieza_publicitaria AS pz
         JOIN publicidad.campania AS c ON c.id_campania = pz.id_campania
         JOIN publicidad.anunciante AS a ON a.id_anunciante = c.id_anunciante
-        WHERE a.identificacion_fiscal LIKE N'PUB-SEED-%'
+        WHERE a.identificacion_fiscal LIKE 'PUB-SEED-%'
           AND CONVERT(DATE, @v_fecha_partido) BETWEEN c.fecha_desde AND c.fecha_hasta
     ) < 5
     BEGIN
         ;THROW 50003,
-               N'45_Seed_Publicidad: deben existir al menos cinco piezas candidatas vigentes',
+               '45_Seed_Publicidad: deben existir al menos cinco piezas candidatas vigentes',
                1;
     END;
 

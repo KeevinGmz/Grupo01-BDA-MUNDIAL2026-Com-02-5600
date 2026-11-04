@@ -13,32 +13,32 @@ GO
 SET NOCOUNT ON;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'INICIO: 99_Drop_Mundial2026';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO: 99_Drop_Mundial2026';
+PRINT '=====================================================================';
 
-IF DB_ID(N'Mundial2026') IS NULL
+IF DB_ID('Mundial2026') IS NULL
 BEGIN
-    PRINT N'La base de datos Mundial2026 no existe. No se realizaron cambios.';
+    PRINT 'La base de datos Mundial2026 no existe. No se realizaron cambios.';
 END
 ELSE
 BEGIN
     BEGIN TRY
-        PRINT N'Cerrando conexiones activas a Mundial2026...';
+        PRINT 'Cerrando conexiones activas a Mundial2026...';
 
         ALTER DATABASE Mundial2026
             SET SINGLE_USER
             WITH ROLLBACK IMMEDIATE;
 
-        PRINT N'Eliminando la base de datos Mundial2026...';
+        PRINT 'Eliminando la base de datos Mundial2026...';
 
         DROP DATABASE Mundial2026;
 
-        IF DB_ID(N'Mundial2026') IS NULL
-            PRINT N'PASS: la base de datos Mundial2026 fue eliminada correctamente.';
+        IF DB_ID('Mundial2026') IS NULL
+            PRINT 'PASS: la base de datos Mundial2026 fue eliminada correctamente.';
         ELSE
             THROW 50001,
-                   N'99_Drop_Mundial2026: la base continua existiendo despues del DROP DATABASE',
+                   '99_Drop_Mundial2026: la base continua existiendo despues del DROP DATABASE',
                    1;
     END TRY
     BEGIN CATCH
@@ -49,7 +49,7 @@ BEGIN
            Si SINGLE_USER se ejecuto pero DROP DATABASE fallo, se intenta
            devolver la base a MULTI_USER para no dejarla bloqueada.
         */
-        IF DB_ID(N'Mundial2026') IS NOT NULL
+        IF DB_ID('Mundial2026') IS NOT NULL
         BEGIN
             BEGIN TRY
                 ALTER DATABASE Mundial2026
@@ -59,9 +59,9 @@ BEGIN
             BEGIN CATCH
                 PRINT CONCAT
                 (
-                    N'Advertencia: no fue posible restaurar MULTI_USER. Error ',
+                    'Advertencia: no fue posible restaurar MULTI_USER. Error ',
                     ERROR_NUMBER(),
-                    N': ',
+                    ': ',
                     ERROR_MESSAGE()
                 );
             END CATCH;
@@ -69,9 +69,9 @@ BEGIN
 
         PRINT CONCAT
         (
-            N'FAIL: no se pudo eliminar Mundial2026. Error ',
+            'FAIL: no se pudo eliminar Mundial2026. Error ',
             @v_error_numero,
-            N': ',
+            ': ',
             @v_error_mensaje
         );
 
@@ -79,7 +79,7 @@ BEGIN
     END CATCH;
 END;
 
-PRINT N'=====================================================================';
-PRINT N'FIN: 99_Drop_Mundial2026';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'FIN: 99_Drop_Mundial2026';
+PRINT '=====================================================================';
 GO

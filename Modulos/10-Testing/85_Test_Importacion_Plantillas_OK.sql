@@ -15,9 +15,9 @@ GO
 
 SET NOCOUNT ON;
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBAS EXITOSAS: 85_Test_Importacion_Plantillas_OK';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBAS EXITOSAS: 85_Test_Importacion_Plantillas_OK';
+PRINT '=====================================================================';
 GO
 
 -------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ GO
 -- (26 por selección); la importación termina OK y la cantidad de jugadores,
 -- clubes y convocados no cambia respecto de la carga inicial.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 1: scraping de plantillas de Wikipedia';
+PRINT '-> Test 1: scraping de plantillas de Wikipedia';
 DECLARE @v_id INT;
 DECLARE @v_jugadores INT = (SELECT COUNT(*) FROM persona.jugador);
 DECLARE @v_clubes INT = (SELECT COUNT(*) FROM persona.club);
@@ -42,7 +42,7 @@ SELECT i.estado, i.filas_leidas, i.filas_ok, i.filas_error,
              AND (SELECT COUNT(*) FROM persona.jugador) = @v_jugadores
              AND (SELECT COUNT(*) FROM persona.club) = @v_clubes
              AND (SELECT COUNT(*) FROM torneo.convocatoria WHERE estado = 'ACTIVO') = @v_convocados
-            THEN N'PASS' ELSE N'FAIL' END AS resultado
+            THEN 'PASS' ELSE 'FAIL' END AS resultado
 FROM soporte.importacion AS i
 WHERE i.id_importacion = @v_id;
 GO
@@ -52,7 +52,7 @@ GO
 -- Resultado esperado: cada selección tiene entre 23 y 26 convocados activos,
 -- con nombre, apellido, fecha de nacimiento, posición y club.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 2: evidencia de plantillas importadas';
+PRINT '-> Test 2: evidencia de plantillas importadas';
 
 SELECT c.dorsal, p.apellido, p.nombre, p.fecha_nac, po.descripcion AS posicion, cl.nombre AS club, cl.pais_club, p.nro_doc
 FROM torneo.convocatoria AS c
@@ -71,11 +71,11 @@ SELECT CASE WHEN NOT EXISTS (
             OUTER APPLY (SELECT COUNT(*) AS cantidad FROM torneo.convocatoria AS c
                          WHERE c.id_seleccion = s.id_seleccion AND c.estado = 'ACTIVO') AS x
             WHERE x.cantidad NOT BETWEEN 23 AND 26)
-            THEN N'PASS todas las selecciones con 23 a 26 convocados'
-            ELSE N'FAIL hay selecciones fuera del rango reglamentario' END AS resultado;
+            THEN 'PASS todas las selecciones con 23 a 26 convocados'
+            ELSE 'FAIL hay selecciones fuera del rango reglamentario' END AS resultado;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBAS EXITOSAS: 85_Test_Importacion_Plantillas_OK';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBAS EXITOSAS: 85_Test_Importacion_Plantillas_OK';
+PRINT '=====================================================================';
 GO

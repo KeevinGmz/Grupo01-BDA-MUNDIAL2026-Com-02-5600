@@ -17,9 +17,9 @@ GO
 
 SET NOCOUNT ON;
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBAS EXITOSAS: 81_Test_Importacion_Geografia_OK';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBAS EXITOSAS: 81_Test_Importacion_Geografia_OK';
+PRINT '=====================================================================';
 GO
 
 -------------------------------------------------------------------------------
@@ -27,8 +27,8 @@ GO
 -- Resultado esperado: estado OK, 0 insertadas, la cantidad de países y de
 -- monedas no cambia (no hay duplicados).
 -------------------------------------------------------------------------------
-PRINT N'-> Test 1: reimportacion de paises (CSV)';
-DECLARE @v_archivo NVARCHAR(260) = N'C:\Mundial2026\datos\country-codes.csv';
+PRINT '-> Test 1: reimportacion de paises (CSV)';
+DECLARE @v_archivo VARCHAR(260) = 'C:\Mundial2026\datos\country-codes.csv';
 DECLARE @v_id INT;
 DECLARE @v_paises_antes INT = (SELECT COUNT(*) FROM geo.pais);
 DECLARE @v_monedas_antes INT = (SELECT COUNT(*) FROM publicidad.moneda);
@@ -40,9 +40,9 @@ SELECT @v_paises_antes AS paises_antes, (SELECT COUNT(*) FROM geo.pais) AS paise
        CASE WHEN (SELECT COUNT(*) FROM geo.pais) = @v_paises_antes
              AND (SELECT COUNT(*) FROM publicidad.moneda) = @v_monedas_antes
              AND (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id) = 'OK'
-            THEN N'PASS' ELSE N'FAIL' END AS resultado;
+            THEN 'PASS' ELSE 'FAIL' END AS resultado;
 
-PRINT N'--- Evidencia: paises de las selecciones con su confederacion y monedas ---';
+PRINT '--- Evidencia: paises de las selecciones con su confederacion y monedas ---';
 SELECT TOP (10) p.nombre, p.cod_iso3, p.cod_fifa, c.sigla AS confederacion
 FROM geo.pais AS p
 JOIN geo.confederacion AS c ON c.id_confederacion = p.id_confederacion
@@ -55,8 +55,8 @@ GO
 -- Resultado esperado: estado OK y sin altas nuevas. Buenos Aires con -180
 -- minutos y sin horario de verano; Nueva York con -300 y horario de verano.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 2: reimportacion de husos horarios (TXT)';
-DECLARE @v_archivo NVARCHAR(260) = N'C:\Mundial2026\datos\timeZones.txt';
+PRINT '-> Test 2: reimportacion de husos horarios (TXT)';
+DECLARE @v_archivo VARCHAR(260) = 'C:\Mundial2026\datos\timeZones.txt';
 DECLARE @v_id INT;
 DECLARE @v_antes INT = (SELECT COUNT(*) FROM geo.huso_horario);
 
@@ -64,14 +64,14 @@ EXEC soporte.usp_Importar_HusosTxt @archivo = @v_archivo, @id_importacion = @v_i
 
 SELECT zona_horaria, offset_utc, horario_verano
 FROM geo.huso_horario
-WHERE zona_horaria IN (N'America/Argentina/Buenos_Aires', N'America/New_York', N'Europe/Madrid', N'Asia/Tokyo');
+WHERE zona_horaria IN ('America/Argentina/Buenos_Aires', 'America/New_York', 'Europe/Madrid', 'Asia/Tokyo');
 
 SELECT @v_antes AS husos_antes, (SELECT COUNT(*) FROM geo.huso_horario) AS husos_despues,
        CASE WHEN (SELECT COUNT(*) FROM geo.huso_horario) = @v_antes
-             AND EXISTS (SELECT 1 FROM geo.huso_horario WHERE zona_horaria = N'America/Argentina/Buenos_Aires' AND offset_utc = -180 AND horario_verano = 0)
-             AND EXISTS (SELECT 1 FROM geo.huso_horario WHERE zona_horaria = N'America/New_York' AND offset_utc = -300 AND horario_verano = 1)
+             AND EXISTS (SELECT 1 FROM geo.huso_horario WHERE zona_horaria = 'America/Argentina/Buenos_Aires' AND offset_utc = -180 AND horario_verano = 0)
+             AND EXISTS (SELECT 1 FROM geo.huso_horario WHERE zona_horaria = 'America/New_York' AND offset_utc = -300 AND horario_verano = 1)
              AND (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id) = 'OK'
-            THEN N'PASS' ELSE N'FAIL' END AS resultado;
+            THEN 'PASS' ELSE 'FAIL' END AS resultado;
 GO
 
 -------------------------------------------------------------------------------
@@ -80,8 +80,8 @@ GO
 -- huso (Buenos Aires, Bogotá) y el huso de cada país es el de su ciudad
 -- más poblada (geo.fn_HusoDePais).
 -------------------------------------------------------------------------------
-PRINT N'-> Test 3: reimportacion de ciudades (TXT)';
-DECLARE @v_archivo NVARCHAR(260) = N'C:\Mundial2026\datos\cities15000.txt';
+PRINT '-> Test 3: reimportacion de ciudades (TXT)';
+DECLARE @v_archivo VARCHAR(260) = 'C:\Mundial2026\datos\cities15000.txt';
 DECLARE @v_id INT;
 DECLARE @v_antes INT = (SELECT COUNT(*) FROM geo.ciudad);
 
@@ -97,13 +97,13 @@ ORDER BY c.poblacion DESC;
 SELECT @v_antes AS ciudades_antes, (SELECT COUNT(*) FROM geo.ciudad) AS ciudades_despues,
        CASE WHEN (SELECT COUNT(*) FROM geo.ciudad) = @v_antes
              AND EXISTS (SELECT 1 FROM geo.ciudad AS c JOIN geo.huso_horario AS h ON h.id_huso = c.id_huso
-                         WHERE c.nombre = N'Buenos Aires' AND h.zona_horaria = N'America/Argentina/Buenos_Aires')
+                         WHERE c.nombre = 'Buenos Aires' AND h.zona_horaria = 'America/Argentina/Buenos_Aires')
              -- El archivo real trae ciudades de territorios sin país cargado
              -- (GS, TF, XK): quedan informadas como error de fila.
              AND (SELECT i.filas_error FROM soporte.importacion AS i WHERE i.id_importacion = @v_id)
                  = (SELECT COUNT(*) FROM soporte.importacion_error AS e
-                    WHERE e.id_importacion = @v_id AND e.mensaje LIKE N'pais inexistente%')
-            THEN N'PASS' ELSE N'FAIL' END AS resultado;
+                    WHERE e.id_importacion = @v_id AND e.mensaje LIKE 'pais inexistente%')
+            THEN 'PASS' ELSE 'FAIL' END AS resultado;
 GO
 
 -------------------------------------------------------------------------------
@@ -111,8 +111,8 @@ GO
 -- Resultado esperado: las 16 sedes del Mundial siguen siendo 16, con
 -- coordenadas en grados decimales y su ciudad.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 4: reimportacion de sedes (JSON)';
-DECLARE @v_archivo NVARCHAR(260) = N'C:\Mundial2026\datos\worldcup.stadiums.json';
+PRINT '-> Test 4: reimportacion de sedes (JSON)';
+DECLARE @v_archivo VARCHAR(260) = 'C:\Mundial2026\datos\worldcup.stadiums.json';
 DECLARE @v_id INT;
 DECLARE @v_antes INT = (SELECT COUNT(*) FROM torneo.sede);
 
@@ -130,7 +130,7 @@ SELECT @v_antes AS sedes_antes, (SELECT COUNT(*) FROM torneo.sede) AS sedes_desp
        CASE WHEN (SELECT COUNT(*) FROM torneo.sede) = @v_antes
              AND (SELECT COUNT(*) FROM torneo.sede WHERE latitud IS NOT NULL) = 16
              AND (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id) = 'OK'
-            THEN N'PASS' ELSE N'FAIL' END AS resultado;
+            THEN 'PASS' ELSE 'FAIL' END AS resultado;
 GO
 
 -------------------------------------------------------------------------------
@@ -138,14 +138,14 @@ GO
 -- Resultado esperado: 48 selecciones del torneo en 12 grupos de 4, con los
 -- tres anfitriones marcados, sin altas nuevas al reimportar.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 5: reimportacion de selecciones (JSON)';
-DECLARE @v_archivo NVARCHAR(260) = N'C:\Mundial2026\datos\worldcup.teams.json';
+PRINT '-> Test 5: reimportacion de selecciones (JSON)';
+DECLARE @v_archivo VARCHAR(260) = 'C:\Mundial2026\datos\worldcup.teams.json';
 DECLARE @v_id INT;
 DECLARE @v_antes INT = (SELECT COUNT(*) FROM torneo.seleccion);
 
 EXEC soporte.usp_Importar_SeleccionesJson @archivo = @v_archivo, @id_importacion = @v_id OUTPUT;
 
-SELECT s.id_letra AS grupo, STRING_AGG(p.nombre, N', ') WITHIN GROUP (ORDER BY p.nombre) AS selecciones
+SELECT s.id_letra AS grupo, STRING_AGG(p.nombre, ', ') WITHIN GROUP (ORDER BY p.nombre) AS selecciones
 FROM torneo.seleccion AS s
 JOIN geo.pais AS p ON p.id_pais = s.id_pais
 GROUP BY s.id_letra
@@ -155,10 +155,10 @@ SELECT @v_antes AS selecciones_antes, (SELECT COUNT(*) FROM torneo.seleccion) AS
        CASE WHEN (SELECT COUNT(*) FROM torneo.seleccion) = @v_antes
              AND (SELECT COUNT(*) FROM torneo.seleccion WHERE es_anfitrion = 1) = 3
              AND (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id) = 'OK'
-            THEN N'PASS' ELSE N'FAIL' END AS resultado;
+            THEN 'PASS' ELSE 'FAIL' END AS resultado;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBAS EXITOSAS: 81_Test_Importacion_Geografia_OK';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBAS EXITOSAS: 81_Test_Importacion_Geografia_OK';
+PRINT '=====================================================================';
 GO

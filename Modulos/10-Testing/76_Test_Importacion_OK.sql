@@ -16,13 +16,13 @@ GO
 
 SET NOCOUNT ON;
 
-PRINT N'=====================================================================';
-PRINT N'INICIO PRUEBA EXITOSA: 76_Test_Importacion_OK';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'INICIO PRUEBA EXITOSA: 76_Test_Importacion_OK';
+PRINT '=====================================================================';
 GO
 
-IF OBJECT_ID(N'soporte.usp_Negocio_ImportarFixture', N'P') IS NULL
-    THROW 50001, N'76_Test_Importacion_OK: no existe soporte.usp_Negocio_ImportarFixture', 1;
+IF OBJECT_ID('soporte.usp_Negocio_ImportarFixture', 'P') IS NULL
+    THROW 50001, '76_Test_Importacion_OK: no existe soporte.usp_Negocio_ImportarFixture', 1;
 GO
 
 -------------------------------------------------------------------------------
@@ -32,14 +32,14 @@ GO
 -- las selecciones, y se actualizan a la fecha y la sede oficiales.
 -- Ninguna fila con error: estado OK.
 -------------------------------------------------------------------------------
-PRINT N'-> Test 1: primera importacion del fixture';
-DECLARE @v_archivo NVARCHAR(260) = N'C:\Mundial2026\datos\worldcup.json';
+PRINT '-> Test 1: primera importacion del fixture';
+DECLARE @v_archivo VARCHAR(260) = 'C:\Mundial2026\datos\worldcup.json';
 DECLARE @v_id INT;
 
 EXEC soporte.usp_Negocio_ImportarFixture @archivo = @v_archivo, @id_importacion = @v_id OUTPUT;
 
 SELECT i.id_importacion, i.estado, i.filas_leidas, i.filas_ok, i.filas_error,
-       CASE WHEN i.estado = 'OK' AND i.filas_leidas = 104 AND i.filas_ok = 104 THEN N'PASS' ELSE N'FAIL' END AS resultado
+       CASE WHEN i.estado = 'OK' AND i.filas_leidas = 104 AND i.filas_ok = 104 THEN 'PASS' ELSE 'FAIL' END AS resultado
 FROM soporte.importacion AS i
 WHERE i.id_importacion = @v_id;
 GO
@@ -49,8 +49,8 @@ GO
 -- Resultado esperado: la cantidad de partidos no cambia y las 104 filas
 -- quedan sin cambios (no hay duplicados).
 -------------------------------------------------------------------------------
-PRINT N'-> Test 2: reimportacion sin duplicados';
-DECLARE @v_archivo NVARCHAR(260) = N'C:\Mundial2026\datos\worldcup.json';
+PRINT '-> Test 2: reimportacion sin duplicados';
+DECLARE @v_archivo VARCHAR(260) = 'C:\Mundial2026\datos\worldcup.json';
 DECLARE @v_id INT;
 DECLARE @v_antes INT = (SELECT COUNT(*) FROM torneo.partido);
 
@@ -59,7 +59,7 @@ EXEC soporte.usp_Negocio_ImportarFixture @archivo = @v_archivo, @id_importacion 
 SELECT @v_antes AS partidos_antes, (SELECT COUNT(*) FROM torneo.partido) AS partidos_despues,
        CASE WHEN (SELECT COUNT(*) FROM torneo.partido) = @v_antes
              AND (SELECT estado FROM soporte.importacion WHERE id_importacion = @v_id) = 'OK'
-            THEN N'PASS' ELSE N'FAIL' END AS resultado;
+            THEN 'PASS' ELSE 'FAIL' END AS resultado;
 GO
 
 -------------------------------------------------------------------------------
@@ -69,7 +69,7 @@ GO
 -- del Mundial. El partido inaugural (México - Sudáfrica) es el 11/06/2026 a
 -- las 19:00 UTC (13:00 en Ciudad de México).
 -------------------------------------------------------------------------------
-PRINT N'-> Test 3: evidencia del fixture importado';
+PRINT '-> Test 3: evidencia del fixture importado';
 
 SELECT f.nro_fase, f.nombre AS fase, COUNT(*) AS partidos
 FROM torneo.partido AS p
@@ -109,11 +109,11 @@ SELECT CASE WHEN EXISTS (
             JOIN torneo.seleccion AS s2 ON s2.id_seleccion = e2.id_seleccion
             JOIN geo.pais AS p2 ON p2.id_pais = s2.id_pais AND p2.cod_fifa = 'RSA'
             WHERE p.fecha_hora_utc = '2026-06-11T19:00:00' AND p.nro_fase = 1)
-            THEN N'PASS partido inaugural en fecha y hora UTC correctas'
-            ELSE N'FAIL partido inaugural' END AS resultado;
+            THEN 'PASS partido inaugural en fecha y hora UTC correctas'
+            ELSE 'FAIL partido inaugural' END AS resultado;
 GO
 
-PRINT N'=====================================================================';
-PRINT N'FIN PRUEBA EXITOSA: 76_Test_Importacion_OK';
-PRINT N'=====================================================================';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBA EXITOSA: 76_Test_Importacion_OK';
+PRINT '=====================================================================';
 GO
