@@ -1,23 +1,19 @@
-/* ===================================================================== 
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
-Comisi�n: 02-5600
+Comisión: 02-5600
 Grupo   : 01
 Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Caceres Lautaro Agustin
 Fecha   : 2026-10-03
-Objetivo: <una l�nea sobre lo que hace este script>
-===================================================================== */
+Objetivo: Crea 15 SP de ABM (Insertar, Modificar y Eliminar).
+   ===================================================================== */
 USE Mundial2026;
 GO
 
 -- ============================================================================
--- Esquema: geo
--- Tablas: confederacion, huso_horario, pais, ciudad, indicador_pais
+-- 1. geo.confederacion
 -- ============================================================================
 
--- ----------------------------------------------------------------------------
--- 1. geo.confederacion
--- ----------------------------------------------------------------------------
 CREATE OR ALTER PROCEDURE geo.usp_Confederacion_Insertar
     @nombre VARCHAR(50),
     @sigla VARCHAR(10),
@@ -27,15 +23,22 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
         IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
-        IF NULLIF(LTRIM(RTRIM(@sigla)), '') IS NULL SET @v_errores += 'sigla obligatoria; ';
+        IF NULLIF(LTRIM(RTRIM(@sigla)), '') IS NULL SET @v_errores += 'sigla obligatorio; ';
         IF EXISTS (SELECT 1 FROM geo.confederacion WHERE nombre = @nombre) SET @v_errores += 'nombre ya registrado; ';
         IF EXISTS (SELECT 1 FROM geo.confederacion WHERE sigla = @sigla) SET @v_errores += 'sigla ya registrada; ';
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = CONCAT('geo.usp_Confederacion_Insertar: ', @v_errores);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_confederacion_insertar;
+        ELSE BEGIN SAVE TRANSACTION sv_confederacion_insertar; SET @v_sp = 1; END
 
         INSERT INTO geo.confederacion (nombre, sigla) VALUES (@nombre, @sigla);
         SET @id_confederacion = SCOPE_IDENTITY();
@@ -43,12 +46,14 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_confederacion_insertar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_confederacion_insertar; 
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE geo.usp_Confederacion_Modificar
     @id_confederacion TINYINT,
@@ -59,28 +64,38 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
         IF NOT EXISTS (SELECT 1 FROM geo.confederacion WHERE id_confederacion = @id_confederacion) SET @v_errores += 'confederacion inexistente; ';
         IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
-        IF NULLIF(LTRIM(RTRIM(@sigla)), '') IS NULL SET @v_errores += 'sigla obligatoria; ';
+        IF NULLIF(LTRIM(RTRIM(@sigla)), '') IS NULL SET @v_errores += 'sigla obligatorio; ';
         IF EXISTS (SELECT 1 FROM geo.confederacion WHERE nombre = @nombre AND id_confederacion <> @id_confederacion) SET @v_errores += 'nombre ya registrado; ';
         IF EXISTS (SELECT 1 FROM geo.confederacion WHERE sigla = @sigla AND id_confederacion <> @id_confederacion) SET @v_errores += 'sigla ya registrada; ';
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = CONCAT('geo.usp_Confederacion_Modificar: ', @v_errores);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_confederacion_modificar;
+        ELSE BEGIN SAVE TRANSACTION sv_confederacion_modificar; SET @v_sp = 1; END
 
         UPDATE geo.confederacion SET nombre = @nombre, sigla = @sigla WHERE id_confederacion = @id_confederacion;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_confederacion_modificar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_confederacion_modificar;  -- solo lo mío
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE geo.usp_Confederacion_Eliminar
     @id_confederacion TINYINT
@@ -89,37 +104,43 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM geo.confederacion WHERE id_confederacion = @id_confederacion) THROW 50001, 'confederacion inexistente', 1;
+        -- 1) El registro debe existir
+        IF NOT EXISTS (SELECT 1 FROM geo.confederacion WHERE id_confederacion = @id_confederacion)
+            THROW 50001, 'geo.usp_Confederacion_Eliminar: confederacion inexistente', 1;
 
+        -- 2) Dependientes: una línea por cada tabla con FK a esta fila
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM geo.pais WHERE id_confederacion = @id_confederacion;
         IF @v_n > 0 SET @v_errores += CONCAT('pais(', @v_n, '); ');
-
         IF @v_errores <> ''
         BEGIN
-            SET @v_errores = CONCAT('No se puede eliminar, tiene dependientes: ', @v_errores);
+            SET @v_errores = CONCAT('geo.usp_Confederacion_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores);
             THROW 50002, @v_errores, 1;
         END
 
+        -- 3) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_confederacion_eliminar;
+        ELSE BEGIN SAVE TRANSACTION sv_confederacion_eliminar; SET @v_sp = 1; END
 
         DELETE FROM geo.confederacion WHERE id_confederacion = @id_confederacion;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_confederacion_eliminar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_confederacion_eliminar;  
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
--- ----------------------------------------------------------------------------
+
+-- ============================================================================
 -- 2. geo.huso_horario
--- ----------------------------------------------------------------------------
+-- ============================================================================
+
 CREATE OR ALTER PROCEDURE geo.usp_HusoHorario_Insertar
     @zona_horaria VARCHAR(60),
     @offset_utc SMALLINT,
@@ -130,14 +151,22 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
         IF NULLIF(LTRIM(RTRIM(@zona_horaria)), '') IS NULL SET @v_errores += 'zona_horaria obligatoria; ';
-        IF @offset_utc NOT BETWEEN -720 AND 840 SET @v_errores += 'offset_utc fuera de rango (-720 a 840); ';
+        IF @offset_utc IS NULL OR @offset_utc NOT BETWEEN -720 AND 840 SET @v_errores += 'offset_utc obligatorio y entre -720 y 840; ';
+        IF @horario_verano IS NULL SET @v_errores += 'horario_verano obligatorio; ';
         IF EXISTS (SELECT 1 FROM geo.huso_horario WHERE zona_horaria = @zona_horaria) SET @v_errores += 'zona_horaria ya registrada; ';
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = CONCAT('geo.usp_HusoHorario_Insertar: ', @v_errores);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_huso_horario_insertar;
+        ELSE BEGIN SAVE TRANSACTION sv_huso_horario_insertar; SET @v_sp = 1; END
 
         INSERT INTO geo.huso_horario (zona_horaria, offset_utc, horario_verano) VALUES (@zona_horaria, @offset_utc, @horario_verano);
         SET @id_huso = SCOPE_IDENTITY();
@@ -145,12 +174,15 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_huso_horario_insertar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_huso_horario_insertar; 
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE geo.usp_HusoHorario_Modificar
     @id_huso SMALLINT,
@@ -162,27 +194,38 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
         IF NOT EXISTS (SELECT 1 FROM geo.huso_horario WHERE id_huso = @id_huso) SET @v_errores += 'huso_horario inexistente; ';
         IF NULLIF(LTRIM(RTRIM(@zona_horaria)), '') IS NULL SET @v_errores += 'zona_horaria obligatoria; ';
-        IF @offset_utc NOT BETWEEN -720 AND 840 SET @v_errores += 'offset_utc fuera de rango; ';
+        IF @offset_utc IS NULL OR @offset_utc NOT BETWEEN -720 AND 840 SET @v_errores += 'offset_utc obligatorio y entre -720 y 840; ';
+        IF @horario_verano IS NULL SET @v_errores += 'horario_verano obligatorio; ';
         IF EXISTS (SELECT 1 FROM geo.huso_horario WHERE zona_horaria = @zona_horaria AND id_huso <> @id_huso) SET @v_errores += 'zona_horaria ya registrada; ';
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = CONCAT('geo.usp_HusoHorario_Modificar: ', @v_errores);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_huso_horario_modificar;
+        ELSE BEGIN SAVE TRANSACTION sv_huso_horario_modificar; SET @v_sp = 1; END
 
         UPDATE geo.huso_horario SET zona_horaria = @zona_horaria, offset_utc = @offset_utc, horario_verano = @horario_verano WHERE id_huso = @id_huso;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_huso_horario_modificar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_huso_horario_modificar; 
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE geo.usp_HusoHorario_Eliminar
     @id_huso SMALLINT
@@ -191,37 +234,43 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM geo.huso_horario WHERE id_huso = @id_huso) THROW 50001, 'huso_horario inexistente', 1;
+        -- 1) El registro debe existir
+        IF NOT EXISTS (SELECT 1 FROM geo.huso_horario WHERE id_huso = @id_huso)
+            THROW 50001, 'geo.usp_HusoHorario_Eliminar: huso_horario inexistente', 1;
 
+        -- 2) Dependientes: una línea por cada tabla con FK a esta fila
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM geo.ciudad WHERE id_huso = @id_huso;
         IF @v_n > 0 SET @v_errores += CONCAT('ciudad(', @v_n, '); ');
-
         IF @v_errores <> ''
         BEGIN
-            SET @v_errores = CONCAT('No se puede eliminar, tiene dependientes: ', @v_errores);
+            SET @v_errores = CONCAT('geo.usp_HusoHorario_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores);
             THROW 50002, @v_errores, 1;
         END
 
+        -- 3) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_huso_horario_eliminar;
+        ELSE BEGIN SAVE TRANSACTION sv_huso_horario_eliminar; SET @v_sp = 1; END
 
         DELETE FROM geo.huso_horario WHERE id_huso = @id_huso;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_huso_horario_eliminar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_huso_horario_eliminar; 
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
--- ----------------------------------------------------------------------------
--- 3. geo.pais (Basado exactamente en la plantilla del Plan B.2)
--- ----------------------------------------------------------------------------
+
+-- ============================================================================
+-- 3. geo.pais (plantilla B.2)
+-- ============================================================================
+
 CREATE OR ALTER PROCEDURE geo.usp_Pais_Insertar
     @nombre VARCHAR(80),
     @cod_iso3 CHAR(3),
@@ -234,16 +283,25 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
         IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
         IF @cod_iso3 IS NULL OR LEN(@cod_iso3) <> 3 SET @v_errores += 'cod_iso3 debe tener 3 letras; ';
+        IF @cod_fifa IS NOT NULL AND LEN(@cod_fifa) <> 3 SET @v_errores += 'cod_fifa debe tener 3 letras; ';
         IF NOT EXISTS (SELECT 1 FROM geo.confederacion WHERE id_confederacion = @id_confederacion) SET @v_errores += 'confederacion inexistente; ';
         IF EXISTS (SELECT 1 FROM geo.pais WHERE cod_iso3 = @cod_iso3) SET @v_errores += 'cod_iso3 ya registrado; ';
+        IF @cod_fifa IS NOT NULL AND EXISTS (SELECT 1 FROM geo.pais WHERE cod_fifa = @cod_fifa) SET @v_errores += 'cod_fifa ya registrado; ';
         IF EXISTS (SELECT 1 FROM geo.pais WHERE nombre = @nombre) SET @v_errores += 'nombre ya registrado; ';
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = CONCAT('geo.usp_Pais_Insertar: ', @v_errores);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_pais_insertar;
+        ELSE BEGIN SAVE TRANSACTION sv_pais_insertar; SET @v_sp = 1; END
 
         INSERT INTO geo.pais (nombre, cod_iso3, cod_fifa, gentilicio, id_confederacion)
         VALUES (@nombre, @cod_iso3, @cod_fifa, @gentilicio, @id_confederacion);
@@ -252,12 +310,15 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_pais_insertar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_pais_insertar; 
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE geo.usp_Pais_Modificar
     @id_pais SMALLINT,
@@ -271,31 +332,43 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
         IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += 'pais inexistente; ';
         IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
         IF @cod_iso3 IS NULL OR LEN(@cod_iso3) <> 3 SET @v_errores += 'cod_iso3 debe tener 3 letras; ';
+        IF @cod_fifa IS NOT NULL AND LEN(@cod_fifa) <> 3 SET @v_errores += 'cod_fifa debe tener 3 letras; ';
         IF NOT EXISTS (SELECT 1 FROM geo.confederacion WHERE id_confederacion = @id_confederacion) SET @v_errores += 'confederacion inexistente; ';
         IF EXISTS (SELECT 1 FROM geo.pais WHERE cod_iso3 = @cod_iso3 AND id_pais <> @id_pais) SET @v_errores += 'cod_iso3 ya registrado; ';
+        IF @cod_fifa IS NOT NULL AND EXISTS (SELECT 1 FROM geo.pais WHERE cod_fifa = @cod_fifa AND id_pais <> @id_pais) SET @v_errores += 'cod_fifa ya registrado; ';
         IF EXISTS (SELECT 1 FROM geo.pais WHERE nombre = @nombre AND id_pais <> @id_pais) SET @v_errores += 'nombre ya registrado; ';
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = CONCAT('geo.usp_Pais_Modificar: ', @v_errores);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_pais_modificar;
+        ELSE BEGIN SAVE TRANSACTION sv_pais_modificar; SET @v_sp = 1; END
 
         UPDATE geo.pais
-        SET nombre = @nombre, cod_iso3 = @cod_iso3, cod_fifa = @cod_fifa, gentilicio = @gentilicio, id_confederacion = @id_confederacion
+           SET nombre = @nombre, cod_iso3 = @cod_iso3, cod_fifa = @cod_fifa, gentilicio = @gentilicio, id_confederacion = @id_confederacion
         WHERE id_pais = @id_pais;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_pais_modificar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_pais_modificar; 
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE geo.usp_Pais_Eliminar
     @id_pais SMALLINT
@@ -304,47 +377,59 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) THROW 50001, 'pais inexistente', 1;
+        -- 1) El registro debe existir
+        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais)
+            THROW 50001, 'geo.usp_Pais_Eliminar: pais inexistente', 1;
 
+        -- 2) Dependientes: una línea por cada tabla con FK a esta fila 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM geo.ciudad WHERE id_pais = @id_pais;
         IF @v_n > 0 SET @v_errores += CONCAT('ciudad(', @v_n, '); ');
+        SELECT @v_n = COUNT(*) FROM geo.indicador_pais WHERE id_pais = @id_pais;
+        IF @v_n > 0 SET @v_errores += CONCAT('indicador_pais(', @v_n, '); ');
         SELECT @v_n = COUNT(*) FROM persona.persona WHERE id_pais = @id_pais;
         IF @v_n > 0 SET @v_errores += CONCAT('persona(', @v_n, '); ');
         SELECT @v_n = COUNT(*) FROM torneo.seleccion WHERE id_pais = @id_pais;
         IF @v_n > 0 SET @v_errores += CONCAT('seleccion(', @v_n, '); ');
         SELECT @v_n = COUNT(*) FROM publicidad.anunciante WHERE id_pais = @id_pais;
         IF @v_n > 0 SET @v_errores += CONCAT('anunciante(', @v_n, '); ');
+        SELECT @v_n = COUNT(*) FROM publicidad.anunciante_pais WHERE id_pais = @id_pais;
+        IF @v_n > 0 SET @v_errores += CONCAT('anunciante_pais(', @v_n, '); ');
+        SELECT @v_n = COUNT(*) FROM publicidad.pieza_publicitaria WHERE id_pais_mercado = @id_pais;
+        IF @v_n > 0 SET @v_errores += CONCAT('pieza_publicitaria(', @v_n, '); ');
         SELECT @v_n = COUNT(*) FROM publicidad.feriado WHERE id_pais = @id_pais;
         IF @v_n > 0 SET @v_errores += CONCAT('feriado(', @v_n, '); ');
-
         IF @v_errores <> ''
         BEGIN
-            SET @v_errores = CONCAT('No se puede eliminar, tiene dependientes: ', @v_errores);
+            SET @v_errores = CONCAT('geo.usp_Pais_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores);
             THROW 50002, @v_errores, 1;
         END
 
+        -- 3) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_pais_eliminar;
+        ELSE BEGIN SAVE TRANSACTION sv_pais_eliminar; SET @v_sp = 1; END
 
         DELETE FROM geo.pais WHERE id_pais = @id_pais;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_pais_eliminar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_pais_eliminar;  -- solo lo mío
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
--- ----------------------------------------------------------------------------
+
+-- ============================================================================
 -- 4. geo.ciudad
--- ----------------------------------------------------------------------------
+-- ============================================================================
+
 CREATE OR ALTER PROCEDURE geo.usp_Ciudad_Insertar
-    @nombre VARCHAR(100),
+    @nombre NVARCHAR(100),
     @poblacion INT,
     @id_pais SMALLINT,
     @id_huso SMALLINT,
@@ -352,18 +437,25 @@ CREATE OR ALTER PROCEDURE geo.usp_Ciudad_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
-        IF @poblacion < 0 SET @v_errores += 'poblacion no puede ser negativa; ';
-        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += 'pais inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM geo.huso_horario WHERE id_huso = @id_huso) SET @v_errores += 'huso_horario inexistente; ';
-        IF EXISTS (SELECT 1 FROM geo.ciudad WHERE id_pais = @id_pais AND nombre = @nombre) SET @v_errores += 'nombre de ciudad ya registrado en el pais; ';
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NULLIF(LTRIM(RTRIM(@nombre)), N'') IS NULL SET @v_errores += N'nombre obligatorio; ';
+        IF @poblacion IS NULL OR @poblacion < 0 SET @v_errores += N'poblacion obligatoria y no negativa; ';
+        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += N'pais inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM geo.huso_horario WHERE id_huso = @id_huso) SET @v_errores += N'huso_horario inexistente; ';
+        IF EXISTS (SELECT 1 FROM geo.ciudad WHERE id_pais = @id_pais AND nombre = @nombre) SET @v_errores += N'nombre de ciudad ya registrado en el pais; ';
+        IF @v_errores <> N''
+        BEGIN
+            SET @v_errores = CONCAT(N'geo.usp_Ciudad_Insertar: ', @v_errores);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_ciudad_insertar;
+        ELSE BEGIN SAVE TRANSACTION sv_ciudad_insertar; SET @v_sp = 1; END
 
         INSERT INTO geo.ciudad (nombre, poblacion, id_pais, id_huso) VALUES (@nombre, @poblacion, @id_pais, @id_huso);
         SET @id_ciudad = SCOPE_IDENTITY();
@@ -371,47 +463,61 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_ciudad_insertar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_ciudad_insertar; 
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 CREATE OR ALTER PROCEDURE geo.usp_Ciudad_Modificar
     @id_ciudad INT,
-    @nombre VARCHAR(100),
+    @nombre NVARCHAR(100),
     @poblacion INT,
     @id_pais SMALLINT,
     @id_huso SMALLINT
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM geo.ciudad WHERE id_ciudad = @id_ciudad) SET @v_errores += 'ciudad inexistente; ';
-        IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
-        IF @poblacion < 0 SET @v_errores += 'poblacion no puede ser negativa; ';
-        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += 'pais inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM geo.huso_horario WHERE id_huso = @id_huso) SET @v_errores += 'huso_horario inexistente; ';
-        IF EXISTS (SELECT 1 FROM geo.ciudad WHERE id_pais = @id_pais AND nombre = @nombre AND id_ciudad <> @id_ciudad) SET @v_errores += 'nombre de ciudad ya registrado en el pais; ';
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM geo.ciudad WHERE id_ciudad = @id_ciudad) SET @v_errores += N'ciudad inexistente; ';
+        IF NULLIF(LTRIM(RTRIM(@nombre)), N'') IS NULL SET @v_errores += N'nombre obligatorio; ';
+        IF @poblacion IS NULL OR @poblacion < 0 SET @v_errores += N'poblacion obligatoria y no negativa; ';
+        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += N'pais inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM geo.huso_horario WHERE id_huso = @id_huso) SET @v_errores += N'huso_horario inexistente; ';
+        IF EXISTS (SELECT 1 FROM geo.ciudad WHERE id_pais = @id_pais AND nombre = @nombre AND id_ciudad <> @id_ciudad) SET @v_errores += N'nombre de ciudad ya registrado en el pais; ';
+        IF @v_errores <> N''
+        BEGIN
+            SET @v_errores = CONCAT(N'geo.usp_Ciudad_Modificar: ', @v_errores);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_ciudad_modificar;
+        ELSE BEGIN SAVE TRANSACTION sv_ciudad_modificar; SET @v_sp = 1; END
 
         UPDATE geo.ciudad SET nombre = @nombre, poblacion = @poblacion, id_pais = @id_pais, id_huso = @id_huso WHERE id_ciudad = @id_ciudad;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_ciudad_modificar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_ciudad_modificar; 
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE geo.usp_Ciudad_Eliminar
     @id_ciudad INT
@@ -420,37 +526,44 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM geo.ciudad WHERE id_ciudad = @id_ciudad) THROW 50001, 'ciudad inexistente', 1;
+        -- 1) El registro debe existir
+        IF NOT EXISTS (SELECT 1 FROM geo.ciudad WHERE id_ciudad = @id_ciudad)
+            THROW 50001, 'geo.usp_Ciudad_Eliminar: ciudad inexistente', 1;
 
+        -- 2) Dependientes: una línea por cada tabla con FK a esta fila (mapa de FK, sección 7)
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM torneo.sede WHERE id_ciudad = @id_ciudad;
         IF @v_n > 0 SET @v_errores += CONCAT('sede(', @v_n, '); ');
-
         IF @v_errores <> ''
         BEGIN
-            SET @v_errores = CONCAT('No se puede eliminar, tiene dependientes: ', @v_errores);
+            SET @v_errores = CONCAT('geo.usp_Ciudad_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores);
             THROW 50002, @v_errores, 1;
         END
 
+        -- 3) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_ciudad_eliminar;
+        ELSE BEGIN SAVE TRANSACTION sv_ciudad_eliminar; SET @v_sp = 1; END
 
         DELETE FROM geo.ciudad WHERE id_ciudad = @id_ciudad;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_ciudad_eliminar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_ciudad_eliminar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
--- ----------------------------------------------------------------------------
--- 5. geo.indicador_pais (PK Compuesta: id_pais, anio, codigo_indicador)
--- ----------------------------------------------------------------------------
+
+
+-- ============================================================================
+-- 5. geo.indicador_pais (PK compuesta: id_pais, anio, codigo_indicador; sin OUTPUT)
+-- ============================================================================
+
 CREATE OR ALTER PROCEDURE geo.usp_IndicadorPais_Insertar
     @id_pais SMALLINT,
     @anio SMALLINT,
@@ -461,27 +574,38 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
         IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += 'pais inexistente; ';
-        IF @anio NOT BETWEEN 1960 AND 2100 SET @v_errores += 'anio fuera de rango (1960-2100); ';
+        IF @anio IS NULL OR @anio NOT BETWEEN 1960 AND 2100 SET @v_errores += 'anio obligatorio y entre 1960 y 2100; ';
         IF NULLIF(LTRIM(RTRIM(@codigo_indicador)), '') IS NULL SET @v_errores += 'codigo_indicador obligatorio; ';
+        IF @valor IS NULL SET @v_errores += 'valor obligatorio; ';
         IF EXISTS (SELECT 1 FROM geo.indicador_pais WHERE id_pais = @id_pais AND anio = @anio AND codigo_indicador = @codigo_indicador) SET @v_errores += 'indicador_pais ya registrado para esa clave; ';
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = CONCAT('geo.usp_IndicadorPais_Insertar: ', @v_errores);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_indicador_pais_insertar;
+        ELSE BEGIN SAVE TRANSACTION sv_indicador_pais_insertar; SET @v_sp = 1; END
 
         INSERT INTO geo.indicador_pais (id_pais, anio, codigo_indicador, valor) VALUES (@id_pais, @anio, @codigo_indicador, @valor);
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_indicador_pais_insertar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_indicador_pais_insertar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE geo.usp_IndicadorPais_Modificar
     @id_pais SMALLINT,
@@ -493,25 +617,35 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
         IF NOT EXISTS (SELECT 1 FROM geo.indicador_pais WHERE id_pais = @id_pais AND anio = @anio AND codigo_indicador = @codigo_indicador) SET @v_errores += 'indicador_pais inexistente; ';
         IF @valor IS NULL SET @v_errores += 'valor obligatorio; ';
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = CONCAT('geo.usp_IndicadorPais_Modificar: ', @v_errores);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_indicador_pais_modificar;
+        ELSE BEGIN SAVE TRANSACTION sv_indicador_pais_modificar; SET @v_sp = 1; END
 
         UPDATE geo.indicador_pais SET valor = @valor WHERE id_pais = @id_pais AND anio = @anio AND codigo_indicador = @codigo_indicador;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_indicador_pais_modificar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_indicador_pais_modificar;  
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE geo.usp_IndicadorPais_Eliminar
     @id_pais SMALLINT,
@@ -520,21 +654,29 @@ CREATE OR ALTER PROCEDURE geo.usp_IndicadorPais_Eliminar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
+    DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM geo.indicador_pais WHERE id_pais = @id_pais AND anio = @anio AND codigo_indicador = @codigo_indicador) THROW 50001, 'indicador_pais inexistente', 1;
+        -- 1) El registro debe existir
+        IF NOT EXISTS (SELECT 1 FROM geo.indicador_pais WHERE id_pais = @id_pais AND anio = @anio AND codigo_indicador = @codigo_indicador)
+            THROW 50001, 'geo.usp_IndicadorPais_Eliminar: indicador_pais inexistente', 1;
 
+        -- 3) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_indicador_pais_eliminar;
+        ELSE BEGIN SAVE TRANSACTION sv_indicador_pais_eliminar; SET @v_sp = 1; END
 
         DELETE FROM geo.indicador_pais WHERE id_pais = @id_pais AND anio = @anio AND codigo_indicador = @codigo_indicador;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_indicador_pais_eliminar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_indicador_pais_eliminar; 
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+-- Comprobación manual (va en los scripts de testing, no acá):
+--   SELECT COUNT(*) FROM sys.procedures WHERE schema_id = SCHEMA_ID('geo') AND name LIKE 'usp[_]%';   -- esperado: 15
