@@ -163,7 +163,7 @@ BEGIN
     JOIN geo.confederacion AS c ON c.sigla = p.sigla_confed;
 
     -- Territorios sin confederación (Antártida y similares): se omiten.
-    UPDATE #pais SET omitida = 1 WHERE continente = 'A' AND cod_iso3 IS NOT NULL;
+    UPDATE #pais SET omitida = 1 WHERE continente = 'AN' AND cod_iso3 IS NOT NULL;
 
     UPDATE p
     SET error = NULLIF(CONCAT(
@@ -518,7 +518,7 @@ GO
 --    Si un mismo país tiene dos ciudades homónimas, se conserva la más poblada.
 -- ============================================================================
 CREATE OR ALTER PROCEDURE soporte.usp_Importar_CiudadesTxt
-    @archivo VARCHAR(260),
+    @archivo NVARCHAR(260),
     @poblacion_minima INT = 100000,
     @id_importacion INT = NULL OUTPUT
 AS
@@ -526,10 +526,10 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @c_sp VARCHAR(60) = 'soporte.usp_Importar_CiudadesTxt';
-    DECLARE @c_fuente VARCHAR(60) = 'GeoNames cities15000';
-    DECLARE @v_errores VARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, '.txt');
-    DECLARE @v_mensaje VARCHAR(2048);
+    DECLARE @c_sp NVARCHAR(60) = N'soporte.usp_Importar_CiudadesTxt';
+    DECLARE @c_fuente NVARCHAR(60) = N'GeoNames cities15000';
+    DECLARE @v_errores NVARCHAR(2000) = soporte.fn_ValidarRutaArchivo(@archivo, N'.txt');
+    DECLARE @v_mensaje NVARCHAR(2048);
     DECLARE @v_leidas INT = 0;
     DECLARE @v_insertadas INT = 0;
     DECLARE @v_actualizadas INT = 0;
@@ -538,13 +538,13 @@ BEGIN
     DECLARE @v_id_min INT;
 
     IF @poblacion_minima IS NULL OR @poblacion_minima < 0
-        SET @v_errores += 'poblacion_minima debe ser mayor o igual a 0; ';
+        SET @v_errores += N'poblacion_minima debe ser mayor o igual a 0; ';
     IF @@TRANCOUNT > 0
-        SET @v_errores += 'no puede ejecutarse dentro de una transaccion; ';
+        SET @v_errores += N'no puede ejecutarse dentro de una transaccion; ';
 
-    IF @v_errores <> ''
+    IF @v_errores <> N''
     BEGIN
-        SET @v_mensaje = CONCAT(@c_sp, ': ', @v_errores);
+        SET @v_mensaje = CONCAT(@c_sp, N': ', @v_errores);
         THROW 50001, @v_mensaje, 1;
     END
 
@@ -556,14 +556,14 @@ BEGIN
         DELETE FROM soporte.stg_ciudad_txt;
         EXEC soporte.usp_Archivo_CargarDelimitado
             @archivo = @archivo,
-            @vista_destino = 'soporte.vw_stg_ciudad_txt_carga',
+            @vista_destino = N'soporte.vw_stg_ciudad_txt_carga',
             @es_csv = 0,
             @primera_fila = 1,
             @filas_cargadas = @v_leidas OUTPUT;
     END TRY
     BEGIN CATCH
         SET @v_mensaje = ERROR_MESSAGE();
-        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, '(archivo)', @archivo, @v_mensaje;
+        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, N'(archivo)', @archivo, @v_mensaje;
         EXEC soporte.usp_Importacion_Finalizar @id_importacion, 0, 0, 0, @error_general = 1, @mostrar_resumen = 0;
         THROW;
     END CATCH
@@ -573,16 +573,16 @@ BEGIN
     CREATE TABLE #ciudad
     (
         nro_fila      INT            NOT NULL PRIMARY KEY,
-        nombre        VARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
-        cod_pais      VARCHAR(10) COLLATE DATABASE_DEFAULT   NULL,
-        zona_horaria  VARCHAR(100) COLLATE DATABASE_DEFAULT  NULL,
-        texto_pob     VARCHAR(30) COLLATE DATABASE_DEFAULT   NULL,
+        nombre        NVARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
+        cod_pais      NVARCHAR(10) COLLATE DATABASE_DEFAULT   NULL,
+        zona_horaria  NVARCHAR(100) COLLATE DATABASE_DEFAULT  NULL,
+        texto_pob     NVARCHAR(30) COLLATE DATABASE_DEFAULT   NULL,
         poblacion     BIGINT         NULL,
         es_capital    BIT            NOT NULL,
         id_pais       SMALLINT       NULL,
         id_huso       SMALLINT       NULL,
         seleccionada  BIT            NOT NULL DEFAULT 0,
-        error         VARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
+        error         NVARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
     );
 
     INSERT INTO #ciudad (nro_fila, nombre, cod_pais, zona_horaria, texto_pob, poblacion, es_capital)
@@ -593,7 +593,7 @@ BEGIN
         soporte.fn_Limpiar(s.zona_horaria),
         soporte.fn_Limpiar(s.poblacion),
         TRY_CONVERT(BIGINT, soporte.fn_Limpiar(s.poblacion)),
-        CASE WHEN soporte.fn_Limpiar(s.codigo_tipo) = 'PPLC' THEN 1 ELSE 0 END
+        CASE WHEN soporte.fn_Limpiar(s.codigo_tipo) = N'PPLC' THEN 1 ELSE 0 END
     FROM soporte.stg_ciudad_txt AS s;
 
     -- Filas que interesan: capitales y ciudades grandes (las demás se omiten).
@@ -614,13 +614,13 @@ BEGIN
 
     UPDATE c
     SET error = NULLIF(CONCAT(
-            CASE WHEN c.nombre IS NULL THEN 'nombre vacio; ' END,
-            CASE WHEN LEN(c.nombre) > 100 THEN 'nombre de mas de 100 caracteres; ' END,
-            CASE WHEN c.poblacion IS NULL THEN CONCAT('poblacion no numerica (', ISNULL(c.texto_pob, 'vacia'), '); ')
-                 WHEN c.poblacion < 0 OR c.poblacion > 2147483647 THEN 'poblacion fuera de rango; ' END,
-            CASE WHEN c.id_pais IS NULL THEN CONCAT('pais inexistente para el codigo ISO2 ', ISNULL(c.cod_pais, 'vacio'), ' (importe antes los paises); ') END,
-            CASE WHEN c.id_huso IS NULL THEN CONCAT('huso horario inexistente: ', ISNULL(c.zona_horaria, 'vacio'), ' (importe antes los husos); ') END
-        ), '')
+            CASE WHEN c.nombre IS NULL THEN N'nombre vacio; ' END,
+            CASE WHEN LEN(c.nombre) > 100 THEN N'nombre de mas de 100 caracteres; ' END,
+            CASE WHEN c.poblacion IS NULL THEN CONCAT(N'poblacion no numerica (', ISNULL(c.texto_pob, N'vacia'), N'); ')
+                 WHEN c.poblacion < 0 OR c.poblacion > 2147483647 THEN N'poblacion fuera de rango; ' END,
+            CASE WHEN c.id_pais IS NULL THEN CONCAT(N'pais inexistente para el codigo ISO2 ', ISNULL(c.cod_pais, N'vacio'), N' (importe antes los paises); ') END,
+            CASE WHEN c.id_huso IS NULL THEN CONCAT(N'huso horario inexistente: ', ISNULL(c.zona_horaria, N'vacio'), N' (importe antes los husos); ') END
+        ), N'')
     FROM #ciudad AS c
     WHERE c.seleccionada = 1;
 
@@ -639,7 +639,7 @@ BEGIN
     WHERE o.rn > 1;
 
     DECLARE @v_fila INT = 0;
-    DECLARE @v_texto VARCHAR(1000);
+    DECLARE @v_texto NVARCHAR(1000);
 
     WHILE 1 = 1
     BEGIN
@@ -653,7 +653,7 @@ BEGIN
         SET @v_con_error += 1;
     END
 
-    DECLARE @v_nombre VARCHAR(100), @v_poblacion INT, @v_id_pais SMALLINT, @v_id_huso SMALLINT;
+    DECLARE @v_nombre NVARCHAR(100), @v_poblacion INT, @v_id_pais SMALLINT, @v_id_huso SMALLINT;
     DECLARE @v_id_ciudad INT, @v_poblacion_act INT, @v_huso_act SMALLINT;
 
     SET @v_fila = 0;
@@ -702,7 +702,7 @@ BEGIN
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SET @v_mensaje = ERROR_MESSAGE();
-            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, 'name', @v_nombre, @v_mensaje;
+            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, N'name', @v_nombre, @v_mensaje;
             SET @v_con_error += 1;
         END CATCH
     END
