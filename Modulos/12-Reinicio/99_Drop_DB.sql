@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
 Comisión: 02-5600
@@ -43,7 +43,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         DECLARE @v_error_numero INT = ERROR_NUMBER();
-        DECLARE @v_error_mensaje NVARCHAR(2048) = ERROR_MESSAGE();
+        DECLARE @v_error_mensaje VARCHAR(2048) = ERROR_MESSAGE();
 
         /*
            Si SINGLE_USER se ejecuto pero DROP DATABASE fallo, se intenta
