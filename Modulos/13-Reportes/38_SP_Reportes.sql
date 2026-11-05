@@ -471,7 +471,7 @@ BEGIN
 
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_cols VARCHAR(MAX);
-    DECLARE @v_sql VARCHAR(MAX);
+    DECLARE @v_sql NVARCHAR(MAX);
 
     IF @id_partido IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido)
@@ -515,7 +515,7 @@ BEGIN
         pv.id_partido,
         pv.fecha_hora_utc,
         pt.cant_prime AS mercados_en_prime_time,
-        CASE WHEN pt.cant_prime > 4 THEN ''SI'' ELSE ''NO'' END AS requiere_priorizacion,
+        CASE WHEN pt.cant_prime > 4 THEN N''SI'' ELSE N''NO'' END AS requiere_priorizacion,
         ' + @v_cols + '
     FROM (SELECT id_partido, fecha_hora_utc, mercado, es_prime FROM #matriz) AS src
     PIVOT (MAX(es_prime) FOR mercado IN (' + @v_cols + ')) AS pv
