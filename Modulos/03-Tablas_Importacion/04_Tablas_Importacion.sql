@@ -219,7 +219,7 @@ GO
 CREATE TABLE soporte.stg_ciudad_txt (
     id_stg               INT IDENTITY(1,1) NOT NULL,
     geonameid            VARCHAR(20)  NULL,
-    nombre               VARCHAR(200) NULL,
+    nombre               NVARCHAR(200) NULL,
     nombre_ascii         VARCHAR(200) NULL,
     nombres_alternativos VARCHAR(MAX) NULL,
     latitud              VARCHAR(30)  NULL,
@@ -336,10 +336,10 @@ CREATE TABLE soporte.stg_jugador_html (
     seleccion_texto VARCHAR(150)  NULL,
     dorsal          VARCHAR(20)   NULL,
     posicion        VARCHAR(20)   NULL,
-    jugador         VARCHAR(200)  NULL,
+    jugador         NVARCHAR(200)  NULL,
     clave_orden     VARCHAR(200)  NULL,
     fecha_nac       VARCHAR(20)   NULL,
-    club            VARCHAR(200)  NULL,
+    club            NVARCHAR(200)  NULL,
     club_pais       VARCHAR(100)  NULL,
     error           VARCHAR(1000) NULL,
     CONSTRAINT PK_stg_jugador_html PRIMARY KEY (nro_fila)
