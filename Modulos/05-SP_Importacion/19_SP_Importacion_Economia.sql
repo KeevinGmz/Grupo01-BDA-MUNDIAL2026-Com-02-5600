@@ -257,10 +257,10 @@ BEGIN
         )
         INSERT INTO soporte.stg_tipo_cambio (nro_fila, fecha, moneda, valor, moneda_base)
         SELECT
-            ROW_NUMBER() OVER (ORDER BY d.dia.value('@time', 'VARCHAR(20)') DESC, c.cot.value('@currency', 'VARCHAR(10)')),
-            d.dia.value('@time', 'VARCHAR(20)'),
-            c.cot.value('@currency', 'VARCHAR(10)'),
-            c.cot.value('@rate', 'VARCHAR(40)'),
+            ROW_NUMBER() OVER (ORDER BY d.dia.value('@time', 'NVARCHAR(20)') DESC, c.cot.value('@currency', 'NVARCHAR(10)')),
+            d.dia.value('@time', 'NVARCHAR(20)'),
+            c.cot.value('@currency', 'NVARCHAR(10)'),
+            c.cot.value('@rate', 'NVARCHAR(40)'),
             'EUR'
         FROM @v_xml.nodes('/gesmes:Envelope/Cube/Cube') AS d(dia)
         CROSS APPLY d.dia.nodes('Cube') AS c(cot);

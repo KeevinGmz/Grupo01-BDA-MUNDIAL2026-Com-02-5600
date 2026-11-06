@@ -70,7 +70,7 @@ GO
 -- Caso 3: ejecución dentro de una transacción
 -- Resultado esperado: excepción 50001 (la importación confirma fila a fila).
 -------------------------------------------------------------------------------
-PRINT '-> Test 3: importacion dentro de una transaccio';
+PRINT '-> Test 3: importacion dentro de una transaccion';
 DECLARE @v_nro INT, @v_msj VARCHAR(2048);
 BEGIN TRANSACTION;
 BEGIN TRY

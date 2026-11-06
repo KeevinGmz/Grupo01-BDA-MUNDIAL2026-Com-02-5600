@@ -1,78 +1,251 @@
-/* =====================================================================
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
-Materia : 3641 - Bases de Datos Aplicada Comisión: Com02-5600
-Grupo : 01 - Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Caceres Lautaro, Agustin
-Fecha : 2026-10-03
-Objetivo: Demostrar las validaciones fallidas y mensajes agrupados en SPs de ABM Geo
+Materia : 3641 - Bases de Datos Aplicada
+Comisión: 02-5600
+Grupo   : 01
+Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Caceres Lautaro Agustin
+Fecha   : 2026-10-03
+Objetivo: Demostrar validaciones fallidas, errores 50001/50002 y mensajes acumulados de los SP ABM del esquema geo.
 ===================================================================== */
 USE Mundial2026;
 GO
 
+SET NOCOUNT ON;
+GO
+
 PRINT '=====================================================================';
-PRINT 'INICIO PRUEBAS DE ERROR: 51_Test_ERR_ABM_Geo';
+PRINT 'INICIO PRUEBAS DE ERROR: 51_Test_ABM_Geo_ERR';
 PRINT '=====================================================================';
+GO
+
+/* =====================================================================
+   CASO 1
+   Varias validaciones simultaneas en geo.usp_Pais_Insertar.
+===================================================================== */
+PRINT '';
+PRINT '-> Test 1.1: pais con multiples parametros invalidos';
+
+DECLARE @v_id_pais_salida SMALLINT;
+DECLARE @v_error_numero INT = NULL;
+DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
+DECLARE @v_id_confederacion_inexistente TINYINT;
+
+-- Se obtiene un ID realmente inexistente, sin asumir que 99 este libre.
+SELECT TOP (1)
+    @v_id_confederacion_inexistente = CONVERT(TINYINT, n.numero)
+FROM
+(
+    SELECT TOP (255)
+        ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS numero
+    FROM sys.all_objects AS a
+) AS n
+WHERE NOT EXISTS
+      (
+          SELECT 1
+          FROM geo.confederacion AS c
+          WHERE c.id_confederacion = n.numero
+      )
+ORDER BY n.numero DESC;
+
+IF @v_id_confederacion_inexistente IS NULL
+BEGIN
+    ;THROW 50001,
+           '51_Test_ABM_Geo_ERR: no hay un id TINYINT libre para probar confederacion inexistente',
+           1;
+END;
 
 BEGIN TRANSACTION;
 
--- ---------------------------------------------------------------------
--- CASO 1: Validación acumulada en geo.usp_Pais_Insertar (Múltiples fallas)
--- Texto esperado: Mensaje con 50001 detallando nombre obligatorio, ISO3 inválido y confederación inexistente
--- ---------------------------------------------------------------------
 BEGIN TRY
-    PRINT '-> Test 1.1: Insertar país con múltiples parámetros inválidos...';
-    DECLARE @id_out SMALLINT;
-    EXEC geo.usp_Pais_Insertar 
-        @nombre = '', 
-        @cod_iso3 = 'ARGENTINA', -- Excede los 3 caracteres
-        @cod_fifa = NULL, 
-        @gentilicio = NULL, 
-        @id_confederacion = 99,   -- Inexistente
-        @id_pais = @id_out OUTPUT;
-    
-    PRINT '   [FALLO CONTROLANDO ERROR]: El SP debió lanzar una excepción y no lo hizo.';
+    EXEC geo.usp_Pais_Insertar
+        @nombre = '',
+        @cod_iso3 = 'AR',
+        @cod_fifa = NULL,
+        @gentilicio = NULL,
+        @id_confederacion = @v_id_confederacion_inexistente,
+        @id_pais = @v_id_pais_salida OUTPUT;
+
+    -- Si llega a esta linea, el SP no rechazo los datos.
+    SET @v_error_numero = 0;
+    SET @v_error_mensaje = 'El SP no lanzo la excepcion esperada';
 END TRY
 BEGIN CATCH
-    PRINT '   [ÉXITO CAPTURANDO ERROR] Código: ' + CAST(ERROR_NUMBER() AS VARCHAR(10));
-    PRINT '   Mensaje retornado:' + CHAR(10) + ERROR_MESSAGE();
+    SET @v_error_numero = ERROR_NUMBER();
+    SET @v_error_mensaje = ERROR_MESSAGE();
 END CATCH;
 
--- ---------------------------------------------------------------------
--- CASO 2: Unicidad duplicada en geo.usp_Pais_Insertar
--- Texto esperado: Error 50001 indicando que cod_iso3 o nombre ya están registrados
--- ---------------------------------------------------------------------
+IF @@TRANCOUNT > 0
+    ROLLBACK TRANSACTION;
+
+PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
+
+IF @v_error_numero = 50001
+   AND @v_error_mensaje LIKE '%nombre obligatorio%'
+   AND @v_error_mensaje LIKE '%3 letras%'
+   AND @v_error_mensaje LIKE '%confederacion inexistente%'
+BEGIN
+    PRINT 'PASS Test 1.1: se acumularon las tres validaciones en un unico error 50001.';
+END
+ELSE
+BEGIN
+    PRINT 'FAIL Test 1.1: numero o mensaje distinto del esperado.';
+END;
+GO
+
+/* =====================================================================
+   CASO 2
+   Duplicacion de cod_iso3.
+===================================================================== */
+PRINT '';
+PRINT '-> Test 1.2: codigo ISO3 duplicado';
+
+DECLARE @v_id_confederacion TINYINT;
+DECLARE @v_id_pais_base SMALLINT;
+DECLARE @v_id_pais_duplicado SMALLINT;
+DECLARE @v_error_numero INT = NULL;
+DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
+
+SELECT TOP (1)
+    @v_id_confederacion = c.id_confederacion
+FROM geo.confederacion AS c
+ORDER BY c.id_confederacion;
+
+IF @v_id_confederacion IS NULL
+BEGIN
+    ;THROW 50001,
+           '51_Test_ABM_Geo_ERR: debe existir al menos una confederacion para ejecutar el Test 1.2',
+           1;
+END;
+
+BEGIN TRANSACTION;
+
 BEGIN TRY
-    PRINT CHAR(10) + '-> Test 1.2: Insertar país con código ISO3 duplicado...';
-    EXEC geo.usp_Pais_Insertar 
-        @nombre = 'Nación Duplicada', 
-        @cod_iso3 = 'ARG', -- ISO3 existente de Argentina
-        @cod_fifa = 'NDP', 
-        @gentilicio = 'Duplicado', 
-        @id_confederacion = 1, 
-        @id_pais = @id_out OUTPUT;
+    EXEC geo.usp_Pais_Insertar
+        @nombre = 'Pais Base Duplicidad',
+        @cod_iso3 = 'DUP',
+        @cod_fifa = 'DUP',
+        @gentilicio = 'duplicense',
+        @id_confederacion = @v_id_confederacion,
+        @id_pais = @v_id_pais_base OUTPUT;
+
+    EXEC geo.usp_Pais_Insertar
+        @nombre = 'Otro Pais Duplicado',
+        @cod_iso3 = 'DUP',
+        @cod_fifa = 'ODP',
+        @gentilicio = 'otro',
+        @id_confederacion = @v_id_confederacion,
+        @id_pais = @v_id_pais_duplicado OUTPUT;
+
+    SET @v_error_numero = 0;
+    SET @v_error_mensaje = 'El SP no lanzo la excepcion esperada';
 END TRY
 BEGIN CATCH
-    PRINT '   [ÉXITO CAPTURANDO ERROR] Código: ' + CAST(ERROR_NUMBER() AS VARCHAR(10));
-    PRINT '   Mensaje retornado: ' + ERROR_MESSAGE();
+    SET @v_error_numero = ERROR_NUMBER();
+    SET @v_error_mensaje = ERROR_MESSAGE();
 END CATCH;
 
--- ---------------------------------------------------------------------
--- CASO 3: Eliminación con dependencias activas en geo.usp_Pais_Eliminar
--- Texto esperado: Error 50002 notificando tablas que impiden el borrado
--- ---------------------------------------------------------------------
-BEGIN TRY
-    PRINT CHAR(10) + '-> Test 1.3: Eliminar país con ciudades y selecciones asociadas...';
-    DECLARE @id_pais_arg SMALLINT;
-    SELECT TOP 1 @id_pais_arg = id_pais FROM geo.pais WHERE cod_iso3 = 'ARG';
+IF @@TRANCOUNT > 0
+    ROLLBACK TRANSACTION;
 
-    EXEC geo.usp_Pais_Eliminar @id_pais = @id_pais_arg;
+PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
+
+IF @v_error_numero = 50001
+   AND @v_error_mensaje LIKE '%cod_iso3 ya registrado%'
+BEGIN
+    PRINT 'PASS Test 1.2: se rechazo el codigo ISO3 duplicado.';
+END
+ELSE
+BEGIN
+    PRINT 'FAIL Test 1.2: numero o mensaje distinto del esperado.';
+END;
+GO
+
+/* =====================================================================
+   CASO 3
+   Eliminacion de un pais con una ciudad dependiente.
+===================================================================== */
+PRINT '';
+PRINT '-> Test 1.3: eliminar pais con dependencias';
+
+DECLARE @v_id_confederacion TINYINT;
+DECLARE @v_id_huso SMALLINT;
+DECLARE @v_id_pais_dependiente SMALLINT;
+DECLARE @v_id_ciudad INT;
+DECLARE @v_error_numero INT = NULL;
+DECLARE @v_error_mensaje VARCHAR(2048) = NULL;
+
+SELECT TOP (1)
+    @v_id_confederacion = c.id_confederacion
+FROM geo.confederacion AS c
+ORDER BY c.id_confederacion;
+
+SELECT TOP (1)
+    @v_id_huso = h.id_huso
+FROM geo.huso_horario AS h
+ORDER BY h.id_huso;
+
+IF @v_id_confederacion IS NULL
+BEGIN
+    ;THROW 50001,
+           '51_Test_ABM_Geo_ERR: debe existir al menos una confederacion para ejecutar el Test 1.3',
+           1;
+END;
+
+IF @v_id_huso IS NULL
+BEGIN
+    ;THROW 50001,
+           '51_Test_ABM_Geo_ERR: debe existir al menos un huso horario para ejecutar el Test 1.3',
+           1;
+END;
+
+BEGIN TRANSACTION;
+
+BEGIN TRY
+    EXEC geo.usp_Pais_Insertar
+        @nombre = 'Pais con Dependencia',
+        @cod_iso3 = 'DEP',
+        @cod_fifa = 'DEP',
+        @gentilicio = 'dependiente',
+        @id_confederacion = @v_id_confederacion,
+        @id_pais = @v_id_pais_dependiente OUTPUT;
+
+    EXEC geo.usp_Ciudad_Insertar
+        @nombre = 'Ciudad Dependiente',
+        @poblacion = 100000,
+        @id_pais = @v_id_pais_dependiente,
+        @id_huso = @v_id_huso,
+        @id_ciudad = @v_id_ciudad OUTPUT;
+
+    EXEC geo.usp_Pais_Eliminar
+        @id_pais = @v_id_pais_dependiente;
+
+    SET @v_error_numero = 0;
+    SET @v_error_mensaje = 'El SP no lanzo la excepcion esperada';
 END TRY
 BEGIN CATCH
-    PRINT '   [ÉXITO CAPTURANDO ERROR] Código: ' + CAST(ERROR_NUMBER() AS VARCHAR(10));
-    PRINT '   Mensaje retornado: ' + ERROR_MESSAGE();
+    SET @v_error_numero = ERROR_NUMBER();
+    SET @v_error_mensaje = ERROR_MESSAGE();
 END CATCH;
 
-ROLLBACK TRANSACTION;
-PRINT CHAR(10) + '=====================================================================';
-PRINT 'FIN PRUEBAS DE ERROR: 51_Test_ERR_ABM_Geo (ROLLBACK EJECUTADO)';
+IF @@TRANCOUNT > 0
+    ROLLBACK TRANSACTION;
+
+PRINT CONCAT('Error capturado ', @v_error_numero, ': ', @v_error_mensaje);
+
+IF @v_error_numero = 50002
+   AND @v_error_mensaje LIKE '%ciudad%'
+BEGIN
+    PRINT 'PASS Test 1.3: se rechazo la eliminacion y se informo la dependencia ciudad.';
+END
+ELSE
+BEGIN
+    PRINT 'FAIL Test 1.3: numero o mensaje distinto del esperado.';
+END;
+GO
+
+PRINT '';
+PRINT '=====================================================================';
+PRINT 'FIN PRUEBAS DE ERROR: 51_Test_ABM_Geo_ERR';
+PRINT 'Cada caso ejecuto su propio ROLLBACK.';
 PRINT '=====================================================================';
 GO
