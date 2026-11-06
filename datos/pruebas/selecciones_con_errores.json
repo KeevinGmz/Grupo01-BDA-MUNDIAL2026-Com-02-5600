@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Mexico",
+    "continent": "North America",
+    "flag_icon": "🇲🇽",
+    "flag_unicode": "\\u{1F1F2}\\u{1F1FD}",
+    "fifa_code": "MEX",
+    "group": "A",
+    "confed": "CONCACAF"
+  },
+  {
+    "name": "Atlantis",
+    "fifa_code": "ATL",
+    "group": "Z",
+    "confed": "UEFA"
+  },
+  {
+    "name": "Codigo Largo",
+    "fifa_code": "MEXX",
+    "group": "A",
+    "confed": "CONCACAF"
+  },
+  {
+    "name": "Confederacion Rara",
+    "fifa_code": "CFR",
+    "group": "B",
+    "confed": "XYZ"
+  },
+  {
+    "name": "Mexico repetido",
+    "continent": "North America",
+    "flag_icon": "🇲🇽",
+    "flag_unicode": "\\u{1F1F2}\\u{1F1FD}",
+    "fifa_code": "MEX",
+    "group": "A",
+    "confed": "CONCACAF"
+  }
+]

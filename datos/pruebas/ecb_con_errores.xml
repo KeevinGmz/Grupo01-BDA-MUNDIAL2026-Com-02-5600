@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gesmes:Envelope xmlns:gesmes="http://www.gesmes.org/xml/2002-08-01" xmlns="http://www.ecb.int/vocabulary/2002-08-01/eurofxref">
+	<gesmes:subject>Reference rates (archivo de prueba con errores)</gesmes:subject>
+	<gesmes:Sender><gesmes:name>Grupo 01 - prueba</gesmes:name></gesmes:Sender>
+	<Cube>
+		<Cube time="2026-02-30">
+			<Cube currency="USD" rate="1.1000"/>
+			<Cube currency="JPY" rate="160.00"/>
+		</Cube>
+		<Cube time="2001-01-03">
+			<Cube currency="GBP" rate="0.6300"/>
+		</Cube>
+		<Cube time="2001-01-04">
+			<Cube currency="USD" rate="abc"/>
+			<Cube currency="1AB" rate="2.0000"/>
+			<Cube currency="CHF" rate="abc"/>
+			<Cube currency="SEK" rate="-8.5"/>
+		</Cube>
+	</Cube>
+</gesmes:Envelope>

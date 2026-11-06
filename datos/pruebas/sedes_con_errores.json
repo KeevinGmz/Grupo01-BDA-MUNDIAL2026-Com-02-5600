@@ -1,0 +1,45 @@
+{
+  "name": "Prueba de errores",
+  "stadiums": [
+    {
+      "city": "Vancouver",
+      "timezone": "UTC-7",
+      "cc": "ca",
+      "name": "BC Place",
+      "capacity": 54000,
+      "coords": "49°16'36\"N 123°6'43\"W"
+    },
+    {
+      "city": "Ciudad X",
+      "timezone": "UTC-3",
+      "cc": "zz",
+      "name": "Estadio Pais Inexistente",
+      "capacity": 50000,
+      "coords": "34°36'S 58°22'W"
+    },
+    {
+      "city": "Toronto",
+      "timezone": "UTC-4",
+      "cc": "ca",
+      "name": "Estadio Capacidad Cero",
+      "capacity": 0,
+      "coords": "43°38'0\"N 79°25'07\"W"
+    },
+    {
+      "city": "Toronto",
+      "timezone": "UTC-4",
+      "cc": "ca",
+      "name": "Estadio Coordenadas Mal",
+      "capacity": 30000,
+      "coords": "norte y oeste"
+    },
+    {
+      "city": "Toronto",
+      "timezone": "GMT mas cuatro",
+      "cc": "ca",
+      "name": "Estadio Huso Mal",
+      "capacity": 30000,
+      "coords": "43.6°N 79.4°W"
+    }
+  ]
+}

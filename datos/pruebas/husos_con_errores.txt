@@ -1,0 +1,5 @@
+CountryCode	TimeZoneId	GMT offset 1. Jan 2026	DST offset 1. Jul 2026	rawOffset (independant of DST)
+AR	America/Argentina/Buenos_Aires	-3.0	-3.0	-3.0
+ZZ	Prueba/Offset_Texto	abc	abc	abc
+ZZ	Prueba/Fuera_De_Rango	20.0	20.0	20.0
+AR	America/Argentina/Buenos_Aires	-3.0	-3.0	-3.0

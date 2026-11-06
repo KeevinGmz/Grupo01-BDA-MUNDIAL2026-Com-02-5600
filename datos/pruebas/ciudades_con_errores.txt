@@ -1,0 +1,4 @@
+9999999	Ciudad Pais Inexistente	Ciudad Pais Inexistente		0.0	0.0	P	PPLA	QQ		01				500000		10	America/Argentina/Buenos_Aires	2026-01-01
+9999999	Ciudad Huso Inexistente	Ciudad Huso Inexistente		0.0	0.0	P	PPLA	AR		01				500000		10	Marte/Olympus_Mons	2026-01-01
+9999999	Ciudad Poblacion Texto	Ciudad Poblacion Texto		0.0	0.0	P	PPLA	AR		01				mucha		10	America/Argentina/Buenos_Aires	2026-01-01
+9999999	Pueblo chico que se omite	Pueblo chico que se omite		0.0	0.0	P	PPLA	AR		01				20000		10	America/Argentina/Buenos_Aires	2026-01-01

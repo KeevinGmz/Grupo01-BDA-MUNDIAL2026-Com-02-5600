@@ -1,0 +1,215 @@
+{
+  "name": "Fixture con errores",
+  "matches": [
+    {
+      "round": "Matchday 1",
+      "date": "2026-06-11",
+      "time": "13:00 UTC-6",
+      "team1": "Mexico",
+      "team2": "South Africa",
+      "score": {
+        "ft": [
+          2,
+          0
+        ],
+        "ht": [
+          1,
+          0
+        ]
+      },
+      "goals1": [
+        {
+          "name": "Julián Quiñones",
+          "minute": "9"
+        },
+        {
+          "name": "Raúl Jiménez",
+          "minute": "67"
+        }
+      ],
+      "goals2": [],
+      "group": "Group A",
+      "ground": "Mexico City"
+    },
+    {
+      "round": "Round of 64",
+      "date": "2026-06-11",
+      "time": "13:00 UTC-6",
+      "team1": "Mexico",
+      "team2": "South Africa",
+      "score": {
+        "ft": [
+          2,
+          0
+        ],
+        "ht": [
+          1,
+          0
+        ]
+      },
+      "goals1": [
+        {
+          "name": "Julián Quiñones",
+          "minute": "9"
+        },
+        {
+          "name": "Raúl Jiménez",
+          "minute": "67"
+        }
+      ],
+      "goals2": [],
+      "group": "Group A",
+      "ground": "Mexico City"
+    },
+    {
+      "round": "Matchday 1",
+      "date": "2026-06-11",
+      "time": "13:00 UTC-6",
+      "team1": "Mexico",
+      "team2": "Atlantis",
+      "score": {
+        "ft": [
+          2,
+          0
+        ],
+        "ht": [
+          1,
+          0
+        ]
+      },
+      "goals1": [
+        {
+          "name": "Julián Quiñones",
+          "minute": "9"
+        },
+        {
+          "name": "Raúl Jiménez",
+          "minute": "67"
+        }
+      ],
+      "goals2": [],
+      "group": "Group A",
+      "ground": "Mexico City"
+    },
+    {
+      "round": "Matchday 1",
+      "date": "2026-06-11",
+      "time": "13:00 UTC-6",
+      "team1": "Mexico",
+      "team2": "South Africa",
+      "score": {
+        "ft": [
+          2,
+          0
+        ],
+        "ht": [
+          1,
+          0
+        ]
+      },
+      "goals1": [
+        {
+          "name": "Julián Quiñones",
+          "minute": "9"
+        },
+        {
+          "name": "Raúl Jiménez",
+          "minute": "67"
+        }
+      ],
+      "goals2": [],
+      "group": "Group A",
+      "ground": "Springfield"
+    },
+    {
+      "round": "Matchday 1",
+      "date": "2026-13-45",
+      "time": "13:00 UTC-6",
+      "team1": "Mexico",
+      "team2": "South Africa",
+      "score": {
+        "ft": [
+          2,
+          0
+        ],
+        "ht": [
+          1,
+          0
+        ]
+      },
+      "goals1": [
+        {
+          "name": "Julián Quiñones",
+          "minute": "9"
+        },
+        {
+          "name": "Raúl Jiménez",
+          "minute": "67"
+        }
+      ],
+      "goals2": [],
+      "group": "Group A",
+      "ground": "Mexico City"
+    },
+    {
+      "round": "Matchday 1",
+      "date": "2026-06-11",
+      "time": "13:00 GMT+X",
+      "team1": "Mexico",
+      "team2": "South Africa",
+      "score": {
+        "ft": [
+          2,
+          0
+        ],
+        "ht": [
+          1,
+          0
+        ]
+      },
+      "goals1": [
+        {
+          "name": "Julián Quiñones",
+          "minute": "9"
+        },
+        {
+          "name": "Raúl Jiménez",
+          "minute": "67"
+        }
+      ],
+      "goals2": [],
+      "group": "Group A",
+      "ground": "Mexico City"
+    },
+    {
+      "round": "Matchday 1",
+      "date": "2026-06-11",
+      "time": "13:00 UTC-6",
+      "team1": "Mexico",
+      "team2": "South Africa",
+      "score": {
+        "ft": [
+          2,
+          0
+        ],
+        "ht": [
+          1,
+          0
+        ]
+      },
+      "goals1": [
+        {
+          "name": "Julián Quiñones",
+          "minute": "9"
+        },
+        {
+          "name": "Raúl Jiménez",
+          "minute": "67"
+        }
+      ],
+      "goals2": [],
+      "group": "Group B",
+      "ground": "Mexico City"
+    }
+  ]
+}
