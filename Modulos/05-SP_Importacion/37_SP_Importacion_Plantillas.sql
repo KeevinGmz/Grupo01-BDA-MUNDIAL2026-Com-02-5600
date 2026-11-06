@@ -44,14 +44,14 @@ GO
 -- como la parte anterior a la coma. Sin coma, el apellido es la última palabra.
 CREATE OR ALTER FUNCTION soporte.fn_ApellidoDesdeClave
 (
-    @nombre_visible VARCHAR(200),
-    @clave_orden VARCHAR(200)
+    @nombre_visible NVARCHAR(200),
+    @clave_orden NVARCHAR(200)
 )
-RETURNS VARCHAR(200)
+RETURNS NVARCHAR(200)
 AS
 BEGIN
-    DECLARE @v_nombre VARCHAR(200) = soporte.fn_Limpiar(@nombre_visible);
-    DECLARE @v_clave VARCHAR(200) = soporte.fn_Limpiar(@clave_orden);
+    DECLARE @v_nombre NVARCHAR(200) = soporte.fn_Limpiar(@nombre_visible);
+    DECLARE @v_clave NVARCHAR(200) = soporte.fn_Limpiar(@clave_orden);
     DECLARE @v_palabras INT = 1;
     DECLARE @v_pos INT;
     DECLARE @v_resto INT;
@@ -59,13 +59,13 @@ BEGIN
     IF @v_nombre IS NULL
         RETURN NULL;
 
-    IF CHARINDEX(' ', @v_nombre) = 0
+    IF CHARINDEX(N' ', @v_nombre) = 0
         RETURN @v_nombre;
 
-    IF @v_clave IS NOT NULL AND CHARINDEX(',', @v_clave) > 1
+    IF @v_clave IS NOT NULL AND CHARINDEX(N',', @v_clave) > 1
     BEGIN
-        SET @v_clave = LTRIM(RTRIM(LEFT(@v_clave, CHARINDEX(',', @v_clave) - 1)));
-        SET @v_palabras = LEN(@v_clave) - LEN(REPLACE(@v_clave, ' ', '')) + 1;
+        SET @v_clave = LTRIM(RTRIM(LEFT(@v_clave, CHARINDEX(N',', @v_clave) - 1)));
+        SET @v_palabras = LEN(@v_clave) - LEN(REPLACE(@v_clave, N' ', N'')) + 1;
     END
 
     -- Posición del espacio que separa las últimas @v_palabras palabras.
@@ -74,48 +74,48 @@ BEGIN
     WHILE @v_resto > 0 AND @v_pos > 1
     BEGIN
         SET @v_pos = @v_pos - 1;
-        WHILE @v_pos > 0 AND SUBSTRING(@v_nombre, @v_pos, 1) <> ' '
+        WHILE @v_pos > 0 AND SUBSTRING(@v_nombre, @v_pos, 1) <> N' '
             SET @v_pos = @v_pos - 1;
         SET @v_resto = @v_resto - 1;
     END
 
     -- Si el apellido ocuparía el nombre completo, se deja una palabra de nombre.
     IF @v_pos <= 1
-        SET @v_pos = CHARINDEX(' ', @v_nombre);
+        SET @v_pos = CHARINDEX(N' ', @v_nombre);
 
     RETURN LTRIM(RTRIM(SUBSTRING(@v_nombre, @v_pos + 1, 200)));
 END;
 GO
 
 CREATE OR ALTER PROCEDURE soporte.usp_Importar_PlantillasWikipedia
-    @url VARCHAR(260) = 'https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_squads',
-    @archivo VARCHAR(260) = NULL,          -- opcional: copia guardada de la página (.html)
+    @url NVARCHAR(260) = N'https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_squads',
+    @archivo NVARCHAR(260) = NULL,          -- opcional: copia guardada de la página (.html)
     @id_importacion INT = NULL OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @c_sp VARCHAR(60) = 'soporte.usp_Importar_PlantillasWikipedia';
-    DECLARE @c_fuente VARCHAR(60) = 'Wikipedia (scraping)';
-    DECLARE @c_marca_fila VARCHAR(40) = '<tr class="nat-fs-player">';
-    DECLARE @v_errores VARCHAR(2000) = '';
-    DECLARE @v_mensaje VARCHAR(2048);
-    DECLARE @v_origen VARCHAR(260);
-    DECLARE @v_html VARCHAR(MAX);
+    DECLARE @c_sp NVARCHAR(60) = N'soporte.usp_Importar_PlantillasWikipedia';
+    DECLARE @c_fuente NVARCHAR(60) = N'Wikipedia (scraping)';
+    DECLARE @c_marca_fila NVARCHAR(40) = N'<tr class="nat-fs-player">';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
+    DECLARE @v_mensaje NVARCHAR(2048);
+    DECLARE @v_origen NVARCHAR(260);
+    DECLARE @v_html NVARCHAR(MAX);
     DECLARE @v_estado INT;
     DECLARE @v_leidas INT = 0;
 
     IF @archivo IS NOT NULL
-        SET @v_errores += soporte.fn_ValidarRutaArchivo(@archivo, '.html,.htm');
-    ELSE IF NULLIF(LTRIM(RTRIM(@url)), '') IS NULL OR @url NOT LIKE 'https://%.wikipedia.org/wiki/%'
-        SET @v_errores += 'url obligatoria y debe ser una pagina de wikipedia.org; ';
+        SET @v_errores += soporte.fn_ValidarRutaArchivo(@archivo, N'.html,.htm');
+    ELSE IF NULLIF(LTRIM(RTRIM(@url)), N'') IS NULL OR @url NOT LIKE N'https://%.wikipedia.org/wiki/%'
+        SET @v_errores += N'url obligatoria y debe ser una pagina de wikipedia.org; ';
     IF @@TRANCOUNT > 0
-        SET @v_errores += 'no puede ejecutarse dentro de una transaccion; ';
+        SET @v_errores += N'no puede ejecutarse dentro de una transaccion; ';
 
-    IF @v_errores <> ''
+    IF @v_errores <> N''
     BEGIN
-        SET @v_mensaje = LEFT(CONCAT(@c_sp, ': ', @v_errores), 2048);
+        SET @v_mensaje = LEFT(CONCAT(@c_sp, N': ', @v_errores), 2048);
         THROW 50001, @v_mensaje, 1;
     END
 
@@ -135,19 +135,19 @@ BEGIN
             EXEC soporte.usp_Http_Obtener @url = @url, @contenido = @v_html OUTPUT, @estado_http = @v_estado OUTPUT;
 
         IF CHARINDEX(@c_marca_fila, @v_html) = 0
-            THROW 50002, 'la pagina no contiene tablas de plantillas (filas <tr class="nat-fs-player">)', 1;
+            THROW 50002, N'la pagina no contiene tablas de plantillas (filas <tr class="nat-fs-player">)', 1;
 
         DELETE FROM soporte.stg_jugador_html;
 
         DECLARE @v_pos INT = 1;
         DECLARE @v_ini INT;
         DECLARE @v_fin INT;
-        DECLARE @v_sig_h3 INT = CHARINDEX('<h3', @v_html);
+        DECLARE @v_sig_h3 INT = CHARINDEX(N'<h3', @v_html);
         DECLARE @v_fin_h3 INT;
-        DECLARE @v_equipo VARCHAR(150);
-        DECLARE @v_fila_html VARCHAR(MAX);
+        DECLARE @v_equipo NVARCHAR(150);
+        DECLARE @v_fila_html NVARCHAR(MAX);
         DECLARE @v_nro INT = 0;
-        DECLARE @v_celdas TABLE (orden INT PRIMARY KEY, atributos VARCHAR(MAX), contenido VARCHAR(MAX));
+        DECLARE @v_celdas TABLE (orden INT PRIMARY KEY, atributos NVARCHAR(MAX), contenido NVARCHAR(MAX));
         DECLARE @v_p INT;
         DECLARE @v_td INT;
         DECLARE @v_th INT;
@@ -156,11 +156,11 @@ BEGIN
         DECLARE @v_fin_celda INT;
         DECLARE @v_orden INT;
         DECLARE @v_es_th BIT;
-        DECLARE @v_atr VARCHAR(MAX);
-        DECLARE @v_club_html VARCHAR(MAX);
+        DECLARE @v_atr NVARCHAR(MAX);
+        DECLARE @v_club_html NVARCHAR(MAX);
         DECLARE @v_bandera INT;
-        DECLARE @v_club_pais VARCHAR(200);
-        DECLARE @v_clave VARCHAR(200);
+        DECLARE @v_club_pais NVARCHAR(200);
+        DECLARE @v_clave NVARCHAR(200);
         DECLARE @v_bday INT;
 
         WHILE 1 = 1
@@ -171,13 +171,13 @@ BEGIN
             -- Selección vigente: último encabezado <h3> anterior a la fila.
             WHILE @v_sig_h3 > 0 AND @v_sig_h3 < @v_ini
             BEGIN
-                SET @v_fin_h3 = CHARINDEX('</h3>', @v_html, @v_sig_h3);
+                SET @v_fin_h3 = CHARINDEX(N'</h3>', @v_html, @v_sig_h3);
                 IF @v_fin_h3 = 0 BREAK;
                 SET @v_equipo = LEFT(soporte.fn_HtmlATexto(SUBSTRING(@v_html, @v_sig_h3, @v_fin_h3 - @v_sig_h3)), 150);
-                SET @v_sig_h3 = CHARINDEX('<h3', @v_html, @v_fin_h3);
+                SET @v_sig_h3 = CHARINDEX(N'<h3', @v_html, @v_fin_h3);
             END
 
-            SET @v_fin = CHARINDEX('</tr>', @v_html, @v_ini);
+            SET @v_fin = CHARINDEX(N'</tr>', @v_html, @v_ini);
             IF @v_fin = 0 SET @v_fin = LEN(@v_html) + 1;
             SET @v_fila_html = SUBSTRING(@v_html, @v_ini, @v_fin - @v_ini);
             SET @v_nro += 1;
@@ -188,13 +188,13 @@ BEGIN
             SET @v_orden = 0;
             WHILE @v_orden < 10
             BEGIN
-                SET @v_td = CHARINDEX('<td', @v_fila_html, @v_p);
-                SET @v_th = CHARINDEX('<th', @v_fila_html, @v_p);
+                SET @v_td = CHARINDEX(N'<td', @v_fila_html, @v_p);
+                SET @v_th = CHARINDEX(N'<th', @v_fila_html, @v_p);
                 IF @v_td = 0 AND @v_th = 0 BREAK;
                 SET @v_es_th = CASE WHEN @v_td = 0 OR (@v_th > 0 AND @v_th < @v_td) THEN 1 ELSE 0 END;
                 SET @v_ini_celda = CASE WHEN @v_es_th = 1 THEN @v_th ELSE @v_td END;
-                SET @v_ini_cont = CHARINDEX('>', @v_fila_html, @v_ini_celda) + 1;
-                SET @v_fin_celda = CHARINDEX(CASE WHEN @v_es_th = 1 THEN '</th>' ELSE '</td>' END, @v_fila_html, @v_ini_cont);
+                SET @v_ini_cont = CHARINDEX(N'>', @v_fila_html, @v_ini_celda) + 1;
+                SET @v_fin_celda = CHARINDEX(CASE WHEN @v_es_th = 1 THEN N'</th>' ELSE N'</td>' END, @v_fila_html, @v_ini_cont);
                 IF @v_ini_cont = 1 OR @v_fin_celda = 0 BREAK;
 
                 SET @v_orden += 1;
@@ -212,25 +212,25 @@ BEGIN
             -- Clave de orden del jugador: data-sort-value="Apellido, Nombre"
             SELECT @v_atr = c.atributos FROM @v_celdas AS c WHERE c.orden = 3;
             SET @v_clave = NULL;
-            IF CHARINDEX('data-sort-value="', ISNULL(@v_atr, '')) > 0
-                SET @v_clave = SUBSTRING(@v_atr, CHARINDEX('data-sort-value="', @v_atr) + 17,
-                                         CHARINDEX('"', @v_atr, CHARINDEX('data-sort-value="', @v_atr) + 17)
-                                         - CHARINDEX('data-sort-value="', @v_atr) - 17);
+            IF CHARINDEX(N'data-sort-value="', ISNULL(@v_atr, N'')) > 0
+                SET @v_clave = SUBSTRING(@v_atr, CHARINDEX(N'data-sort-value="', @v_atr) + 17,
+                                         CHARINDEX(N'"', @v_atr, CHARINDEX(N'data-sort-value="', @v_atr) + 17)
+                                         - CHARINDEX(N'data-sort-value="', @v_atr) - 17);
 
             -- País del club: nombre del archivo de la bandera (Flag_of_the_Netherlands.svg)
             SELECT @v_club_html = c.contenido FROM @v_celdas AS c WHERE c.orden = 7;
             SET @v_club_pais = NULL;
-            SET @v_bandera = CHARINDEX('Flag_of_', ISNULL(@v_club_html, ''));
-            IF @v_bandera > 0 AND CHARINDEX('.svg', @v_club_html, @v_bandera) > 0
+            SET @v_bandera = CHARINDEX(N'Flag_of_', ISNULL(@v_club_html, N''));
+            IF @v_bandera > 0 AND CHARINDEX(N'.svg', @v_club_html, @v_bandera) > 0
             BEGIN
-                SET @v_club_pais = SUBSTRING(@v_club_html, @v_bandera + 8, CHARINDEX('.svg', @v_club_html, @v_bandera) - @v_bandera - 8);
-                SET @v_club_pais = REPLACE(REPLACE(REPLACE(@v_club_pais, '_', ' '), '%27', ''''), '%28', '(');
-                SET @v_club_pais = REPLACE(@v_club_pais, '%29', ')');
-                IF @v_club_pais LIKE 'the %'
+                SET @v_club_pais = SUBSTRING(@v_club_html, @v_bandera + 8, CHARINDEX(N'.svg', @v_club_html, @v_bandera) - @v_bandera - 8);
+                SET @v_club_pais = REPLACE(REPLACE(REPLACE(@v_club_pais, N'_', N' '), N'%27', N''''), N'%28', N'(');
+                SET @v_club_pais = REPLACE(@v_club_pais, N'%29', N')');
+                IF @v_club_pais LIKE N'the %'
                     SET @v_club_pais = SUBSTRING(@v_club_pais, 5, 200);
             END
 
-            SELECT @v_bday = CHARINDEX('class="bday">', c.contenido) FROM @v_celdas AS c WHERE c.orden = 4;
+            SELECT @v_bday = CHARINDEX(N'class="bday">', c.contenido) FROM @v_celdas AS c WHERE c.orden = 4;
 
             INSERT INTO soporte.stg_jugador_html
                 (nro_fila, seleccion_texto, dorsal, posicion, jugador, clave_orden, fecha_nac, club, club_pais)
@@ -253,7 +253,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @v_mensaje = ERROR_MESSAGE();
-        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, '(pagina)', @v_origen, @v_mensaje;
+        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, 1, N'(pagina)', @v_origen, @v_mensaje;
         EXEC soporte.usp_Importacion_Finalizar @id_importacion, 0, 0, 0, @error_general = 1, @mostrar_resumen = 0;
         THROW;
     END CATCH
@@ -264,25 +264,25 @@ BEGIN
     CREATE TABLE #jug
     (
         nro_fila      INT            NOT NULL PRIMARY KEY,
-        seleccion     VARCHAR(150) COLLATE DATABASE_DEFAULT  NULL,
+        seleccion     NVARCHAR(150) COLLATE DATABASE_DEFAULT  NULL,
         id_pais       SMALLINT       NULL,
         cod_pais      CHAR(3) COLLATE DATABASE_DEFAULT        NULL,
         id_seleccion  INT            NULL,
-        dorsal_txt    VARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
+        dorsal_txt    NVARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
         dorsal        INT            NULL,
-        posicion_txt  VARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
+        posicion_txt  NVARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
         id_posicion   TINYINT        NULL,
-        jugador       VARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
-        nombre        VARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
-        apellido      VARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
-        fecha_txt     VARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
+        jugador       NVARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
+        nombre        NVARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
+        apellido      NVARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
+        fecha_txt     NVARCHAR(20) COLLATE DATABASE_DEFAULT   NULL,
         fecha_nac     DATE           NULL,
-        club          VARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
-        club_pais     VARCHAR(100) COLLATE DATABASE_DEFAULT  NULL,
-        nro_doc       VARCHAR(30) COLLATE DATABASE_DEFAULT   NULL,
+        club          NVARCHAR(200) COLLATE DATABASE_DEFAULT  NULL,
+        club_pais     NVARCHAR(100) COLLATE DATABASE_DEFAULT  NULL,
+        nro_doc       NVARCHAR(30) COLLATE DATABASE_DEFAULT   NULL,
         id_jugador    INT            NULL,
         estado        CHAR(1) COLLATE DATABASE_DEFAULT        NULL,     -- I insertado, U actualizado, S sin cambios, E error
-        error         VARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
+        error         NVARCHAR(1000) COLLATE DATABASE_DEFAULT NULL
     );
 
     INSERT INTO #jug (nro_fila, seleccion, dorsal_txt, dorsal, posicion_txt, jugador, nombre, apellido,
@@ -298,14 +298,14 @@ BEGIN
         soporte.fn_ApellidoDesdeClave(x.jugador, s.clave_orden),
         s.fecha_nac,
         TRY_CONVERT(DATE, s.fecha_nac, 23),
-        CASE WHEN s.club IN ('Unattached', 'Free agent', 'Without club') THEN NULL ELSE s.club END,
-        ISNULL(s.club_pais, '(sin datos)')
+        CASE WHEN s.club IN (N'Unattached', N'Free agent', N'Without club') THEN NULL ELSE s.club END,
+        ISNULL(s.club_pais, N'(sin datos)')
     FROM soporte.stg_jugador_html AS s
     CROSS APPLY
     (
         -- Se quita la marca de capitán: "Nombre (captain)".
-        SELECT CASE WHEN CHARINDEX('captai', s.jugador) > 0 AND CHARINDEX(' (', s.jugador) > 1
-                    THEN LTRIM(RTRIM(LEFT(s.jugador, CHARINDEX(' (', s.jugador) - 1)))
+        SELECT CASE WHEN CHARINDEX(N'captain', s.jugador) > 0 AND CHARINDEX(N' (', s.jugador) > 1
+                    THEN LTRIM(RTRIM(LEFT(s.jugador, CHARINDEX(N' (', s.jugador) - 1)))
                     ELSE s.jugador END AS jugador
     ) AS x;
 
@@ -318,10 +318,10 @@ BEGIN
     FROM #jug AS j
     LEFT JOIN persona.posicion AS po
            ON po.descripcion = CASE j.posicion_txt
-                                   WHEN 'GK' THEN 'Arquero'
-                                   WHEN 'DF' THEN 'Defensor'
-                                   WHEN 'MF' THEN 'Mediocampista'
-                                   WHEN 'FW' THEN 'Delantero'
+                                   WHEN N'GK' THEN N'Arquero'
+                                   WHEN N'DF' THEN N'Defensor'
+                                   WHEN N'MF' THEN N'Mediocampista'
+                                   WHEN N'FW' THEN N'Delantero'
                                END;
 
     UPDATE j
@@ -332,52 +332,52 @@ BEGIN
     LEFT JOIN torneo.seleccion AS s ON s.id_pais = j.id_pais;
 
     UPDATE #jug
-    SET nro_doc = CONCAT(cod_pais, '-', CONVERT(CHAR(8), fecha_nac, 112), '-',
+    SET nro_doc = CONCAT(cod_pais, N'-', CONVERT(CHAR(8), fecha_nac, 112), N'-',
                          LEFT(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', UPPER(jugador)), 2), 8))
     WHERE cod_pais IS NOT NULL AND fecha_nac IS NOT NULL AND jugador IS NOT NULL;
 
     UPDATE j
     SET error = NULLIF(CONCAT(
-            CASE WHEN j.id_seleccion IS NULL THEN CONCAT('seleccion inexistente: ', ISNULL(j.seleccion, 'sin encabezado'), '; ') END,
+            CASE WHEN j.id_seleccion IS NULL THEN CONCAT(N'seleccion inexistente: ', ISNULL(j.seleccion, N'sin encabezado'), N'; ') END,
             CASE WHEN j.dorsal IS NULL OR j.dorsal NOT BETWEEN 1 AND 99
-                 THEN CONCAT('dorsal invalido (', ISNULL(j.dorsal_txt, 'vacio'), '); ') END,
-            CASE WHEN j.id_posicion IS NULL THEN CONCAT('posicion desconocida (', ISNULL(j.posicion_txt, 'vacia'), '); ') END,
-            CASE WHEN j.jugador IS NULL THEN 'jugador sin nombre; ' END,
-            CASE WHEN LEN(j.nombre) > 80 OR LEN(j.apellido) > 80 THEN 'nombre o apellido de mas de 80 caracteres; ' END,
-            CASE WHEN j.fecha_nac IS NULL THEN CONCAT('fecha de nacimiento invalida (', ISNULL(j.fecha_txt, 'vacia'), '); ')
-                 WHEN j.fecha_nac > CONVERT(DATE, SYSDATETIME()) THEN 'fecha de nacimiento futura; ' END,
-            CASE WHEN LEN(j.club) > 100 THEN 'nombre de club de mas de 100 caracteres; ' END,
+                 THEN CONCAT(N'dorsal invalido (', ISNULL(j.dorsal_txt, N'vacio'), N'); ') END,
+            CASE WHEN j.id_posicion IS NULL THEN CONCAT(N'posicion desconocida (', ISNULL(j.posicion_txt, N'vacia'), N'); ') END,
+            CASE WHEN j.jugador IS NULL THEN N'jugador sin nombre; ' END,
+            CASE WHEN LEN(j.nombre) > 80 OR LEN(j.apellido) > 80 THEN N'nombre o apellido de mas de 80 caracteres; ' END,
+            CASE WHEN j.fecha_nac IS NULL THEN CONCAT(N'fecha de nacimiento invalida (', ISNULL(j.fecha_txt, N'vacia'), N'); ')
+                 WHEN j.fecha_nac > CONVERT(DATE, SYSDATETIME()) THEN N'fecha de nacimiento futura; ' END,
+            CASE WHEN LEN(j.club) > 100 THEN N'nombre de club de mas de 100 caracteres; ' END,
             CASE WHEN EXISTS (SELECT 1 FROM #jug AS d WHERE d.id_seleccion = j.id_seleccion AND d.dorsal = j.dorsal AND d.nro_fila < j.nro_fila)
-                 THEN 'dorsal repetido en la seleccion; ' END,
+                 THEN N'dorsal repetido en la seleccion; ' END,
             CASE WHEN EXISTS (SELECT 1 FROM #jug AS d WHERE d.nro_doc = j.nro_doc AND d.nro_fila < j.nro_fila)
-                 THEN 'jugador repetido en la pagina; ' END
-        ), '')
+                 THEN N'jugador repetido en la pagina; ' END
+        ), N'')
     FROM #jug AS j;
 
     UPDATE #jug SET estado = 'E' WHERE error IS NOT NULL;
 
     DECLARE @v_fila INT = 0;
-    DECLARE @v_texto VARCHAR(1000);
-    DECLARE @v_jugador VARCHAR(200);
+    DECLARE @v_texto NVARCHAR(1000);
+    DECLARE @v_jugador NVARCHAR(200);
 
     WHILE 1 = 1
     BEGIN
-        SELECT TOP (1) @v_fila = j.nro_fila, @v_texto = j.error, @v_jugador = CONCAT(j.seleccion, ' - ', j.jugador)
+        SELECT TOP (1) @v_fila = j.nro_fila, @v_texto = j.error, @v_jugador = CONCAT(j.seleccion, N' - ', j.jugador)
         FROM #jug AS j
         WHERE j.error IS NOT NULL AND j.nro_fila > @v_fila
         ORDER BY j.nro_fila;
         IF @@ROWCOUNT = 0 BREAK;
 
-        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, 'jugador', @v_jugador, @v_texto;
+        EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, N'jugador', @v_jugador, @v_texto;
     END
 
     ---------------------------------------------------------------------------
     -- 3. Upsert de clubes y jugadores (una transacción por fila)
     ---------------------------------------------------------------------------
-    DECLARE @v_nombre VARCHAR(80), @v_apellido VARCHAR(80), @v_fecha DATE, @v_id_pais SMALLINT;
-    DECLARE @v_nro_doc VARCHAR(30), @v_id_posicion TINYINT, @v_club VARCHAR(100), @v_club_pais_f VARCHAR(80);
+    DECLARE @v_nombre NVARCHAR(80), @v_apellido NVARCHAR(80), @v_fecha DATE, @v_id_pais SMALLINT;
+    DECLARE @v_nro_doc NVARCHAR(30), @v_id_posicion TINYINT, @v_club NVARCHAR(100), @v_club_pais_f NVARCHAR(80);
     DECLARE @v_id_club INT, @v_id_jugador INT;
-    DECLARE @a_nombre VARCHAR(80), @a_apellido VARCHAR(80), @a_fecha DATE, @a_id_pais SMALLINT;
+    DECLARE @a_nombre NVARCHAR(80), @a_apellido NVARCHAR(80), @a_fecha DATE, @a_id_pais SMALLINT;
     DECLARE @a_pie CHAR(1), @a_altura SMALLINT, @a_club INT, @a_posicion TINYINT;
 
     SET @v_fila = 0;
@@ -393,7 +393,7 @@ BEGIN
             @v_id_posicion = j.id_posicion,
             @v_club = LEFT(j.club, 100),
             @v_club_pais_f = LEFT(j.club_pais, 80),
-            @v_jugador = CONCAT(j.seleccion, ' - ', j.jugador)
+            @v_jugador = CONCAT(j.seleccion, N' - ', j.jugador)
         FROM #jug AS j
         WHERE j.error IS NULL AND j.nro_fila > @v_fila
         ORDER BY j.nro_fila;
@@ -467,7 +467,7 @@ BEGIN
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SET @v_mensaje = ERROR_MESSAGE();
             UPDATE #jug SET estado = 'E' WHERE nro_fila = @v_fila;
-            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, 'jugador', @v_jugador, @v_mensaje;
+            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_fila, N'jugador', @v_jugador, @v_mensaje;
         END CATCH
     END
 
@@ -482,7 +482,7 @@ BEGIN
     ---------------------------------------------------------------------------
     DECLARE @v_id_seleccion INT = 0;
     DECLARE @v_primera_fila INT;
-    DECLARE @v_nombre_sel VARCHAR(150);
+    DECLARE @v_nombre_sel NVARCHAR(150);
     DECLARE @v_lista torneo.tt_Convocado;
     DECLARE @v_altas INT, @v_bajas INT, @v_cambian INT;
     DECLARE @v_convocatorias_nuevas INT = 0;
@@ -509,7 +509,7 @@ BEGIN
 
         BEGIN TRY
             IF EXISTS (SELECT 1 FROM #jug AS j WHERE j.id_seleccion = @v_id_seleccion AND j.estado = 'E')
-                THROW 50003, 'no se registra ni se compara la convocatoria porque hay jugadores de la seleccion con errores', 1;
+                THROW 50003, N'no se registra ni se compara la convocatoria porque hay jugadores de la seleccion con errores', 1;
 
             IF NOT EXISTS (SELECT 1 FROM torneo.convocatoria AS c WHERE c.id_seleccion = @v_id_seleccion AND c.estado = 'ACTIVO')
             BEGIN
@@ -540,9 +540,9 @@ BEGIN
                     SET @v_convocatorias_iguales += 1;
                 ELSE
                 BEGIN
-                    SET @v_mensaje = CONCAT('la seleccion ya tiene una convocatoria activa distinta de la publicada (',
-                                            @v_altas, ' altas, ', @v_bajas, ' bajas, ', @v_cambian,
-                                            ' cambios de dorsal); registre los reemplazos con torneo.usp_Negocio_ReemplazarConvocado');
+                    SET @v_mensaje = CONCAT(N'la seleccion ya tiene una convocatoria activa distinta de la publicada (',
+                                            @v_altas, N' altas, ', @v_bajas, N' bajas, ', @v_cambian,
+                                            N' cambios de dorsal); registre los reemplazos con torneo.usp_Negocio_ReemplazarConvocado');
                     THROW 50003, @v_mensaje, 1;
                 END
             END
@@ -550,7 +550,7 @@ BEGIN
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SET @v_mensaje = ERROR_MESSAGE();
-            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_primera_fila, 'convocatoria', @v_nombre_sel, @v_mensaje;
+            EXEC soporte.usp_Importacion_RegistrarError @id_importacion, @v_primera_fila, N'convocatoria', @v_nombre_sel, @v_mensaje;
             SET @v_convocatorias_error += 1;
             -- Las filas de la selección quedan contadas como filas con error.
             UPDATE #jug SET estado = 'E' WHERE id_seleccion = @v_id_seleccion;
