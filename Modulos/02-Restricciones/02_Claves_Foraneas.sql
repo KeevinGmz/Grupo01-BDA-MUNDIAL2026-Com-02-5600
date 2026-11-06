@@ -1,11 +1,11 @@
-/* =====================================================================
+Ôªø/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
-ComisiÛn: 02-5600
+Comisi√≥n: 02-5600
 Grupo   : 01
 Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Caceres Lautaro Agustin
 Fecha   : 2026-10-03 
-Objetivo: Agrega las 63 claves for·neas (simples y compuestas) y 40 Ìndices de apoyo sobre columnas for·neas.
+Objetivo: Agrega las 63 claves for√°neas (simples y compuestas) y 40 √≠ndices de apoyo sobre columnas for√°neas.
    ===================================================================== */
 USE Mundial2026;
 GO
@@ -344,5 +344,5 @@ CREATE INDEX IX_exhibicion_id_pieza ON publicidad.exhibicion (id_pieza);
 CREATE INDEX IX_exhibicion_id_tarifa ON publicidad.exhibicion (id_tarifa);
 GO
 
--- ComprobaciÛn manual (va en los scripts de testing, no ac·):
+-- Comprobaci√≥n manual (va en los scripts de testing, no ac√°):
 --   SELECT COUNT(*) FROM sys.foreign_keys;   -- esperado: 63
