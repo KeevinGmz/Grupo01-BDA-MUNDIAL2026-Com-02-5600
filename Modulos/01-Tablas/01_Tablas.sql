@@ -175,7 +175,7 @@ GO
 -- persona.club: clubes de origen de los jugadores.
 CREATE TABLE persona.club (
     id_club   INT IDENTITY(1,1) NOT NULL,
-    nombre    VARCHAR(100) NOT NULL,
+    nombre    NVARCHAR(100) NOT NULL,
     pais_club VARCHAR(80) NOT NULL,
     CONSTRAINT PK_club PRIMARY KEY (id_club),
     CONSTRAINT UQ_club_nombre_pais_club UNIQUE (nombre, pais_club)
@@ -287,7 +287,7 @@ GO
 -- geo.ciudad: ciudades con población y huso horario (el huso de un país es el de su ciudad más poblada).
 CREATE TABLE geo.ciudad (
     id_ciudad INT IDENTITY(1,1) NOT NULL,
-    nombre    VARCHAR(100) NOT NULL,
+    nombre    NVARCHAR(100) NOT NULL,
     poblacion INT NOT NULL,
     id_pais   SMALLINT NOT NULL,
     id_huso   SMALLINT NOT NULL,
@@ -315,8 +315,8 @@ CREATE TABLE persona.persona (
     tipo_persona CHAR(1) NOT NULL,
     tipo_doc     VARCHAR(5) NOT NULL,
     nro_doc      VARCHAR(30) NOT NULL,
-    nombre       VARCHAR(80) NOT NULL,
-    apellido     VARCHAR(80) NOT NULL,
+    nombre       NVARCHAR(80) NOT NULL,
+    apellido     NVARCHAR(80) NOT NULL,
     fecha_nac    DATE NOT NULL,
     id_pais      SMALLINT NOT NULL,
     CONSTRAINT PK_persona PRIMARY KEY (id_persona),
