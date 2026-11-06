@@ -1,20 +1,19 @@
-/* ===================================================================== 
-Universidad Nacional de La Matanza (UNLaM)
-Materia : 3641 - Bases de Datos Aplicada
-Comisi�n: 02-5600
-Grupo   : 01
-Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Caceres Lautaro Agustin
-Fecha   : 2026-10-03
-Objetivo: <una l�nea sobre lo que hace este script>
+﻿/* ===================================================================== 
+   Universidad Nacional de La Matanza (UNLaM)
+   Materia : 3641 - Bases de Datos Aplicada                  
+   Comisión: 02-5600
+   Grupo   : 01 
+   Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Caceres Lautaro Agustin
+   Fecha   : 2026-10-03
+   Objetivo: Crea los SP de ABM del esquema juego.
 ===================================================================== */
 USE Mundial2026;
 GO
 
---------------------------------------------------------------------------------
--- ESQUEMA: juego
---------------------------------------------------------------------------------
-
+-- ============================================================================
 -- 1. juego.tipo_tarjeta
+-- ============================================================================
+
 CREATE OR ALTER PROCEDURE juego.usp_TipoTarjeta_Insertar
     @descripcion VARCHAR(30),
     @id_tipo TINYINT OUTPUT
@@ -23,30 +22,37 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL
-            SET @v_errores += 'descripcion obligatoria; ';
-        IF EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE descripcion = @descripcion)
-            SET @v_errores += 'descripcion ya registrada; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL SET @v_errores += 'descripcion obligatoria; ';
+        IF EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE descripcion = @descripcion) SET @v_errores += 'descripcion ya registrada; ';
+        
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_TipoTarjeta_Insertar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
-
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_tipo_tarjeta_insertar;
+        ELSE BEGIN SAVE TRANSACTION sv_tipo_tarjeta_insertar; SET @v_sp = 1; END
 
         INSERT INTO juego.tipo_tarjeta (descripcion) VALUES (@descripcion);
-        SET @id_tipo = SCOPE_IDENTITY();
+        SET @id_tipo = CONVERT(TINYINT, SCOPE_IDENTITY());
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_tipo_tarjeta_insertar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_tipo_tarjeta_insertar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_TipoTarjeta_Modificar
     @id_tipo TINYINT,
@@ -56,30 +62,37 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo)
-            SET @v_errores += 'tipo_tarjeta inexistente; ';
-        IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL
-            SET @v_errores += 'descripcion obligatoria; ';
-        IF EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE descripcion = @descripcion AND id_tipo <> @id_tipo)
-            SET @v_errores += 'descripcion ya registrada; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo) SET @v_errores += 'tipo_tarjeta inexistente; ';
+        IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL SET @v_errores += 'descripcion obligatoria; ';
+        IF EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE descripcion = @descripcion AND id_tipo <> @id_tipo) SET @v_errores += 'descripcion ya registrada; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_TipoTarjeta_Modificar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_tipo_tarjeta_modificar;
+        ELSE BEGIN SAVE TRANSACTION sv_tipo_tarjeta_modificar; SET @v_sp = 1; END
 
         UPDATE juego.tipo_tarjeta SET descripcion = @descripcion WHERE id_tipo = @id_tipo;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_tipo_tarjeta_modificar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_TipoTarjeta_Eliminar
     @id_tipo TINYINT
@@ -88,11 +101,13 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) El registro debe existir
         IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo)
-            THROW 50001, 'tipo_tarjeta inexistente', 1;
+            THROW 50001, 'juego.usp_TipoTarjeta_Eliminar: tipo_tarjeta inexistente', 1;
 
+        -- 2) Dependientes: una línea por cada tabla con FK a esta fila
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM juego.tarjeta WHERE id_tipo = @id_tipo;
         IF @v_n > 0 SET @v_errores += CONCAT('tarjeta(', @v_n, '); ');
@@ -101,25 +116,30 @@ BEGIN
 
         IF @v_errores <> ''
         BEGIN
-            SET @v_errores = CONCAT('No se puede eliminar, tiene dependientes: ', @v_errores);
+            SET @v_errores = LEFT(CONCAT('juego.usp_TipoTarjeta_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
             THROW 50002, @v_errores, 1;
         END
 
+        -- 3) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_tipo_tarjeta_eliminar;
+        ELSE BEGIN SAVE TRANSACTION sv_tipo_tarjeta_eliminar; SET @v_sp = 1; END
 
         DELETE FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_tipo_tarjeta_eliminar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
+-- ============================================================================
 -- 2. juego.alineacion
+-- ============================================================================
+
 CREATE OR ALTER PROCEDURE juego.usp_Alineacion_Insertar
     @id_partido INT,
     @id_seleccion INT,
@@ -133,27 +153,29 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM torneo.equipo_en_partido WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion)
-            SET @v_errores += 'equipo_en_partido inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador)
-            SET @v_errores += 'jugador inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM torneo.posicion WHERE id_posicion = @id_posicion)
-            SET @v_errores += 'posicion inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion AND id_jugador = @id_jugador AND estado = 'ACTIVO')
-            SET @v_errores += 'jugador no convocado activo; ';
-        IF @dorsal < 1 OR @dorsal > 99
-            SET @v_errores += 'dorsal fuera de rango (1-99); ';
-        IF EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador)
-            SET @v_errores += 'alineacion ya registrada para el jugador; ';
-        IF EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND dorsal = @dorsal)
-            SET @v_errores += 'dorsal ya utilizado en el partido por la seleccion; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM torneo.equipo_en_partido WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion) SET @v_errores += 'equipo_en_partido inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador) SET @v_errores += 'jugador inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM persona.posicion WHERE id_posicion = @id_posicion) SET @v_errores += 'posicion inexistente; ';
+        IF EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador AND @es_posicion_habitual <> CASE WHEN id_posicion_habitual = @id_posicion THEN 1 ELSE 0 END) SET @v_errores += 'es_posicion_habitual no coincide con la posicion habitual del jugador; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.convocatoria WHERE id_seleccion = @id_seleccion AND id_jugador = @id_jugador AND estado = 'ACTIVO') SET @v_errores += 'jugador no convocado activo; ';
+        IF @dorsal IS NULL OR @dorsal < 1 OR @dorsal > 99 SET @v_errores += 'dorsal obligatorio y fuera de rango (1-99); ';
+        IF @es_titular IS NULL SET @v_errores += 'es_titular obligatorio; ';
+        IF @es_posicion_habitual IS NULL SET @v_errores += 'es_posicion_habitual obligatorio; ';
+        IF EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador) SET @v_errores += 'alineacion ya registrada para el jugador; ';
+        IF EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND dorsal = @dorsal) SET @v_errores += 'dorsal ya utilizado en el partido por la seleccion; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_Alineacion_Insertar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_alineacion_insertar;
+        ELSE BEGIN SAVE TRANSACTION sv_alineacion_insertar; SET @v_sp = 1; END
 
         INSERT INTO juego.alineacion (id_partido, id_seleccion, id_jugador, dorsal, es_titular, id_posicion, es_posicion_habitual)
         VALUES (@id_partido, @id_seleccion, @id_jugador, @dorsal, @es_titular, @id_posicion, @es_posicion_habitual);
@@ -161,12 +183,15 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_alineacion_insertar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_alineacion_insertar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_Alineacion_Modificar
     @id_partido INT,
@@ -181,35 +206,43 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador)
-            SET @v_errores += 'alineacion inexistente; ';
-        IF @dorsal < 1 OR @dorsal > 99
-            SET @v_errores += 'dorsal fuera de rango (1-99); ';
-        IF EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND dorsal = @dorsal AND id_jugador <> @id_jugador)
-            SET @v_errores += 'dorsal ya utilizado por otro jugador; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador) SET @v_errores += 'alineacion inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM persona.posicion WHERE id_posicion = @id_posicion) SET @v_errores += 'posicion inexistente; ';
+        IF EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador AND @es_posicion_habitual <> CASE WHEN id_posicion_habitual = @id_posicion THEN 1 ELSE 0 END) SET @v_errores += 'es_posicion_habitual no coincide con la posicion habitual del jugador; ';
+        IF @dorsal IS NULL OR @dorsal < 1 OR @dorsal > 99 SET @v_errores += 'dorsal obligatorio y fuera de rango (1-99); ';
+        IF @es_titular IS NULL SET @v_errores += 'es_titular obligatorio; ';
+        IF @es_posicion_habitual IS NULL SET @v_errores += 'es_posicion_habitual obligatorio; ';
+        IF EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND dorsal = @dorsal AND id_jugador <> @id_jugador) SET @v_errores += 'dorsal ya utilizado por otro jugador; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_Alineacion_Modificar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_alineacion_modificar;
+        ELSE BEGIN SAVE TRANSACTION sv_alineacion_modificar; SET @v_sp = 1; END
 
         UPDATE juego.alineacion
-        SET dorsal = @dorsal,
-            es_titular = @es_titular,
-            id_posicion = @id_posicion,
-            es_posicion_habitual = @es_posicion_habitual
+        SET dorsal = @dorsal, es_titular = @es_titular, id_posicion = @id_posicion, es_posicion_habitual = @es_posicion_habitual
         WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_alineacion_modificar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_Alineacion_Eliminar
     @id_partido INT,
@@ -220,11 +253,13 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) El registro debe existir
         IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador)
-            THROW 50001, 'alineacion inexistente', 1;
+            THROW 50001, 'juego.usp_Alineacion_Eliminar: alineacion inexistente', 1;
 
+        -- 2) Dependientes: una línea por cada tabla con FK a esta fila
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM juego.sustitucion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND (id_jugador_sale = @id_jugador OR id_jugador_entra = @id_jugador);
         IF @v_n > 0 SET @v_errores += CONCAT('sustitucion(', @v_n, '); ');
@@ -235,25 +270,30 @@ BEGIN
 
         IF @v_errores <> ''
         BEGIN
-            SET @v_errores = CONCAT('No se puede eliminar, tiene dependientes: ', @v_errores);
+            SET @v_errores = LEFT(CONCAT('juego.usp_Alineacion_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
             THROW 50002, @v_errores, 1;
         END
 
+        -- 3) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_alineacion_eliminar;
+        ELSE BEGIN SAVE TRANSACTION sv_alineacion_eliminar; SET @v_sp = 1; END
 
         DELETE FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_alineacion_eliminar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
+-- ============================================================================
 -- 3. juego.sustitucion
+-- ============================================================================
+
 CREATE OR ALTER PROCEDURE juego.usp_Sustitucion_Insertar
     @id_partido INT,
     @id_seleccion INT,
@@ -268,25 +308,26 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_sale)
-            SET @v_errores += 'jugador_sale no alineado; ';
-        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_entra)
-            SET @v_errores += 'jugador_entra no alineado; ';
-        IF @id_jugador_sale = @id_jugador_entra
-            SET @v_errores += 'jugador sale y entra deben ser distintos; ';
-        IF @minuto < 1 OR @minuto > 130
-            SET @v_errores += 'minuto fuera de rango (1-130); ';
-        IF @motivo NOT IN ('TACTICO', 'LESION', 'PRECAUCION')
-            SET @v_errores += 'motivo invalido; ';
-        IF EXISTS (SELECT 1 FROM juego.sustitucion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_sustitucion = @nro_sustitucion)
-            SET @v_errores += 'nro_sustitucion ya registrado; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_sale) SET @v_errores += 'jugador_sale no alineado; ';
+        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_entra) SET @v_errores += 'jugador_entra no alineado; ';
+        IF @id_jugador_sale = @id_jugador_entra SET @v_errores += 'jugador sale y entra deben ser distintos; ';
+        IF @minuto IS NULL OR @minuto < 1 OR @minuto > 130 SET @v_errores += 'minuto fuera de rango (1-130); ';
+        IF @nro_ventana IS NULL OR @nro_ventana < 1 SET @v_errores += 'nro_ventana obligatorio y mayor a 0; ';
+        IF @motivo IS NULL OR @motivo NOT IN ('TACTICO', 'LESION', 'PRECAUCION') SET @v_errores += 'motivo invalido; ';
+        IF EXISTS (SELECT 1 FROM juego.sustitucion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_sustitucion = @nro_sustitucion) SET @v_errores += 'nro_sustitucion ya registrado; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_Sustitucion_Insertar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_sustitucion_insertar;
+        ELSE BEGIN SAVE TRANSACTION sv_sustitucion_insertar; SET @v_sp = 1; END
 
         INSERT INTO juego.sustitucion (id_partido, id_seleccion, nro_sustitucion, minuto, nro_ventana, motivo, id_jugador_sale, id_jugador_entra)
         VALUES (@id_partido, @id_seleccion, @nro_sustitucion, @minuto, @nro_ventana, @motivo, @id_jugador_sale, @id_jugador_entra);
@@ -294,12 +335,15 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_sustitucion_insertar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_sustitucion_insertar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_Sustitucion_Modificar
     @id_partido INT,
@@ -315,38 +359,43 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM juego.sustitucion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_sustitucion = @nro_sustitucion)
-            SET @v_errores += 'sustitucion inexistente; ';
-        IF @minuto < 1 OR @minuto > 130
-            SET @v_errores += 'minuto fuera de rango (1-130); ';
-        IF @motivo NOT IN ('TACTICO', 'LESION', 'PRECAUCION')
-            SET @v_errores += 'motivo invalido; ';
-        IF @id_jugador_sale = @id_jugador_entra
-            SET @v_errores += 'jugador sale y entra deben ser distintos; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM juego.sustitucion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_sustitucion = @nro_sustitucion) SET @v_errores += 'sustitucion inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_sale) SET @v_errores += 'jugador_sale no alineado; ';
+        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_entra) SET @v_errores += 'jugador_entra no alineado; ';
+        IF @minuto IS NULL OR @minuto < 1 OR @minuto > 130 SET @v_errores += 'minuto fuera de rango (1-130); ';
+        IF @nro_ventana IS NULL OR @nro_ventana < 1 SET @v_errores += 'nro_ventana obligatorio y mayor a 0; ';
+        IF @motivo IS NULL OR @motivo NOT IN ('TACTICO', 'LESION', 'PRECAUCION') SET @v_errores += 'motivo invalido; ';
+        IF @id_jugador_sale = @id_jugador_entra SET @v_errores += 'jugador sale y entra deben ser distintos; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_Sustitucion_Modificar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_sustitucion_modificar;
+        ELSE BEGIN SAVE TRANSACTION sv_sustitucion_modificar; SET @v_sp = 1; END
 
         UPDATE juego.sustitucion
-        SET minuto = @minuto,
-            nro_ventana = @nro_ventana,
-            motivo = @motivo,
-            id_jugador_sale = @id_jugador_sale,
-            id_jugador_entra = @id_jugador_entra
+        SET minuto = @minuto, nro_ventana = @nro_ventana, motivo = @motivo, id_jugador_sale = @id_jugador_sale, id_jugador_entra = @id_jugador_entra
         WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_sustitucion = @nro_sustitucion;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_sustitucion_modificar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_Sustitucion_Eliminar
     @id_partido INT,
@@ -357,26 +406,34 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) El registro debe existir
         IF NOT EXISTS (SELECT 1 FROM juego.sustitucion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_sustitucion = @nro_sustitucion)
-            THROW 50001, 'sustitucion inexistente', 1;
+            THROW 50001, 'juego.usp_Sustitucion_Eliminar: sustitucion inexistente', 1;
 
+        -- 2) Dependientes: la tabla sustitucion no tiene dependencias según el esquema
+        
+        -- 3) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_sustitucion_eliminar;
+        ELSE BEGIN SAVE TRANSACTION sv_sustitucion_eliminar; SET @v_sp = 1; END
 
         DELETE FROM juego.sustitucion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_sustitucion = @nro_sustitucion;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_sustitucion_eliminar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
+-- ============================================================================
 -- 4. juego.gol
+-- ============================================================================
+
 CREATE OR ALTER PROCEDURE juego.usp_Gol_Insertar
     @id_partido INT,
     @id_seleccion INT,
@@ -386,31 +443,33 @@ CREATE OR ALTER PROCEDURE juego.usp_Gol_Insertar
     @en_contra BIT,
     @periodo VARCHAR(5),
     @id_jugador_autor INT,
-    @id_jugador_asistente INT
+    @id_jugador_asistente INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_autor)
-            SET @v_errores += 'jugador_autor no alineado; ';
-        IF @id_jugador_asistente IS NOT NULL AND NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_asistente)
-            SET @v_errores += 'jugador_asistente no alineado; ';
-        IF @id_jugador_asistente IS NOT NULL AND @id_jugador_autor = @id_jugador_asistente
-            SET @v_errores += 'autor y asistente deben ser distintos; ';
-        IF @minuto < 0 OR @minuto > 130
-            SET @v_errores += 'minuto fuera de rango (0-130); ';
-        IF @periodo NOT IN ('PT', 'ST', 'ADIC', 'ALARG', 'PEN')
-            SET @v_errores += 'periodo invalido; ';
-        IF EXISTS (SELECT 1 FROM juego.gol WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_gol = @nro_gol)
-            SET @v_errores += 'nro_gol ya registrado; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_autor) SET @v_errores += 'jugador_autor no alineado; ';
+        IF @id_jugador_asistente IS NOT NULL AND NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_asistente) SET @v_errores += 'jugador_asistente no alineado; ';
+        IF @id_jugador_asistente IS NOT NULL AND @id_jugador_autor = @id_jugador_asistente SET @v_errores += 'autor y asistente deben ser distintos; ';
+        IF @minuto IS NULL OR @minuto < 0 OR @minuto > 130 SET @v_errores += 'minuto fuera de rango (0-130); ';
+        IF @periodo IS NULL OR @periodo NOT IN ('PT', 'ST', 'ADIC', 'ALARG', 'PEN') SET @v_errores += 'periodo invalido; ';
+        IF @tipo_gol IS NULL OR @tipo_gol NOT IN ('JUGADA','PENAL','TIRO LIBRE','CABEZAZO','OTRO') SET @v_errores += 'tipo_gol invalido; ';
+        IF @en_contra IS NULL SET @v_errores += 'en_contra obligatorio; ';
+        IF EXISTS (SELECT 1 FROM juego.gol WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_gol = @nro_gol) SET @v_errores += 'nro_gol ya registrado; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_Gol_Insertar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_gol_insertar;
+        ELSE BEGIN SAVE TRANSACTION sv_gol_insertar; SET @v_sp = 1; END
 
         INSERT INTO juego.gol (id_partido, id_seleccion, nro_gol, minuto, tipo_gol, en_contra, periodo, id_jugador_autor, id_jugador_asistente)
         VALUES (@id_partido, @id_seleccion, @nro_gol, @minuto, @tipo_gol, @en_contra, @periodo, @id_jugador_autor, @id_jugador_asistente);
@@ -418,12 +477,15 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_gol_insertar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_gol_insertar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_Gol_Modificar
     @id_partido INT,
@@ -434,45 +496,50 @@ CREATE OR ALTER PROCEDURE juego.usp_Gol_Modificar
     @en_contra BIT,
     @periodo VARCHAR(5),
     @id_jugador_autor INT,
-    @id_jugador_asistente INT
+    @id_jugador_asistente INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM juego.gol WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_gol = @nro_gol)
-            SET @v_errores += 'gol inexistente; ';
-        IF @minuto < 0 OR @minuto > 130
-            SET @v_errores += 'minuto fuera de rango (0-130); ';
-        IF @periodo NOT IN ('PT', 'ST', 'ADIC', 'ALARG', 'PEN')
-            SET @v_errores += 'periodo invalido; ';
-        IF @id_jugador_asistente IS NOT NULL AND @id_jugador_autor = @id_jugador_asistente
-            SET @v_errores += 'autor y asistente deben ser distintos; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM juego.gol WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_gol = @nro_gol) SET @v_errores += 'gol inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_autor) SET @v_errores += 'jugador_autor no alineado; ';
+        IF @id_jugador_asistente IS NOT NULL AND NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador_asistente) SET @v_errores += 'jugador_asistente no alineado; ';
+        IF @minuto IS NULL OR @minuto < 0 OR @minuto > 130 SET @v_errores += 'minuto fuera de rango (0-130); ';
+        IF @periodo IS NULL OR @periodo NOT IN ('PT', 'ST', 'ADIC', 'ALARG', 'PEN') SET @v_errores += 'periodo invalido; ';
+        IF @tipo_gol IS NULL OR @tipo_gol NOT IN ('JUGADA','PENAL','TIRO LIBRE','CABEZAZO','OTRO') SET @v_errores += 'tipo_gol invalido; ';
+        IF @en_contra IS NULL SET @v_errores += 'en_contra obligatorio; ';
+        IF @id_jugador_asistente IS NOT NULL AND @id_jugador_autor = @id_jugador_asistente SET @v_errores += 'autor y asistente deben ser distintos; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_Gol_Modificar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_gol_modificar;
+        ELSE BEGIN SAVE TRANSACTION sv_gol_modificar; SET @v_sp = 1; END
 
         UPDATE juego.gol
-        SET minuto = @minuto,
-            tipo_gol = @tipo_gol,
-            en_contra = @en_contra,
-            periodo = @periodo,
-            id_jugador_autor = @id_jugador_autor,
-            id_jugador_asistente = @id_jugador_asistente
+        SET minuto = @minuto, tipo_gol = @tipo_gol, en_contra = @en_contra, periodo = @periodo, id_jugador_autor = @id_jugador_autor, id_jugador_asistente = @id_jugador_asistente
         WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_gol = @nro_gol;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_gol_modificar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_Gol_Eliminar
     @id_partido INT,
@@ -483,32 +550,40 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) El registro debe existir
         IF NOT EXISTS (SELECT 1 FROM juego.gol WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_gol = @nro_gol)
-            THROW 50001, 'gol inexistente', 1;
+            THROW 50001, 'juego.usp_Gol_Eliminar: gol inexistente', 1;
 
+        -- 2) Dependientes: la tabla gol no tiene dependencias según el esquema
+
+        -- 3) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_gol_eliminar;
+        ELSE BEGIN SAVE TRANSACTION sv_gol_eliminar; SET @v_sp = 1; END
 
         DELETE FROM juego.gol WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_gol = @nro_gol;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_gol_eliminar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
+-- ============================================================================
 -- 5. juego.tarjeta
+-- ============================================================================
+
 CREATE OR ALTER PROCEDURE juego.usp_Tarjeta_Insertar
     @id_partido INT,
     @id_seleccion INT,
     @nro_tarjeta TINYINT,
     @minuto SMALLINT,
-    @motivo VARCHAR(100),
+    @motivo VARCHAR(100) = NULL,
     @id_tipo TINYINT,
     @id_arbitro INT,
     @id_jugador INT
@@ -517,21 +592,24 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador)
-            SET @v_errores += 'jugador no alineado; ';
-        IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo)
-            SET @v_errores += 'tipo_tarjeta inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM persona.arbitro WHERE id_persona = @id_arbitro)
-            SET @v_errores += 'arbitro inexistente; ';
-        IF EXISTS (SELECT 1 FROM juego.tarjeta WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_tarjeta = @nro_tarjeta)
-            SET @v_errores += 'nro_tarjeta ya registrado; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador) SET @v_errores += 'jugador no alineado; ';
+        IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo) SET @v_errores += 'tipo_tarjeta inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM persona.arbitro WHERE id_persona = @id_arbitro) SET @v_errores += 'arbitro inexistente; ';
+        IF @minuto IS NULL OR @minuto < 0 OR @minuto > 130 SET @v_errores += 'minuto fuera de rango (0-130); ';
+        IF EXISTS (SELECT 1 FROM juego.tarjeta WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_tarjeta = @nro_tarjeta) SET @v_errores += 'nro_tarjeta ya registrado; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_Tarjeta_Insertar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_tarjeta_insertar;
+        ELSE BEGIN SAVE TRANSACTION sv_tarjeta_insertar; SET @v_sp = 1; END
 
         INSERT INTO juego.tarjeta (id_partido, id_seleccion, nro_tarjeta, minuto, motivo, id_tipo, id_arbitro, id_jugador)
         VALUES (@id_partido, @id_seleccion, @nro_tarjeta, @minuto, @motivo, @id_tipo, @id_arbitro, @id_jugador);
@@ -539,19 +617,22 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_tarjeta_insertar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_tarjeta_insertar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_Tarjeta_Modificar
     @id_partido INT,
     @id_seleccion INT,
     @nro_tarjeta TINYINT,
     @minuto SMALLINT,
-    @motivo VARCHAR(100),
+    @motivo VARCHAR(100) = NULL,
     @id_tipo TINYINT,
     @id_arbitro INT,
     @id_jugador INT
@@ -560,36 +641,41 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM juego.tarjeta WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_tarjeta = @nro_tarjeta)
-            SET @v_errores += 'tarjeta inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo)
-            SET @v_errores += 'tipo_tarjeta inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM persona.arbitro WHERE id_persona = @id_arbitro)
-            SET @v_errores += 'arbitro inexistente; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM juego.tarjeta WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_tarjeta = @nro_tarjeta) SET @v_errores += 'tarjeta inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM juego.alineacion WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND id_jugador = @id_jugador) SET @v_errores += 'jugador no alineado; ';
+        IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo) SET @v_errores += 'tipo_tarjeta inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM persona.arbitro WHERE id_persona = @id_arbitro) SET @v_errores += 'arbitro inexistente; ';
+        IF @minuto IS NULL OR @minuto < 0 OR @minuto > 130 SET @v_errores += 'minuto fuera de rango (0-130); ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_Tarjeta_Modificar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_tarjeta_modificar;
+        ELSE BEGIN SAVE TRANSACTION sv_tarjeta_modificar; SET @v_sp = 1; END
 
         UPDATE juego.tarjeta
-        SET minuto = @minuto,
-            motivo = @motivo,
-            id_tipo = @id_tipo,
-            id_arbitro = @id_arbitro,
-            id_jugador = @id_jugador
+        SET minuto = @minuto, motivo = @motivo, id_tipo = @id_tipo, id_arbitro = @id_arbitro, id_jugador = @id_jugador
         WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_tarjeta = @nro_tarjeta;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_tarjeta_modificar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_Tarjeta_Eliminar
     @id_partido INT,
@@ -600,26 +686,34 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) El registro debe existir
         IF NOT EXISTS (SELECT 1 FROM juego.tarjeta WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_tarjeta = @nro_tarjeta)
-            THROW 50001, 'tarjeta inexistente', 1;
+            THROW 50001, 'juego.usp_Tarjeta_Eliminar: tarjeta inexistente', 1;
 
+        -- 2) Dependientes: la tabla tarjeta no tiene dependencias según el esquema
+
+        -- 3) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_tarjeta_eliminar;
+        ELSE BEGIN SAVE TRANSACTION sv_tarjeta_eliminar; SET @v_sp = 1; END
 
         DELETE FROM juego.tarjeta WHERE id_partido = @id_partido AND id_seleccion = @id_seleccion AND nro_tarjeta = @nro_tarjeta;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_tarjeta_eliminar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
+-- ============================================================================
 -- 6. juego.criterio_suspension
+-- ============================================================================
+
 CREATE OR ALTER PROCEDURE juego.usp_CriterioSuspension_Insertar
     @id_tipo TINYINT,
     @cant_tarjetas_requeridas TINYINT,
@@ -631,31 +725,40 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo)
-            SET @v_errores += 'tipo_tarjeta inexistente; ';
-        IF @cant_tarjetas_requeridas <= 0 OR @cant_partidos_suspension <= 0
-            SET @v_errores += 'cantidades deben ser mayores a 0; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo) SET @v_errores += 'tipo_tarjeta inexistente; ';
+        IF @cant_tarjetas_requeridas IS NULL OR @cant_partidos_suspension IS NULL OR @cant_tarjetas_requeridas <= 0 OR @cant_partidos_suspension <= 0 SET @v_errores += 'cantidades deben ser mayores a 0; ';
+        IF @vigente IS NULL SET @v_errores += 'vigente obligatorio; ';
+        IF @vigente = 1 AND EXISTS (SELECT 1 FROM juego.criterio_suspension WHERE id_tipo = @id_tipo AND vigente = 1) SET @v_errores += 'ya existe un criterio vigente para el tipo de tarjeta; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_CriterioSuspension_Insertar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_criterio_suspension_insertar;
+        ELSE BEGIN SAVE TRANSACTION sv_criterio_suspension_insertar; SET @v_sp = 1; END
 
         INSERT INTO juego.criterio_suspension (id_tipo, cant_tarjetas_requeridas, cant_partidos_suspension, vigente)
         VALUES (@id_tipo, @cant_tarjetas_requeridas, @cant_partidos_suspension, @vigente);
-        SET @id_criterio = SCOPE_IDENTITY();
+        SET @id_criterio = CONVERT(INT, SCOPE_IDENTITY());
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_criterio_suspension_insertar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_criterio_suspension_insertar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_CriterioSuspension_Modificar
     @id_criterio INT,
@@ -668,35 +771,41 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM juego.criterio_suspension WHERE id_criterio = @id_criterio)
-            SET @v_errores += 'criterio_suspension inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo)
-            SET @v_errores += 'tipo_tarjeta inexistente; ';
-        IF @cant_tarjetas_requeridas <= 0 OR @cant_partidos_suspension <= 0
-            SET @v_errores += 'cantidades deben ser mayores a 0; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM juego.criterio_suspension WHERE id_criterio = @id_criterio) SET @v_errores += 'criterio_suspension inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM juego.tipo_tarjeta WHERE id_tipo = @id_tipo) SET @v_errores += 'tipo_tarjeta inexistente; ';
+        IF @cant_tarjetas_requeridas IS NULL OR @cant_partidos_suspension IS NULL OR @cant_tarjetas_requeridas <= 0 OR @cant_partidos_suspension <= 0 SET @v_errores += 'cantidades deben ser mayores a 0; ';
+        IF @vigente IS NULL SET @v_errores += 'vigente obligatorio; ';
+        IF @vigente = 1 AND EXISTS (SELECT 1 FROM juego.criterio_suspension WHERE id_tipo = @id_tipo AND vigente = 1 AND id_criterio <> @id_criterio) SET @v_errores += 'ya existe un criterio vigente para el tipo de tarjeta; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_CriterioSuspension_Modificar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_criterio_suspension_modificar;
+        ELSE BEGIN SAVE TRANSACTION sv_criterio_suspension_modificar; SET @v_sp = 1; END
 
         UPDATE juego.criterio_suspension
-        SET id_tipo = @id_tipo,
-            cant_tarjetas_requeridas = @cant_tarjetas_requeridas,
-            cant_partidos_suspension = @cant_partidos_suspension,
-            vigente = @vigente
+        SET id_tipo = @id_tipo, cant_tarjetas_requeridas = @cant_tarjetas_requeridas, cant_partidos_suspension = @cant_partidos_suspension, vigente = @vigente
         WHERE id_criterio = @id_criterio;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_criterio_suspension_modificar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_CriterioSuspension_Eliminar
     @id_criterio INT
@@ -705,76 +814,91 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) El registro debe existir
         IF NOT EXISTS (SELECT 1 FROM juego.criterio_suspension WHERE id_criterio = @id_criterio)
-            THROW 50001, 'criterio_suspension inexistente', 1;
+            THROW 50001, 'juego.usp_CriterioSuspension_Eliminar: criterio_suspension inexistente', 1;
 
+        -- 2) Dependientes: una línea por cada tabla con FK a esta fila
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM juego.suspension WHERE id_criterio = @id_criterio;
         IF @v_n > 0 SET @v_errores += CONCAT('suspension(', @v_n, '); ');
 
         IF @v_errores <> ''
         BEGIN
-            SET @v_errores = CONCAT('No se puede eliminar, tiene dependientes: ', @v_errores);
+            SET @v_errores = LEFT(CONCAT('juego.usp_CriterioSuspension_Eliminar: No se puede eliminar, tiene dependientes: ', @v_errores), 2048);
             THROW 50002, @v_errores, 1;
         END
 
+        -- 3) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_criterio_suspension_eliminar;
+        ELSE BEGIN SAVE TRANSACTION sv_criterio_suspension_eliminar; SET @v_sp = 1; END
 
         DELETE FROM juego.criterio_suspension WHERE id_criterio = @id_criterio;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_criterio_suspension_eliminar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
+-- ============================================================================
 -- 7. juego.suspension
+-- ============================================================================
+
 CREATE OR ALTER PROCEDURE juego.usp_Suspension_Insertar
     @id_jugador INT,
     @id_criterio INT,
     @cant_partidos TINYINT,
     @estado VARCHAR(10),
     @fecha_alta DATETIME2(0),
-    @motivo VARCHAR(200),
+    @motivo VARCHAR(200) = NULL,
     @id_suspension INT OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador)
-            SET @v_errores += 'jugador inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM juego.criterio_suspension WHERE id_criterio = @id_criterio)
-            SET @v_errores += 'criterio_suspension inexistente; ';
-        IF @estado NOT IN ('PENDIENTE', 'CUMPLIDA', 'ANULADA')
-            SET @v_errores += 'estado invalido; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador) SET @v_errores += 'jugador inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM juego.criterio_suspension WHERE id_criterio = @id_criterio) SET @v_errores += 'criterio_suspension inexistente; ';
+        IF @estado IS NULL OR @estado NOT IN ('PENDIENTE', 'CUMPLIDA', 'ANULADA') SET @v_errores += 'estado invalido; ';
+        IF @cant_partidos IS NULL OR @cant_partidos < 1 SET @v_errores += 'cant_partidos debe ser mayor o igual a 1; ';
+        IF @fecha_alta IS NULL SET @v_errores += 'fecha_alta obligatoria; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_Suspension_Insertar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_suspension_insertar;
+        ELSE BEGIN SAVE TRANSACTION sv_suspension_insertar; SET @v_sp = 1; END
 
         INSERT INTO juego.suspension (id_jugador, id_criterio, cant_partidos, estado, fecha_alta, motivo)
         VALUES (@id_jugador, @id_criterio, @cant_partidos, @estado, @fecha_alta, @motivo);
-        SET @id_suspension = SCOPE_IDENTITY();
+        SET @id_suspension = CONVERT(INT, SCOPE_IDENTITY());
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_suspension_insertar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_suspension_insertar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_Suspension_Modificar
     @id_suspension INT,
@@ -783,45 +907,48 @@ CREATE OR ALTER PROCEDURE juego.usp_Suspension_Modificar
     @cant_partidos TINYINT,
     @estado VARCHAR(10),
     @fecha_alta DATETIME2(0),
-    @motivo VARCHAR(200)
+    @motivo VARCHAR(200) = NULL
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM juego.suspension WHERE id_suspension = @id_suspension)
-            SET @v_errores += 'suspension inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador)
-            SET @v_errores += 'jugador inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM juego.criterio_suspension WHERE id_criterio = @id_criterio)
-            SET @v_errores += 'criterio_suspension inexistente; ';
-        IF @estado NOT IN ('PENDIENTE', 'CUMPLIDA', 'ANULADA')
-            SET @v_errores += 'estado invalido; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM juego.suspension WHERE id_suspension = @id_suspension) SET @v_errores += 'suspension inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_jugador) SET @v_errores += 'jugador inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM juego.criterio_suspension WHERE id_criterio = @id_criterio) SET @v_errores += 'criterio_suspension inexistente; ';
+        IF @estado IS NULL OR @estado NOT IN ('PENDIENTE', 'CUMPLIDA', 'ANULADA') SET @v_errores += 'estado invalido; ';
+        IF @cant_partidos IS NULL OR @cant_partidos < 1 SET @v_errores += 'cant_partidos debe ser mayor o igual a 1; ';
+        IF @fecha_alta IS NULL SET @v_errores += 'fecha_alta obligatoria; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_Suspension_Modificar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_suspension_modificar;
+        ELSE BEGIN SAVE TRANSACTION sv_suspension_modificar; SET @v_sp = 1; END
 
         UPDATE juego.suspension
-        SET id_jugador = @id_jugador,
-            id_criterio = @id_criterio,
-            cant_partidos = @cant_partidos,
-            estado = @estado,
-            fecha_alta = @fecha_alta,
-            motivo = @motivo
+        SET id_jugador = @id_jugador, id_criterio = @id_criterio, cant_partidos = @cant_partidos, estado = @estado, fecha_alta = @fecha_alta, motivo = @motivo
         WHERE id_suspension = @id_suspension;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_suspension_modificar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_Suspension_Eliminar
     @id_suspension INT
@@ -830,36 +957,34 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) El registro debe existir
         IF NOT EXISTS (SELECT 1 FROM juego.suspension WHERE id_suspension = @id_suspension)
-            THROW 50001, 'suspension inexistente', 1;
+            THROW 50001, 'juego.usp_Suspension_Eliminar: suspension inexistente', 1;
 
-        DECLARE @v_n INT;
-        SELECT @v_n = COUNT(*) FROM juego.suspension_partido WHERE id_suspension = @id_suspension;
-        IF @v_n > 0 SET @v_errores += CONCAT('suspension_partido(', @v_n, '); ');
-
-        IF @v_errores <> ''
-        BEGIN
-            SET @v_errores = CONCAT('No se puede eliminar, tiene dependientes: ', @v_errores);
-            THROW 50002, @v_errores, 1;
-        END
-
+        -- 2) Baja logica: suspension tiene columna estado; no se elimina el historial
+-- 3) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_suspension_eliminar;
+        ELSE BEGIN SAVE TRANSACTION sv_suspension_eliminar; SET @v_sp = 1; END
 
-        DELETE FROM juego.suspension WHERE id_suspension = @id_suspension;
+        UPDATE juego.suspension SET estado = 'ANULADA' WHERE id_suspension = @id_suspension;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_suspension_eliminar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
--- 8. juego.suspension_partido
+-- ============================================================================
+-- 8. juego.suspension_partido (tabla puente, PK compuesta: id_suspension, id_partido)
+-- Modificar no aplica: la tabla solo contiene las columnas de su clave compuesta.
+-- ============================================================================
+
 CREATE OR ALTER PROCEDURE juego.usp_SuspensionPartido_Insertar
     @id_suspension INT,
     @id_partido INT
@@ -868,60 +993,37 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM juego.suspension WHERE id_suspension = @id_suspension)
-            SET @v_errores += 'suspension inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido)
-            SET @v_errores += 'partido inexistente; ';
-        IF EXISTS (SELECT 1 FROM juego.suspension_partido WHERE id_suspension = @id_suspension AND id_partido = @id_partido)
-            SET @v_errores += 'suspension_partido ya registrado; ';
+        -- 1) Validaciones: todas antes de abrir la transacción; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM juego.suspension WHERE id_suspension = @id_suspension) SET @v_errores += 'suspension inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM torneo.partido WHERE id_partido = @id_partido) SET @v_errores += 'partido inexistente; ';
+        IF EXISTS (SELECT 1 FROM juego.suspension_partido WHERE id_suspension = @id_suspension AND id_partido = @id_partido) SET @v_errores += 'suspension_partido ya registrado; ';
 
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
+        IF @v_errores <> ''
+        BEGIN
+            SET @v_errores = LEFT(CONCAT('juego.usp_SuspensionPartido_Insertar: ', @v_errores), 2048);
+            THROW 50001, @v_errores, 1;
+        END
 
+        -- 2) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_suspension_partido_insertar;
+        ELSE BEGIN SAVE TRANSACTION sv_suspension_partido_insertar; SET @v_sp = 1; END
 
         INSERT INTO juego.suspension_partido (id_suspension, id_partido) VALUES (@id_suspension, @id_partido);
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        ELSE IF @v_propia = 0 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_suspension_partido_insertar;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_suspension_partido_insertar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
-CREATE OR ALTER PROCEDURE juego.usp_SuspensionPartido_Modificar
-    @id_suspension INT,
-    @id_partido INT
-AS
-BEGIN
-    SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
-    DECLARE @v_propia BIT = 0;
 
-    BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM juego.suspension_partido WHERE id_suspension = @id_suspension AND id_partido = @id_partido)
-            SET @v_errores += 'suspension_partido inexistente; ';
-
-        IF @v_errores <> '' THROW 50001, @v_errores, 1;
-
-        IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_suspension_partido_modificar;
-
-        -- Al ser clave compuesta pura de 2 campos que forman la PK, no hay columnas modificables adicionales aparte de la clave.
-
-        IF @v_propia = 1 COMMIT TRANSACTION;
-    END TRY
-    BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
-    END CATCH
-END
-GO
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE juego.usp_SuspensionPartido_Eliminar
     @id_suspension INT,
@@ -931,21 +1033,24 @@ BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     DECLARE @v_errores VARCHAR(2000) = '';
     DECLARE @v_propia BIT = 0;
-
+    DECLARE @v_sp BIT = 0;
     BEGIN TRY
+        -- 1) El registro debe existir
         IF NOT EXISTS (SELECT 1 FROM juego.suspension_partido WHERE id_suspension = @id_suspension AND id_partido = @id_partido)
-            THROW 50001, 'suspension_partido inexistente', 1;
+            THROW 50001, 'juego.usp_SuspensionPartido_Eliminar: suspension_partido inexistente', 1;
 
+        -- 3) Transacción propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
-        ELSE SAVE TRANSACTION sv_suspension_partido_eliminar;
+        ELSE BEGIN SAVE TRANSACTION sv_suspension_partido_eliminar; SET @v_sp = 1; END
 
         DELETE FROM juego.suspension_partido WHERE id_suspension = @id_suspension AND id_partido = @id_partido;
 
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacción propia: se deshace todo
+        ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_suspension_partido_eliminar;
+        THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
