@@ -1,7 +1,7 @@
-/* ===================================================================== 
+﻿/* ===================================================================== 
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
-Comisi�n: 02-5600
+Comisión: 02-5600
 Grupo   : 01
 Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Caceres Lautaro Agustin
 Fecha   : 2026-10-03
