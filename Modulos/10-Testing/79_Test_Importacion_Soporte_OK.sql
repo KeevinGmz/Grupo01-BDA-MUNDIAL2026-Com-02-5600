@@ -38,7 +38,7 @@ FROM (VALUES
     ('fn_HtmlATexto decodifica entidades y referencias',
         soporte.fn_HtmlATexto('<a>AT&amp;T Stadium</a><sup class="reference">[1]</sup>'), 'AT&T Stadium'),
     ('fn_CoordenadaADecimal grados/minutos/segundos norte',
-        CONVERT(VARCHAR(20), soporte.fn_CoordenadaADecimal(CONCAT('49', NCHAR(176), '16''36"'))), '49.276667'),
+        CONVERT(VARCHAR(20), soporte.fn_CoordenadaADecimal(CONCAT('49', NCHAR(176), '16''36"N'))), '49.276667'),
     ('fn_CoordenadaADecimal grados decimales oeste',
         CONVERT(VARCHAR(20), soporte.fn_CoordenadaADecimal(CONCAT('121.970', NCHAR(176), 'W'))), '-121.970000'),
     ('fn_ValidarRutaArchivo acepta una ruta valida',
