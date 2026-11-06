@@ -1,4 +1,4 @@
-/* =====================================================================
+Ôªø/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada
 Comision: 02-5600
@@ -24,7 +24,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL SET @v_errores += 'descripcion obligatoria; ';
         IF EXISTS (SELECT 1 FROM persona.posicion WHERE descripcion = @descripcion) SET @v_errores += 'descripcion ya registrada; ';
         IF @v_errores <> ''
@@ -33,7 +33,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_posicion_insertar; SET @v_sp = 1; END
 
@@ -43,7 +43,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_posicion_insertar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -63,7 +63,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF NOT EXISTS (SELECT 1 FROM persona.posicion WHERE id_posicion = @id_posicion) SET @v_errores += 'posicion inexistente; ';
         IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL SET @v_errores += 'descripcion obligatoria; ';
         IF EXISTS (SELECT 1 FROM persona.posicion WHERE descripcion = @descripcion AND id_posicion <> @id_posicion) SET @v_errores += 'descripcion ya registrada; ';
@@ -73,7 +73,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_posicion_modificar; SET @v_sp = 1; END
 
@@ -82,7 +82,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_posicion_modificar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -105,7 +105,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM persona.posicion WHERE id_posicion = @id_posicion)
             THROW 50001, 'persona.usp_Posicion_Eliminar: posicion inexistente', 1;
 
-        -- 2) Dependientes: una lÌnea por cada tabla con FK a esta fila
+        -- 2) Dependientes: una l√≠nea por cada tabla con FK a esta fila
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM persona.jugador WHERE id_posicion_habitual = @id_posicion;
         IF @v_n > 0 SET @v_errores += CONCAT('jugador(', @v_n, '); ');
@@ -117,7 +117,7 @@ BEGIN
             THROW 50002, @v_errores, 1;
         END
 
-        -- 3) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 3) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_posicion_eliminar; SET @v_sp = 1; END
 
@@ -126,7 +126,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_posicion_eliminar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -149,7 +149,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL SET @v_errores += 'descripcion obligatoria; ';
         IF EXISTS (SELECT 1 FROM persona.rol_cuerpo_tecnico WHERE descripcion = @descripcion) SET @v_errores += 'descripcion ya registrada; ';
         IF @v_errores <> ''
@@ -158,7 +158,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_rol_ct_insertar; SET @v_sp = 1; END
 
@@ -168,7 +168,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_rol_ct_insertar;
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -188,7 +188,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF NOT EXISTS (SELECT 1 FROM persona.rol_cuerpo_tecnico WHERE id_rol_ct = @id_rol_ct) SET @v_errores += 'rol_cuerpo_tecnico inexistente; ';
         IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL SET @v_errores += 'descripcion obligatoria; ';
         IF EXISTS (SELECT 1 FROM persona.rol_cuerpo_tecnico WHERE descripcion = @descripcion AND id_rol_ct <> @id_rol_ct) SET @v_errores += 'descripcion ya registrada; ';
@@ -198,7 +198,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_rol_ct_modificar; SET @v_sp = 1; END
 
@@ -207,7 +207,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_rol_ct_modificar;
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -230,7 +230,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM persona.rol_cuerpo_tecnico WHERE id_rol_ct = @id_rol_ct)
             THROW 50001, 'persona.usp_RolCuerpoTecnico_Eliminar: rol_cuerpo_tecnico inexistente', 1;
 
-        -- 2) Dependientes: una lÌnea por cada tabla con FK a esta fila 
+        -- 2) Dependientes: una l√≠nea por cada tabla con FK a esta fila 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM persona.miembro_cuerpo_tecnico WHERE id_rol_ct = @id_rol_ct;
         IF @v_n > 0 SET @v_errores += CONCAT('miembro_cuerpo_tecnico(', @v_n, '); ');
@@ -240,7 +240,7 @@ BEGIN
             THROW 50002, @v_errores, 1;
         END
 
-        -- 3) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 3) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_rol_ct_eliminar; SET @v_sp = 1; END
 
@@ -249,7 +249,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_rol_ct_eliminar;
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -270,7 +270,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL SET @v_errores += 'descripcion obligatoria; ';
         IF EXISTS (SELECT 1 FROM persona.categoria_arbitral WHERE descripcion = @descripcion) SET @v_errores += 'descripcion ya registrada; ';
         IF @v_errores <> ''
@@ -279,7 +279,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_categoria_arbitral_insertar; SET @v_sp = 1; END
 
@@ -289,7 +289,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_categoria_arbitral_insertar;
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -309,7 +309,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF NOT EXISTS (SELECT 1 FROM persona.categoria_arbitral WHERE id_categoria = @id_categoria) SET @v_errores += 'categoria_arbitral inexistente; ';
         IF NULLIF(LTRIM(RTRIM(@descripcion)), '') IS NULL SET @v_errores += 'descripcion obligatoria; ';
         IF EXISTS (SELECT 1 FROM persona.categoria_arbitral WHERE descripcion = @descripcion AND id_categoria <> @id_categoria) SET @v_errores += 'descripcion ya registrada; ';
@@ -319,7 +319,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_categoria_arbitral_modificar; SET @v_sp = 1; END
 
@@ -328,7 +328,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_categoria_arbitral_modificar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -351,7 +351,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM persona.categoria_arbitral WHERE id_categoria = @id_categoria)
             THROW 50001, 'persona.usp_CategoriaArbitral_Eliminar: categoria_arbitral inexistente', 1;
 
-        -- 2) Dependientes: una lÌnea por cada tabla con FK a esta fila 
+        -- 2) Dependientes: una l√≠nea por cada tabla con FK a esta fila 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM persona.arbitro WHERE id_categoria = @id_categoria;
         IF @v_n > 0 SET @v_errores += CONCAT('arbitro(', @v_n, '); ');
@@ -361,7 +361,7 @@ BEGIN
             THROW 50002, @v_errores, 1;
         END
 
-        -- 3) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 3) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_categoria_arbitral_eliminar; SET @v_sp = 1; END
 
@@ -370,7 +370,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_categoria_arbitral_eliminar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -394,7 +394,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF @cod_iso639 IS NULL OR LEN(@cod_iso639) <> 3 SET @v_errores += 'cod_iso639 debe tener 3 letras; ';
         IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
         IF EXISTS (SELECT 1 FROM persona.idioma WHERE cod_iso639 = @cod_iso639) SET @v_errores += 'cod_iso639 ya registrado; ';
@@ -405,7 +405,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_idioma_insertar; SET @v_sp = 1; END
 
@@ -415,7 +415,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_idioma_insertar;
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -436,7 +436,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF NOT EXISTS (SELECT 1 FROM persona.idioma WHERE id_idioma = @id_idioma) SET @v_errores += 'idioma inexistente; ';
         IF @cod_iso639 IS NULL OR LEN(@cod_iso639) <> 3 SET @v_errores += 'cod_iso639 debe tener 3 letras; ';
         IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
@@ -448,7 +448,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_idioma_modificar; SET @v_sp = 1; END
 
@@ -457,7 +457,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_idioma_modificar;
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -480,7 +480,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM persona.idioma WHERE id_idioma = @id_idioma)
             THROW 50001, 'persona.usp_Idioma_Eliminar: idioma inexistente', 1;
 
-        -- 2) Dependientes: una lÌnea por cada tabla con FK a esta fila 
+        -- 2) Dependientes: una l√≠nea por cada tabla con FK a esta fila 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM persona.persona_idioma WHERE id_idioma = @id_idioma;
         IF @v_n > 0 SET @v_errores += CONCAT('persona_idioma(', @v_n, '); ');
@@ -492,7 +492,7 @@ BEGIN
             THROW 50002, @v_errores, 1;
         END
 
-        -- 3) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 3) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_idioma_eliminar; SET @v_sp = 1; END
 
@@ -501,7 +501,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_idioma_eliminar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -513,27 +513,27 @@ GO
 -- ============================================================================
 
 CREATE OR ALTER PROCEDURE persona.usp_Club_Insertar
-    @nombre VARCHAR(100),
-    @pais_club VARCHAR(80),
+    @nombre NVARCHAR(100),
+    @pais_club NVARCHAR(80),
     @id_club INT OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
-        IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
-        IF NULLIF(LTRIM(RTRIM(@pais_club)), '') IS NULL SET @v_errores += 'pais_club obligatorio; ';
-        IF EXISTS (SELECT 1 FROM persona.club WHERE nombre = @nombre AND pais_club = @pais_club) SET @v_errores += 'club ya registrado para ese pais; ';
-        IF @v_errores <> ''
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
+        IF NULLIF(LTRIM(RTRIM(@nombre)), N'') IS NULL SET @v_errores += N'nombre obligatorio; ';
+        IF NULLIF(LTRIM(RTRIM(@pais_club)), N'') IS NULL SET @v_errores += N'pais_club obligatorio; ';
+        IF EXISTS (SELECT 1 FROM persona.club WHERE nombre = @nombre AND pais_club = @pais_club) SET @v_errores += N'club ya registrado para ese pais; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = CONCAT('persona.usp_Club_Insertar: ', @v_errores);
+            SET @v_errores = CONCAT(N'persona.usp_Club_Insertar: ', @v_errores);
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_club_insertar; SET @v_sp = 1; END
 
@@ -543,7 +543,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_club_insertar;
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -555,27 +555,27 @@ GO
 
 CREATE OR ALTER PROCEDURE persona.usp_Club_Modificar
     @id_club INT,
-    @nombre VARCHAR(100),
-    @pais_club VARCHAR(80)
+    @nombre NVARCHAR(100),
+    @pais_club NVARCHAR(80)
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
-        IF NOT EXISTS (SELECT 1 FROM persona.club WHERE id_club = @id_club) SET @v_errores += 'club inexistente; ';
-        IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
-        IF NULLIF(LTRIM(RTRIM(@pais_club)), '') IS NULL SET @v_errores += 'pais_club obligatorio; ';
-        IF EXISTS (SELECT 1 FROM persona.club WHERE nombre = @nombre AND pais_club = @pais_club AND id_club <> @id_club) SET @v_errores += 'club ya registrado para ese pais; ';
-        IF @v_errores <> ''
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM persona.club WHERE id_club = @id_club) SET @v_errores += N'club inexistente; ';
+        IF NULLIF(LTRIM(RTRIM(@nombre)), N'') IS NULL SET @v_errores += N'nombre obligatorio; ';
+        IF NULLIF(LTRIM(RTRIM(@pais_club)), N'') IS NULL SET @v_errores += N'pais_club obligatorio; ';
+        IF EXISTS (SELECT 1 FROM persona.club WHERE nombre = @nombre AND pais_club = @pais_club AND id_club <> @id_club) SET @v_errores += N'club ya registrado para ese pais; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = CONCAT('persona.usp_Club_Modificar: ', @v_errores);
+            SET @v_errores = CONCAT(N'persona.usp_Club_Modificar: ', @v_errores);
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_club_modificar; SET @v_sp = 1; END
 
@@ -584,7 +584,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_club_modificar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -607,7 +607,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM persona.club WHERE id_club = @id_club)
             THROW 50001, 'persona.usp_Club_Eliminar: club inexistente', 1;
 
-        -- 2) Dependientes: una lÌnea por cada tabla con FK a esta fila
+        -- 2) Dependientes: una l√≠nea por cada tabla con FK a esta fila
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM persona.jugador WHERE id_club = @id_club;
         IF @v_n > 0 SET @v_errores += CONCAT('jugador(', @v_n, '); ');
@@ -617,7 +617,7 @@ BEGIN
             THROW 50002, @v_errores, 1;
         END
 
-        -- 3) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 3) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_club_eliminar; SET @v_sp = 1; END
 
@@ -626,7 +626,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_club_eliminar;
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -652,7 +652,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF NOT EXISTS (SELECT 1 FROM persona.persona WHERE id_persona = @id_persona) SET @v_errores += 'persona inexistente; ';
         IF @tipo_doc IS NULL OR @tipo_doc NOT IN ('DNI','PAS','EXT') SET @v_errores += 'tipo_doc invalido (DNI, PAS, EXT); ';
         IF NULLIF(LTRIM(RTRIM(@nro_doc)), '') IS NULL SET @v_errores += 'nro_doc obligatorio; ';
@@ -667,7 +667,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_persona_modificar; SET @v_sp = 1; END
 
@@ -678,7 +678,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_persona_modificar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -701,7 +701,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM persona.persona WHERE id_persona = @id_persona)
             THROW 50001, 'persona.usp_Persona_Eliminar: persona inexistente', 1;
 
-        -- 2) Dependientes: una lÌnea por cada tabla con FK a esta fila 
+        -- 2) Dependientes: una l√≠nea por cada tabla con FK a esta fila 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM persona.persona_idioma WHERE id_persona = @id_persona;
         IF @v_n > 0 SET @v_errores += CONCAT('persona_idioma(', @v_n, '); ');
@@ -717,7 +717,7 @@ BEGIN
             THROW 50002, @v_errores, 1;
         END
 
-        -- 3) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 3) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_persona_eliminar; SET @v_sp = 1; END
 
@@ -726,7 +726,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_persona_eliminar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -747,7 +747,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF NOT EXISTS (SELECT 1 FROM persona.persona WHERE id_persona = @id_persona) SET @v_errores += 'persona inexistente; ';
         IF NOT EXISTS (SELECT 1 FROM persona.idioma WHERE id_idioma = @id_idioma) SET @v_errores += 'idioma inexistente; ';
         IF EXISTS (SELECT 1 FROM persona.persona_idioma WHERE id_persona = @id_persona AND id_idioma = @id_idioma) SET @v_errores += 'persona_idioma ya registrado; ';
@@ -757,7 +757,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_persona_idioma_insertar; SET @v_sp = 1; END
 
@@ -766,7 +766,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_persona_idioma_insertar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -790,7 +790,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM persona.persona_idioma WHERE id_persona = @id_persona AND id_idioma = @id_idioma)
             THROW 50001, 'persona.usp_PersonaIdioma_Eliminar: persona_idioma inexistente', 1;
 
-        -- 3) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 3) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_persona_idioma_eliminar; SET @v_sp = 1; END
 
@@ -799,7 +799,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_persona_idioma_eliminar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -807,14 +807,14 @@ END
 GO
 
 -- ============================================================================
--- 8. persona.jugador (subtipo de persona: inserta persona + jugador en una transacciÛn)
+-- 8. persona.jugador (subtipo de persona: inserta persona + jugador en una transacci√≥n)
 -- ============================================================================
 
 CREATE OR ALTER PROCEDURE persona.usp_Jugador_Insertar
     @tipo_doc VARCHAR(5),
-    @nro_doc VARCHAR(30),
-    @nombre VARCHAR(80),
-    @apellido VARCHAR(80),
+    @nro_doc NVARCHAR(30),
+    @nombre NVARCHAR(80),
+    @apellido NVARCHAR(80),
     @fecha_nac DATE,
     @id_pais SMALLINT,
     @pie_habil CHAR(1) = NULL,
@@ -825,29 +825,29 @@ CREATE OR ALTER PROCEDURE persona.usp_Jugador_Insertar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
-        IF @tipo_doc IS NULL OR @tipo_doc NOT IN ('DNI','PAS','EXT') SET @v_errores += 'tipo_doc invalido (DNI, PAS, EXT); ';
-        IF NULLIF(LTRIM(RTRIM(@nro_doc)), '') IS NULL SET @v_errores += 'nro_doc obligatorio; ';
-        IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
-        IF NULLIF(LTRIM(RTRIM(@apellido)), '') IS NULL SET @v_errores += 'apellido obligatorio; ';
-        IF @fecha_nac IS NULL OR @fecha_nac > CAST(SYSDATETIME() AS DATE) SET @v_errores += 'fecha_nac obligatoria y no futura; ';
-        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += 'pais inexistente; ';
-        IF EXISTS (SELECT 1 FROM persona.persona WHERE tipo_doc = @tipo_doc AND nro_doc = @nro_doc) SET @v_errores += 'documento ya registrado; ';
-        IF @pie_habil IS NOT NULL AND @pie_habil NOT IN ('I','D','A') SET @v_errores += 'pie_habil invalido (I, D, A); ';
-        IF @altura_cm IS NOT NULL AND @altura_cm NOT BETWEEN 120 AND 230 SET @v_errores += 'altura_cm fuera de rango (120-230); ';
-        IF @id_club IS NOT NULL AND NOT EXISTS (SELECT 1 FROM persona.club WHERE id_club = @id_club) SET @v_errores += 'club inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM persona.posicion WHERE id_posicion = @id_posicion_habitual) SET @v_errores += 'posicion habitual inexistente; ';
-        IF @v_errores <> ''
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
+        IF @tipo_doc IS NULL OR @tipo_doc NOT IN ('DNI','PAS','EXT') SET @v_errores += N'tipo_doc invalido (DNI, PAS, EXT); ';
+        IF NULLIF(LTRIM(RTRIM(@nro_doc)), N'') IS NULL SET @v_errores += N'nro_doc obligatorio; ';
+        IF NULLIF(LTRIM(RTRIM(@nombre)), N'') IS NULL SET @v_errores += N'nombre obligatorio; ';
+        IF NULLIF(LTRIM(RTRIM(@apellido)), N'') IS NULL SET @v_errores += N'apellido obligatorio; ';
+        IF @fecha_nac IS NULL OR @fecha_nac > CAST(SYSDATETIME() AS DATE) SET @v_errores += N'fecha_nac obligatoria y no futura; ';
+        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += N'pais inexistente; ';
+        IF EXISTS (SELECT 1 FROM persona.persona WHERE tipo_doc = @tipo_doc AND nro_doc = @nro_doc) SET @v_errores += N'documento ya registrado; ';
+        IF @pie_habil IS NOT NULL AND @pie_habil NOT IN ('I','D','A') SET @v_errores += N'pie_habil invalido (I, D, A); ';
+        IF @altura_cm IS NOT NULL AND @altura_cm NOT BETWEEN 120 AND 230 SET @v_errores += N'altura_cm fuera de rango (120-230); ';
+        IF @id_club IS NOT NULL AND NOT EXISTS (SELECT 1 FROM persona.club WHERE id_club = @id_club) SET @v_errores += N'club inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM persona.posicion WHERE id_posicion = @id_posicion_habitual) SET @v_errores += N'posicion habitual inexistente; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = CONCAT('persona.usp_Jugador_Insertar: ', @v_errores);
+            SET @v_errores = CONCAT(N'persona.usp_Jugador_Insertar: ', @v_errores);
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_jugador_insertar; SET @v_sp = 1; END
 
@@ -861,7 +861,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_jugador_insertar;
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -874,9 +874,9 @@ GO
 CREATE OR ALTER PROCEDURE persona.usp_Jugador_Modificar
     @id_persona INT,
     @tipo_doc VARCHAR(5),
-    @nro_doc VARCHAR(30),
-    @nombre VARCHAR(80),
-    @apellido VARCHAR(80),
+    @nro_doc NVARCHAR(30),
+    @nombre NVARCHAR(80),
+    @apellido NVARCHAR(80),
     @fecha_nac DATE,
     @id_pais SMALLINT,
     @pie_habil CHAR(1) = NULL,
@@ -886,30 +886,30 @@ CREATE OR ALTER PROCEDURE persona.usp_Jugador_Modificar
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
-    DECLARE @v_errores VARCHAR(2000) = '';
+    DECLARE @v_errores NVARCHAR(2000) = N'';
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
-        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_persona) SET @v_errores += 'jugador inexistente; ';
-        IF @tipo_doc IS NULL OR @tipo_doc NOT IN ('DNI','PAS','EXT') SET @v_errores += 'tipo_doc invalido (DNI, PAS, EXT); ';
-        IF NULLIF(LTRIM(RTRIM(@nro_doc)), '') IS NULL SET @v_errores += 'nro_doc obligatorio; ';
-        IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
-        IF NULLIF(LTRIM(RTRIM(@apellido)), '') IS NULL SET @v_errores += 'apellido obligatorio; ';
-        IF @fecha_nac IS NULL OR @fecha_nac > CAST(SYSDATETIME() AS DATE) SET @v_errores += 'fecha_nac obligatoria y no futura; ';
-        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += 'pais inexistente; ';
-        IF EXISTS (SELECT 1 FROM persona.persona WHERE tipo_doc = @tipo_doc AND nro_doc = @nro_doc AND id_persona <> @id_persona) SET @v_errores += 'documento ya registrado; ';
-        IF @pie_habil IS NOT NULL AND @pie_habil NOT IN ('I','D','A') SET @v_errores += 'pie_habil invalido (I, D, A); ';
-        IF @altura_cm IS NOT NULL AND @altura_cm NOT BETWEEN 120 AND 230 SET @v_errores += 'altura_cm fuera de rango (120-230); ';
-        IF @id_club IS NOT NULL AND NOT EXISTS (SELECT 1 FROM persona.club WHERE id_club = @id_club) SET @v_errores += 'club inexistente; ';
-        IF NOT EXISTS (SELECT 1 FROM persona.posicion WHERE id_posicion = @id_posicion_habitual) SET @v_errores += 'posicion habitual inexistente; ';
-        IF @v_errores <> ''
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
+        IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_persona) SET @v_errores += N'jugador inexistente; ';
+        IF @tipo_doc IS NULL OR @tipo_doc NOT IN ('DNI','PAS','EXT') SET @v_errores += N'tipo_doc invalido (DNI, PAS, EXT); ';
+        IF NULLIF(LTRIM(RTRIM(@nro_doc)), N'') IS NULL SET @v_errores += N'nro_doc obligatorio; ';
+        IF NULLIF(LTRIM(RTRIM(@nombre)), N'') IS NULL SET @v_errores += N'nombre obligatorio; ';
+        IF NULLIF(LTRIM(RTRIM(@apellido)), N'') IS NULL SET @v_errores += N'apellido obligatorio; ';
+        IF @fecha_nac IS NULL OR @fecha_nac > CAST(SYSDATETIME() AS DATE) SET @v_errores += N'fecha_nac obligatoria y no futura; ';
+        IF NOT EXISTS (SELECT 1 FROM geo.pais WHERE id_pais = @id_pais) SET @v_errores += N'pais inexistente; ';
+        IF EXISTS (SELECT 1 FROM persona.persona WHERE tipo_doc = @tipo_doc AND nro_doc = @nro_doc AND id_persona <> @id_persona) SET @v_errores += N'documento ya registrado; ';
+        IF @pie_habil IS NOT NULL AND @pie_habil NOT IN ('I','D','A') SET @v_errores += N'pie_habil invalido (I, D, A); ';
+        IF @altura_cm IS NOT NULL AND @altura_cm NOT BETWEEN 120 AND 230 SET @v_errores += N'altura_cm fuera de rango (120-230); ';
+        IF @id_club IS NOT NULL AND NOT EXISTS (SELECT 1 FROM persona.club WHERE id_club = @id_club) SET @v_errores += N'club inexistente; ';
+        IF NOT EXISTS (SELECT 1 FROM persona.posicion WHERE id_posicion = @id_posicion_habitual) SET @v_errores += N'posicion habitual inexistente; ';
+        IF @v_errores <> N''
         BEGIN
-            SET @v_errores = CONCAT('persona.usp_Jugador_Modificar: ', @v_errores);
+            SET @v_errores = CONCAT(N'persona.usp_Jugador_Modificar: ', @v_errores);
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_jugador_modificar; SET @v_sp = 1; END
 
@@ -924,7 +924,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_jugador_modificar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -947,7 +947,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM persona.jugador WHERE id_persona = @id_persona)
             THROW 50001, 'persona.usp_Jugador_Eliminar: jugador inexistente', 1;
 
-        -- 2) Dependientes: una lÌnea por cada tabla con FK a esta fila 
+        -- 2) Dependientes: una l√≠nea por cada tabla con FK a esta fila 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM torneo.convocatoria WHERE id_jugador = @id_persona;
         IF @v_n > 0 SET @v_errores += CONCAT('convocatoria(', @v_n, '); ');
@@ -961,7 +961,7 @@ BEGIN
             THROW 50002, @v_errores, 1;
         END
 
-        -- 3) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 3) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_jugador_eliminar; SET @v_sp = 1; END
 
@@ -971,7 +971,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_jugador_eliminar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -999,7 +999,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF @tipo_doc IS NULL OR @tipo_doc NOT IN ('DNI','PAS','EXT') SET @v_errores += 'tipo_doc invalido (DNI, PAS, EXT); ';
         IF NULLIF(LTRIM(RTRIM(@nro_doc)), '') IS NULL SET @v_errores += 'nro_doc obligatorio; ';
         IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
@@ -1015,7 +1015,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_mct_insertar; SET @v_sp = 1; END
 
@@ -1029,7 +1029,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_mct_insertar;
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -1056,7 +1056,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF NOT EXISTS (SELECT 1 FROM persona.miembro_cuerpo_tecnico WHERE id_persona = @id_persona) SET @v_errores += 'miembro_cuerpo_tecnico inexistente; ';
         IF @tipo_doc IS NULL OR @tipo_doc NOT IN ('DNI','PAS','EXT') SET @v_errores += 'tipo_doc invalido (DNI, PAS, EXT); ';
         IF NULLIF(LTRIM(RTRIM(@nro_doc)), '') IS NULL SET @v_errores += 'nro_doc obligatorio; ';
@@ -1073,7 +1073,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_mct_modificar; SET @v_sp = 1; END
 
@@ -1088,7 +1088,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_mct_modificar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -1111,7 +1111,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM persona.miembro_cuerpo_tecnico WHERE id_persona = @id_persona)
             THROW 50001, 'persona.usp_MiembroCuerpoTecnico_Eliminar: miembro_cuerpo_tecnico inexistente', 1;
 
-        -- 2) Dependientes: una lÌnea por cada tabla con FK a esta fila 
+        -- 2) Dependientes: una l√≠nea por cada tabla con FK a esta fila 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM persona.persona_idioma WHERE id_persona = @id_persona;
         IF @v_n > 0 SET @v_errores += CONCAT('persona_idioma(', @v_n, '); ');
@@ -1121,7 +1121,7 @@ BEGIN
             THROW 50002, @v_errores, 1;
         END
 
-        -- 3) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 3) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_mct_eliminar; SET @v_sp = 1; END
 
@@ -1131,7 +1131,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_mct_eliminar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -1159,7 +1159,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF @tipo_doc IS NULL OR @tipo_doc NOT IN ('DNI','PAS','EXT') SET @v_errores += 'tipo_doc invalido (DNI, PAS, EXT); ';
         IF NULLIF(LTRIM(RTRIM(@nro_doc)), '') IS NULL SET @v_errores += 'nro_doc obligatorio; ';
         IF NULLIF(LTRIM(RTRIM(@nombre)), '') IS NULL SET @v_errores += 'nombre obligatorio; ';
@@ -1175,7 +1175,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_arbitro_insertar; SET @v_sp = 1; END
 
@@ -1189,7 +1189,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_arbitro_insertar;
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -1216,7 +1216,7 @@ BEGIN
     DECLARE @v_propia BIT = 0;
     DECLARE @v_sp BIT = 0;
     BEGIN TRY
-        -- 1) Validaciones: todas antes de abrir la transacciÛn; se acumulan
+        -- 1) Validaciones: todas antes de abrir la transacci√≥n; se acumulan
         IF NOT EXISTS (SELECT 1 FROM persona.arbitro WHERE id_persona = @id_persona) SET @v_errores += 'arbitro inexistente; ';
         IF @tipo_doc IS NULL OR @tipo_doc NOT IN ('DNI','PAS','EXT') SET @v_errores += 'tipo_doc invalido (DNI, PAS, EXT); ';
         IF NULLIF(LTRIM(RTRIM(@nro_doc)), '') IS NULL SET @v_errores += 'nro_doc obligatorio; ';
@@ -1233,7 +1233,7 @@ BEGIN
             THROW 50001, @v_errores, 1;
         END
 
-        -- 2) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 2) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_arbitro_modificar; SET @v_sp = 1; END
 
@@ -1248,7 +1248,7 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_arbitro_modificar;  
         THROW;   -- relanza el mismo error al llamador
     END CATCH
@@ -1271,7 +1271,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM persona.arbitro WHERE id_persona = @id_persona)
             THROW 50001, 'persona.usp_Arbitro_Eliminar: arbitro inexistente', 1;
 
-        -- 2) Dependientes: una lÌnea por cada tabla con FK a esta fila 
+        -- 2) Dependientes: una l√≠nea por cada tabla con FK a esta fila 
         DECLARE @v_n INT;
         SELECT @v_n = COUNT(*) FROM juego.tarjeta WHERE id_arbitro = @id_persona;
         IF @v_n > 0 SET @v_errores += CONCAT('tarjeta(', @v_n, '); ');
@@ -1285,7 +1285,7 @@ BEGIN
             THROW 50002, @v_errores, 1;
         END
 
-        -- 3) TransacciÛn propia o savepoint si ya hay una abierta
+        -- 3) Transacci√≥n propia o savepoint si ya hay una abierta
         IF @@TRANCOUNT = 0 BEGIN BEGIN TRANSACTION; SET @v_propia = 1; END
         ELSE BEGIN SAVE TRANSACTION sv_arbitro_eliminar; SET @v_sp = 1; END
 
@@ -1295,12 +1295,12 @@ BEGIN
         IF @v_propia = 1 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacciÛn propia: se deshace todo
+        IF @v_propia = 1 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;     -- transacci√≥n propia: se deshace todo
         ELSE IF @v_sp = 1 AND XACT_STATE() = 1 ROLLBACK TRANSACTION sv_arbitro_eliminar; 
         THROW;   -- relanza el mismo error al llamador
     END CATCH
 END
 GO
 
--- ComprobaciÛn manual (va en los scripts de testing, no ac·):
+-- Comprobaci√≥n manual (va en los scripts de testing, no ac√°):
 --   SELECT COUNT(*) FROM sys.procedures WHERE schema_id = SCHEMA_ID('persona') AND name LIKE 'usp[_]%';   -- esperado: 28
