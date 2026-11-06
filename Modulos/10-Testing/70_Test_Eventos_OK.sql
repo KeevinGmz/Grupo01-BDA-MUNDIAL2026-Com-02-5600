@@ -39,7 +39,7 @@ DECLARE @v_estado_original VARCHAR(12);
 
 IF OBJECT_ID('juego.usp_Negocio_RegistrarGol', 'P') IS NULL
    OR OBJECT_ID('juego.usp_Negocio_RegistrarTarjeta', 'P') IS NULL
-   OR OBJECT_ID('juego.usp_Negocio_RegistrarSustitucio', 'P') IS NULL
+   OR OBJECT_ID('juego.usp_Negocio_RegistrarSustitucion', 'P') IS NULL
 BEGIN
     ;THROW 50001,
            '70_Test_OK_Eventos: faltan uno o mas procedimientos de negocio requeridos',
