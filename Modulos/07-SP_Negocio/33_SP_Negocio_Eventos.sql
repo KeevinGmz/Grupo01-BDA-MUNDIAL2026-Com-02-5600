@@ -97,7 +97,7 @@ BEGIN
        OR @tipo_gol NOT IN ('JUGADA', 'PENAL', 'TIRO LIBRE', 'CABEZA', 'CORNER', 'REBOTE', 'EN CONTRA')
         SET @v_errores += 'tipo_gol invalido; ';
 
-    IF @periodo = 'PE' AND ISNULL(@v_admite_penales, 0) = 0
+    IF @periodo = 'PEN' AND ISNULL(@v_admite_penales, 0) = 0
     BEGIN
         SET @v_codigo = 50003;
         SET @v_errores += 'la fase no admite definicion por penales; ';
