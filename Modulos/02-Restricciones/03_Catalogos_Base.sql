@@ -61,7 +61,7 @@ GO
 --     (Entrega 6: los seeds 43 y 45 los requieren).
 INSERT INTO persona.categoria_arbitral (descripcion)
 SELECT v.descripcion
-FROM (VALUES ('FIFA'), ('CONFEDERACIO'), ('NACIONAL')) AS v(descripcion)
+FROM (VALUES ('FIFA'), ('CONFEDERACION'), ('NACIONAL')) AS v(descripcion)
 WHERE NOT EXISTS (SELECT 1 FROM persona.categoria_arbitral c WHERE c.descripcion = v.descripcion);
 
 INSERT INTO persona.rol_cuerpo_tecnico (descripcion)
@@ -72,7 +72,7 @@ WHERE NOT EXISTS (SELECT 1 FROM persona.rol_cuerpo_tecnico r WHERE r.descripcion
 INSERT INTO persona.idioma (cod_iso639, nombre)
 SELECT v.cod, v.nombre
 FROM (VALUES ('spa', 'Español'), ('eng', 'Inglés'), ('fra', 'Francés'), ('por', 'Portugués'),
-             ('deu', 'Alemá'), ('ita', 'Italiano'), ('ara', 'Árabe'), ('jp', 'Japonés')) AS v(cod, nombre)
+             ('deu', 'Alemán'), ('ita', 'Italiano'), ('ara', 'Árabe'), ('jpn', 'Japonés')) AS v(cod, nombre)
 WHERE NOT EXISTS (SELECT 1 FROM persona.idioma i WHERE i.cod_iso639 = v.cod);
 GO
 
