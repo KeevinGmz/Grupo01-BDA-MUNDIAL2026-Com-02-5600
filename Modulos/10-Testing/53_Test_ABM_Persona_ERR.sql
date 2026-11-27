@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada 
 Comisión: 02-5600
@@ -7,6 +7,7 @@ Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Cacer
 Fecha : 2026-10-03
 Objetivo: Validar fallas en ABM Persona (V-14: Documento único, validaciones de dominios)
 ===================================================================== */
+-- Entrega 8: ajustado al cifrado: el documento se busca por hash (persona.fn_HashDocumento) porque nro_doc ya no existe en texto plano.
 USE Mundial2026;
 GO
 
@@ -60,7 +61,7 @@ IF EXISTS
     SELECT 1
     FROM persona.persona AS p
     WHERE p.tipo_doc = 'DNI'
-      AND p.nro_doc = @v_nro_doc
+      AND p.nro_doc_hash = persona.fn_HashDocumento(@v_nro_doc)
 )
 BEGIN
     ;THROW 50001, '53_Test_ABM_Persona_ERR: ya existe el documento reservado para el Test 1',1;
@@ -155,7 +156,7 @@ IF EXISTS
     SELECT 1
     FROM persona.persona AS p
     WHERE p.tipo_doc = 'PAS'
-      AND p.nro_doc = @v_nro_doc
+      AND p.nro_doc_hash = persona.fn_HashDocumento(@v_nro_doc)
 )
 BEGIN
     ;THROW 50001, '53_Test_ABM_Persona_ERR: ya existe el documento reservado para el Test 2',1;

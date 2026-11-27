@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
 Universidad Nacional de La Matanza (UNLaM)
 Materia : 3641 - Bases de Datos Aplicada 
 Comisión: 02-5600
@@ -7,6 +7,7 @@ Integrantes: Gomez Kevin Ariel, Kobak Camila Nicole, Bogado Rodrigo David, Cacer
 Fecha : 2026-10-03
 Objetivo: Prueba exitosa de ABM para el esquema Persona (inserción de jugador con datos de persona en una sola transacción)
 ===================================================================== */
+-- Entrega 8: ajustado al cifrado: el documento se busca por hash (persona.fn_HashDocumento) porque nro_doc ya no existe en texto plano.
 USE Mundial2026;
 GO
 
@@ -70,7 +71,7 @@ IF EXISTS
     SELECT 1
     FROM persona.persona AS p
     WHERE p.tipo_doc = 'DNI'
-      AND p.nro_doc = @v_nro_doc
+      AND p.nro_doc_hash = persona.fn_HashDocumento(@v_nro_doc)
 )
 BEGIN
     ;THROW 50001,'52_Test_ABM_Persona_OK: ya existe el documento de prueba JUG-TEST-0001', 1;
@@ -98,7 +99,7 @@ BEGIN TRY
     SELECT p.*
     FROM persona.persona AS p
     WHERE p.tipo_doc = 'DNI'
-      AND p.nro_doc = @v_nro_doc;
+      AND p.nro_doc_hash = persona.fn_HashDocumento(@v_nro_doc);
 
     ---------------------------------------------------------------------------
     -- 3. Insertar persona y jugador con un unico SP jerarquico
@@ -135,7 +136,7 @@ BEGIN TRY
                  WHERE p.id_persona = @v_id_persona
                    AND p.tipo_persona = 'J'
                    AND p.tipo_doc = 'DNI'
-                   AND p.nro_doc = @v_nro_doc
+                   AND p.nro_doc_hash = persona.fn_HashDocumento(@v_nro_doc)
                    AND j.tipo_persona = 'J'
                    AND j.pie_habil = 'D'
                    AND j.altura_cm = 180
@@ -276,7 +277,7 @@ SELECT CASE
              SELECT 1
              FROM persona.persona AS p
              WHERE p.tipo_doc = 'DNI'
-               AND p.nro_doc = 'JUG-TEST-0001'
+               AND p.nro_doc_hash = persona.fn_HashDocumento('JUG-TEST-0001')
          )
         THEN 'PASS rollback: no quedaron residuos'
     ELSE 'FAIL rollback: quedaron residuos'

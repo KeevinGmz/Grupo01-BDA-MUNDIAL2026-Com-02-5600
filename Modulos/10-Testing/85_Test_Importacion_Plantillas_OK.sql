@@ -10,6 +10,7 @@ Objetivo: Pruebas exitosas de 37_SP_Importacion_Plantillas.sql: scraping de
           sobre datos ya cargados (39) demuestra que no se duplican jugadores,
           clubes ni convocatorias. Requiere conexión a internet.
 ===================================================================== */
+-- Entrega 8: la evidencia muestra el documento y la fecha de nacimiento descifrados (abre y cierra la clave con seguridad.usp_AbrirClave / usp_CerrarClave).
 USE Mundial2026;
 GO
 
@@ -54,7 +55,10 @@ GO
 -------------------------------------------------------------------------------
 PRINT '-> Test 2: evidencia de plantillas importadas';
 
-SELECT c.dorsal, p.apellido, p.nombre, p.fecha_nac, po.descripcion AS posicion, cl.nombre AS club, cl.pais_club, p.nro_doc
+DECLARE @v_abrio_clave BIT;
+EXEC seguridad.usp_AbrirClave @abrio = @v_abrio_clave OUTPUT;
+
+SELECT c.dorsal, p.apellido, p.nombre, persona.fn_FechaNacDescifrada(p.fecha_nac_cif) AS fecha_nac, po.descripcion AS posicion, cl.nombre AS club, cl.pais_club, persona.fn_NroDocDescifrado(p.nro_doc_cif) AS nro_doc
 FROM torneo.convocatoria AS c
 JOIN torneo.seleccion AS s ON s.id_seleccion = c.id_seleccion
 JOIN geo.pais AS pa ON pa.id_pais = s.id_pais
@@ -64,6 +68,8 @@ JOIN persona.posicion AS po ON po.id_posicion = j.id_posicion_habitual
 LEFT JOIN persona.club AS cl ON cl.id_club = j.id_club
 WHERE pa.cod_fifa = 'ARG' AND c.estado = 'ACTIVO'
 ORDER BY c.dorsal;
+
+IF @v_abrio_clave = 1 EXEC seguridad.usp_CerrarClave;
 
 SELECT CASE WHEN NOT EXISTS (
             SELECT 1
